@@ -49,24 +49,31 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
     """
     Enforces maximum request body size to guard against oversized payload DoS.
+    Differentiates standard JSON payloads from multipart upload endpoints.
     """
 
-    def __init__(self, app, max_bytes: int):  # noqa: ANN001
+    def __init__(  # noqa: ANN001
+        self, app, max_bytes: int, upload_max_bytes: int | None = None
+    ):
         super().__init__(app)
         self.max_bytes = max_bytes
+        self.upload_max_bytes = upload_max_bytes or max_bytes
 
     async def dispatch(self, request: Request, call_next) -> Response:  # noqa: ANN001
         content_length = request.headers.get("content-length")
         if content_length:
             try:
                 length = int(content_length)
-                if length > self.max_bytes:
+                is_upload = request.url.path.startswith("/api/v1/extraction")
+                limit = self.upload_max_bytes if is_upload else self.max_bytes
+
+                if length > limit:
                     return JSONResponse(
                         status_code=413,
                         content={
                             "error": {
                                 "code": "PAYLOAD_TOO_LARGE",
-                                "message": f"Request body exceeds limit of {self.max_bytes} bytes.",
+                                "message": f"Request body exceeds limit of {limit} bytes.",
                             }
                         },
                     )

@@ -160,5 +160,48 @@ describe("ApiClient", () => {
       })
     );
   });
+
+  it("calls extractOcr endpoint with FormData", async () => {
+    const mockOcrResponse = {
+      raw_text: "Energy 150 kcal\nIngredients: Salt",
+      nutrition_lines: ["Energy 150 kcal"],
+      ingredients_text: "Salt",
+      nutrient_candidates: {
+        energy_kcal: {
+          field_name: "energy_kcal",
+          raw_text: "Energy 150 kcal",
+          value: 150.0,
+          unit: "kcal",
+          confidence: 90.0,
+        },
+      },
+      serving_size_candidate: null,
+      serving_unit_candidate: null,
+      overall_confidence: 90.0,
+      warnings: [],
+      verification_required: true,
+      disclaimer: "User review required.",
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => mockOcrResponse,
+    });
+
+    const client = new ApiClient("http://localhost:8000");
+    const testFile = new File(["fake-image-bytes"], "label.png", { type: "image/png" });
+    const result = await client.extractOcr(testFile);
+
+    expect(result).toEqual(mockOcrResponse);
+    expect(result.verification_required).toBe(true);
+    expect(result.nutrient_candidates.energy_kcal.value).toBe(150.0);
+    expect(global.fetch).toHaveBeenCalledWith(
+      "http://localhost:8000/api/v1/extraction/ocr",
+      expect.objectContaining({
+        method: "POST",
+      })
+    );
+  });
 });
 

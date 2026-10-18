@@ -8,6 +8,7 @@ import {
   IngredientAnalysisRequest,
   IngredientAnalysisResponse,
 } from "../lib/api/client";
+import { LabelScanner, TransferredValues } from "./LabelScanner";
 
 /**
  * Safely parses optional numeric input.
@@ -218,8 +219,28 @@ export const NutritionDemoForm: React.FC = () => {
     }
   };
 
+  const handleTransferFromOcr = (values: TransferredValues) => {
+    if (values.servingSize !== undefined && values.servingSize !== "") setServingSize(values.servingSize);
+    if (values.servingUnit !== undefined) setServingUnit(values.servingUnit);
+    if (values.energyKcal !== undefined && values.energyKcal !== "") setEnergyKcal(values.energyKcal);
+    if (values.proteinG !== undefined && values.proteinG !== "") setProteinG(values.proteinG);
+    if (values.carbohydratesG !== undefined && values.carbohydratesG !== "") setCarbohydratesG(values.carbohydratesG);
+    if (values.totalSugarG !== undefined && values.totalSugarG !== "") setTotalSugarG(values.totalSugarG);
+    if (values.addedSugarG !== undefined && values.addedSugarG !== "") setAddedSugarG(values.addedSugarG);
+    if (values.dietaryFiberG !== undefined && values.dietaryFiberG !== "") setDietaryFiberG(values.dietaryFiberG);
+    if (values.totalFatG !== undefined && values.totalFatG !== "") setTotalFatG(values.totalFatG);
+    if (values.saturatedFatG !== undefined && values.saturatedFatG !== "") setSaturatedFatG(values.saturatedFatG);
+    if (values.transFatG !== undefined && values.transFatG !== "") setTransFatG(values.transFatG);
+    if (values.cholesterolMg !== undefined && values.cholesterolMg !== "") setCholesterolMg(values.cholesterolMg);
+    if (values.sodiumMg !== undefined && values.sodiumMg !== "") setSodiumMg(values.sodiumMg);
+    if (values.ingredientsText !== undefined && values.ingredientsText !== "") setIngredientsText(values.ingredientsText);
+  };
+
   return (
-    <section className="card" aria-labelledby="analyzer-heading" style={{ marginTop: "1.5rem" }}>
+    <>
+      <LabelScanner onTransferValues={handleTransferFromOcr} />
+
+      <section className="card" aria-labelledby="analyzer-heading" style={{ marginTop: "1.5rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.5rem" }}>
         <h2 id="analyzer-heading" style={{ margin: 0 }}>Packaged Food Label Analyzer</h2>
         <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -785,5 +806,6 @@ export const NutritionDemoForm: React.FC = () => {
         </div>
       )}
     </section>
+    </>
   );
 };

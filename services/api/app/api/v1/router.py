@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import health, ingredients, nutrition
+from app.api.v1.endpoints import extraction, health, ingredients, nutrition
 
 api_v1_router = APIRouter()
 
@@ -8,3 +8,4 @@ api_v1_router = APIRouter()
 api_v1_router.include_router(health.router, tags=["Health"])
 api_v1_router.include_router(nutrition.router, prefix="/nutrition", tags=["Nutrition"])
 api_v1_router.include_router(ingredients.router, prefix="/ingredients", tags=["Ingredients"])
+api_v1_router.include_router(extraction.router, prefix="/extraction", tags=["Extraction"])

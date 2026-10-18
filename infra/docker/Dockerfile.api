@@ -11,6 +11,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Install system packages (tesseract-ocr for offline extraction)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends tesseract-ocr && \
+    rm -rf /var/lib/apt/lists/*
+
 # Install uv for fast, reliable dependency management
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
@@ -24,8 +29,9 @@ COPY services/api/pyproject.toml services/api/uv.lock ./
 # Install dependencies into project virtual environment
 RUN uv sync --frozen --no-dev --no-install-project
 
-# Copy application source code
+# Copy application source code and reference data
 COPY services/api/app ./app
+COPY data /data
 
 # Set non-root ownership
 RUN chown -R appuser:appuser /app

@@ -111,20 +111,20 @@ healthyIndia/
 - Never deploy directly from unreviewed experimental branches.
 
 ## Current Implementation Status
-- **Implemented Controls (Phase 1, Phase 2A, Phase 2B):**
+- **Implemented Controls (Phase 1, Phase 2A, Phase 2B, Phase 3A):**
   - Monorepo directory structure established with clear separation of web, api, data, and infra.
   - Strict Pydantic environment configuration with fail-safe startup validation against weak secrets or wildcard origins in staging/production.
   - Automated security headers applied to all API and web responses.
   - Restrictive CORS configuration limited to explicit trusted origins.
-  - Request body size limit enforcement (413 Payload Too Large).
-  - Safe error responses for 404, 422, and 500 without stack traces or path disclosures.
+  - Request body size limit enforcement (413 Payload Too Large) with distinct 1 MB JSON / 10 MB image upload limits.
+  - Safe error responses for 404, 413, 422, and 500 without stack traces or path disclosures.
   - Pinned lockfiles for Python (`uv.lock`) and Node.js (`pnpm-lock.yaml`).
   - Automated quality checks (Ruff, pytest, TypeScript, Vitest, and Gitleaks) in GitHub Actions.
   - Development Dockerfile configured with non-root user execution.
   - Deterministic nutrition analysis engine (`/api/v1/nutrition/analyze`) calculating per-serving and per-100g/ml metrics against FSSAI and ICMR-NIN standards.
   - Curated, cited additive reference dataset (`data/ingredient_reference/additives_v1.json`) with FSSAI statutory regulations and Codex citations.
   - Deterministic ingredient parser (`/api/v1/ingredients/analyze`) extracting INS/E numbers and exact verified aliases while strictly preserving unmatched items without probabilistic guessing.
-  - Integrated, accessible frontend analyzer form evaluating product labels end-to-end.
+  - Local, offline OCR adapter (`/api/v1/extraction/ocr`) using Tesseract and Pillow with decompression bomb defenses (max 4096px, 16 MP) and ephemeral in-memory processing.
+  - Integrated, accessible frontend analyzer form evaluating product labels end-to-end with OCR photo scan, review, and edit workflows.
 - **Future Phase Controls (Planned):**
-  - Replaceable local OCR adapter without paid generative-AI APIs (Phase 3).
   - User accounts, history persistence, and database migrations (Post-MVP).

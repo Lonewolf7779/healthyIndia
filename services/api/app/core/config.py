@@ -53,6 +53,13 @@ class Settings(BaseSettings):
     MAX_REQUEST_BODY_BYTES: int = 1_048_576  # 1 MB
     REQUEST_TIMEOUT_SECONDS: float = 30.0
 
+    # OCR and image upload limits (Phase 3)
+    MAX_IMAGE_UPLOAD_BYTES: int = 10_485_760  # 10 MB
+    MAX_IMAGE_DIMENSION: int = 4096  # Max width or height in pixels
+    MAX_IMAGE_PIXELS: int = 16_000_000  # 16 Megapixels decompression limit
+    OCR_TIMEOUT_SECONDS: float = 15.0
+    TESSERACT_CMD: str | None = None
+
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
     def parse_allowed_origins(cls, v: Any) -> list[str]:

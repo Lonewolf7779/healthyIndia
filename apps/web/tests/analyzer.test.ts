@@ -131,5 +131,38 @@ describe("Frontend Nutrition & Ingredient Analysis Logic", () => {
       expect(err.message).not.toContain("fastapi");
       expect(err.message).not.toContain("pydantic");
     });
+
+    it("verifies OCR response mandates verification and holds candidate values", () => {
+      const ocrData = {
+        raw_text: "Serving 30g\nEnergy 140 kcal\nIngredients: Wheat, Oil",
+        nutrition_lines: ["Serving 30g", "Energy 140 kcal"],
+        ingredients_text: "Wheat, Oil",
+        nutrient_candidates: {
+          energy_kcal: {
+            field_name: "energy_kcal",
+            raw_text: "Energy 140 kcal",
+            value: 140,
+            unit: "kcal",
+            confidence: 85,
+          },
+        },
+        serving_size_candidate: 30,
+        serving_unit_candidate: "g",
+        overall_confidence: 85,
+        warnings: [
+          {
+            code: "LOW_CONFIDENCE",
+            message: "OCR confidence is low (85%). Please verify values.",
+          },
+        ],
+        verification_required: true,
+        disclaimer: "Machine-generated draft requiring manual review.",
+      };
+
+      expect(ocrData.verification_required).toBe(true);
+      expect(ocrData.serving_size_candidate).toBe(30);
+      expect(ocrData.nutrient_candidates.energy_kcal.value).toBe(140);
+      expect(ocrData.warnings[0].code).toBe("LOW_CONFIDENCE");
+    });
   });
 });

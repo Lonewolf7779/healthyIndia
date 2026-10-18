@@ -78,6 +78,9 @@ healthyIndia/
 - **pnpm:** v12.x or higher
 - **Python:** v3.11 or higher (v3.13 recommended)
 - **uv:** v0.6 or higher (`pip install uv`)
+- **Tesseract OCR:** v5.x (Local offline engine)
+  - *Windows:* `winget install --id UB-Mannheim.TesseractOCR`
+  - *Ubuntu/Debian:* `sudo apt-get install -y tesseract-ocr`
 - **Docker & Docker Compose:** (Optional, for containerized local development)
 
 ---
@@ -170,8 +173,15 @@ pnpm run build
   * Missing values tracked explicitly without silent conversion to zero.
   * Unified frontend analyzer supporting product name, serving details, 11 nutrient fields, and ingredient list.
   * Dual-engine orchestration with isolated error boundaries and accessible results presentation.
-* **Phase 3: OCR & Label Image Extraction (Planned):**
-  * Replaceable local OCR adapter without paid cloud generative-AI dependencies.
+* **Phase 3A: Local Food-Label OCR Workflow (COMPLETED):**
+  * Offline, local OCR execution using Tesseract and Pillow (no paid cloud AI APIs).
+  * Defensive image validation against decompression bombs (max 10 MB, max 4096px, max 16 MP).
+  * Strict memory-only processing with zero permanent storage of uploaded images.
+  * Heuristic parser extracting candidate nutrition lines, candidate nutrients, and ingredient statements.
+  * Uncertainty and quality warnings with explicit mandatory user review requirement.
+  * Accessible frontend label scanner supporting camera capture, image preview, draft editing, and transfer into the analysis form.
+* **Phase 4: Database Persistence & User Accounts (Post-MVP):**
+  * Optional user history and product persistence.
 
 ---
 

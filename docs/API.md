@@ -193,6 +193,68 @@ Parses declared ingredient strings deterministically against curated FSSAI/Codex
 
 ---
 
+### 4. Local Food-Label OCR Extraction
+Extracts raw text, identifies nutrition facts lines, extracts candidate ingredients statements, and parses draft nutrient candidates from an uploaded food label image using local, offline Tesseract OCR.
+
+* **Method:** `POST`
+* **Path:** `/api/v1/extraction/ocr`
+* **Content-Type:** `multipart/form-data`
+* **Form Field:** `file` (Binary image file)
+
+#### Supported Formats & Upload Limits
+* **Formats:** JPEG (`.jpg`, `.jpeg`), PNG (`.png`), WEBP (`.webp`).
+* **Max Payload Size:** 10 MB (`MAX_IMAGE_UPLOAD_BYTES: 10485760`).
+* **Max Dimensions:** 4096 x 4096 pixels.
+* **Max Pixel Density:** 16,000,000 pixels (decompression bomb protection).
+* **Privacy & Retention:** Processed purely in memory. Images are **never permanently stored** on disk or logged.
+
+#### Example Request
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/extraction/ocr \
+  -F "file=@packaging_label.jpg;type=image/jpeg"
+```
+
+#### Example Response (200 OK)
+```json
+{
+  "raw_text": "NUTRITION FACTS\nServing Size: 30g\nEnergy: 145 kcal\nProtein: 2.5g\nCarbohydrates: 21g\nAdded Sugars: 7.5g\nTotal Fat: 6g\nSodium: 180mg\nINGREDIENTS: Wheat Flour, Palm Oil, Salt, Emulsifier (INS 322(i))",
+  "nutrition_lines": [
+    "Serving Size: 30g",
+    "Energy: 145 kcal",
+    "Protein: 2.5g",
+    "Carbohydrates: 21g",
+    "Added Sugars: 7.5g",
+    "Total Fat: 6g",
+    "Sodium: 180mg"
+  ],
+  "ingredients_text": "Wheat Flour, Palm Oil, Salt, Emulsifier (INS 322(i))",
+  "nutrient_candidates": {
+    "energy_kcal": {
+      "field_name": "energy_kcal",
+      "raw_text": "Energy: 145 kcal",
+      "value": 145.0,
+      "unit": "kcal",
+      "confidence": 92.0
+    },
+    "added_sugar_g": {
+      "field_name": "added_sugar_g",
+      "raw_text": "Added Sugars: 7.5g",
+      "value": 7.5,
+      "unit": "g",
+      "confidence": 92.0
+    }
+  },
+  "serving_size_candidate": 30.0,
+  "serving_unit_candidate": "g",
+  "overall_confidence": 92.0,
+  "warnings": [],
+  "verification_required": true,
+  "disclaimer": "OCR extraction is preliminary and machine-generated. Physical print quality, lighting, reflections, or packaging folds may cause errors. The user must review, verify, and correct all values before submission."
+}
+```
+
+---
+
 ## Error Responses
 Error responses follow a consistent, safe structure without leaking internal stack traces or filesystem paths.
 

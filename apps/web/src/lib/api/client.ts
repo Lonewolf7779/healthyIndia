@@ -104,6 +104,32 @@ export interface IngredientAnalysisResponse {
   disclaimer: string;
 }
 
+export interface ExtractedNutrientCandidate {
+  field_name: string;
+  raw_text: string;
+  value: number | null;
+  unit: string | null;
+  confidence: number | null;
+}
+
+export interface ExtractionWarning {
+  code: string;
+  message: string;
+}
+
+export interface OcrExtractionResponse {
+  raw_text: string;
+  nutrition_lines: string[];
+  ingredients_text: string | null;
+  nutrient_candidates: Record<string, ExtractedNutrientCandidate>;
+  serving_size_candidate: number | null;
+  serving_unit_candidate: string | null;
+  overall_confidence: number | null;
+  warnings: ExtractionWarning[];
+  verification_required: boolean;
+  disclaimer: string;
+}
+
 export class ApiClientError extends Error {
   public readonly code: string;
   public readonly status?: number;
@@ -168,6 +194,19 @@ export class ApiClient {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Uploads a food label photo for local offline OCR text and candidate extraction.
+   */
+  public async extractOcr(file: File): Promise<OcrExtractionResponse> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return this.request<OcrExtractionResponse>("/api/v1/extraction/ocr", {
+      method: "POST",
+      body: formData,
     });
   }
 

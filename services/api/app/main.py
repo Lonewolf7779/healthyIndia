@@ -51,6 +51,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(
         RequestSizeLimitMiddleware,
         max_bytes=settings.MAX_REQUEST_BODY_BYTES,
+        upload_max_bytes=settings.MAX_IMAGE_UPLOAD_BYTES,
     )
 
     # 2. Baseline security headers
@@ -100,12 +101,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def starlette_http_exception_handler(
         request: Request, exc: StarletteHTTPException
     ) -> JSONResponse:
+        if isinstance(exc.detail, dict):
+            error_code = exc.detail.get("code", "HTTP_ERROR")
+            error_msg = exc.detail.get("message", "An error occurred.")
+        else:
+            error_code = "HTTP_ERROR"
+            error_msg = str(exc.detail)
+
         return JSONResponse(
             status_code=exc.status_code,
             content={
                 "error": {
-                    "code": "HTTP_ERROR",
-                    "message": str(exc.detail),
+                    "code": error_code,
+                    "message": error_msg,
                 }
             },
             headers=exc.headers,
@@ -113,12 +121,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+        if isinstance(exc.detail, dict):
+            error_code = exc.detail.get("code", "HTTP_ERROR")
+            error_msg = exc.detail.get("message", "An error occurred.")
+        else:
+            error_code = "HTTP_ERROR"
+            error_msg = str(exc.detail)
+
         return JSONResponse(
             status_code=exc.status_code,
             content={
                 "error": {
-                    "code": "HTTP_ERROR",
-                    "message": str(exc.detail),
+                    "code": error_code,
+                    "message": error_msg,
                 }
             },
             headers=exc.headers,
