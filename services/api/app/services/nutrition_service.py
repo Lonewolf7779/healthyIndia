@@ -97,4 +97,5 @@ class NutritionService:
             missing_nutrients=result.missing_nutrients,
             disclaimer=result.disclaimer,
             everyday_explanations=everyday_explanations,
+            calculation_assumptions=result.calculation_assumptions,
         )

@@ -253,6 +253,7 @@ describe("LabelScanner Image Selection & Lifecycle", () => {
 
     it("resets scanner to initial clean state", () => {
       const dirtyState: ScannerState = {
+        ...initialScannerState,
         selectedFile: mockFileA,
         previewUrl: "blob:http://localhost/test",
         uploading: false,

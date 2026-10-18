@@ -243,3 +243,9 @@ class NutritionAnalysisResponse(BaseModel):
         default_factory=list,
         description="Plain-language quantity explanations and everyday comparisons.",
     )
+    calculation_assumptions: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Transparent record of scaling formulas, rounding rules, and reference diet standards."
+        ),
+    )

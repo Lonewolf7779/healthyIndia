@@ -322,6 +322,28 @@ def analyze_nutrition(input_data: RawNutrientInput) -> NutritionAnalysisResult:
         serving_unit=input_data.serving_unit.value,
     )
 
+    scaling_desc = (
+        f"Scaled using deterministic factor {round(100.0 / input_data.serving_size, 4)} "
+        f"based on serving size {input_data.serving_size}{input_data.serving_unit.value}."
+        if input_data.serving_unit not in (ServingUnit.PIECE, ServingUnit.PORTION)
+        else "Discrete piece/portion units without net gram weight cannot be scaled to 100g."
+    )
+
+    calculation_assumptions = {
+        "serving_scaling_formula": scaling_desc,
+        "rounding_precision": (
+            "Nutrient amounts rounded to 2 decimal places; "
+            "% Daily Values rounded to 1 decimal place."
+        ),
+        "daily_reference_source": (
+            "ICMR-NIN (2020) and FSSAI (2020) daily reference values for a 2,000 kcal/day diet."
+        ),
+        "missing_value_policy": (
+            "Missing values are strictly preserved as unprovided (None) "
+            "and never silently converted to zero."
+        ),
+    }
+
     return NutritionAnalysisResult(
         status=status,
         serving_size=input_data.serving_size,
@@ -335,4 +357,5 @@ def analyze_nutrition(input_data: RawNutrientInput) -> NutritionAnalysisResult:
         missing_nutrients=missing_mandatory,
         disclaimer=DISCLAIMER,
         everyday_explanations=everyday_explanations,
+        calculation_assumptions=calculation_assumptions,
     )

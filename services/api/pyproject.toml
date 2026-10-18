@@ -12,6 +12,7 @@ dependencies = [
     "python-multipart>=0.0.32",
     "pillow>=13.0.0",
     "pytesseract>=0.3.13",
+    "opencv-python-headless>=5.0.0.93",
 ]
 
 [dependency-groups]
@@ -45,6 +46,7 @@ ignore = [
 "tests/*" = ["S101", "S105", "S106"] # allow assert and test passwords in tests
 "app/core/config.py" = ["S105"] # allow setting field name SECRET_KEY
 "app/api/*" = ["B008"] # allow FastAPI Depends in route signatures
+"scripts/*" = ["E501"] # allow formatted multiline markdown templates in benchmark scripts
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

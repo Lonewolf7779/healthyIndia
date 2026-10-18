@@ -1,17 +1,22 @@
 """
 Pluggable OCR Adapter interfaces and implementations.
-Implements the Replaceable Adapter pattern.
+Implements the Replaceable Adapter pattern with multi-pass OCR and discrepancy detection.
 """
 
 import io
 import os
 import shutil
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
 
+import cv2
+import numpy as np
 import pytesseract
 from PIL import Image, ImageEnhance, ImageOps
+
+from app.extraction.quality import _estimate_skew_angle
 
 DEFAULT_TIMEOUT_SECONDS: Final[float] = 15.0
 
@@ -42,6 +47,25 @@ class OcrTimeoutError(OcrEngineError):
         )
 
 
+@dataclass
+class OcrEngineOutput:
+    """
+    Richer outcome of local OCR engine execution with dual-pass discrepancy tracking.
+    Supports backward-compatible 2-tuple unpacking via __iter__ (raw_text, confidence).
+    """
+
+    raw_text: str
+    confidence: float | None
+    pass_a_text: str | None = None
+    pass_b_text: str | None = None
+    pass_discrepancy: bool = False
+    discrepancy_details: list[str] = field(default_factory=list)
+
+    def __iter__(self):
+        """Allows unpacking directly as (raw_text, confidence) for backwards compatibility."""
+        return iter((self.raw_text, self.confidence))
+
+
 class BaseOcrAdapter(ABC):
     """
     Abstract adapter for local OCR engines.
@@ -49,19 +73,18 @@ class BaseOcrAdapter(ABC):
     """
 
     @abstractmethod
-    def extract_text(self, image_bytes: bytes) -> tuple[str, float | None]:
+    def extract_text(self, image_bytes: bytes) -> OcrEngineOutput:
         """
         Executes local OCR on verified image bytes in memory.
-
-        Returns:
-            tuple[str, float | None]: (extracted_raw_text, confidence_score_0_to_100)
         """
         ...
 
 
 class TesseractOcrAdapter(BaseOcrAdapter):
     """
-    Adapter implementing offline OCR using Tesseract and Pillow.
+    Adapter implementing offline OCR using Tesseract, OpenCV, and Pillow.
+    Features dual-pass preprocessing (normalized grayscale vs deskewed binary)
+    and deterministic discrepancy auditing between passes.
     """
 
     def __init__(
@@ -104,24 +127,80 @@ class TesseractOcrAdapter(BaseOcrAdapter):
         """Verifies whether the Tesseract executable is present and callable."""
         return self.resolved_cmd is not None and Path(self.resolved_cmd).is_file()
 
-    def _preprocess_image(self, img: Image.Image) -> Image.Image:
+    def _preprocess_pass_a(self, img_bytes: bytes) -> Image.Image:
         """
-        Applies non-destructive in-memory preprocessing to improve OCR accuracy
-        on packaged food labels (lighting correction, contrast enhancement).
+        Pass A: Normalized grayscale with CLAHE and mild sharpening.
+        Optimal for clear, high-contrast packaging prints.
         """
-        # Convert to grayscale
-        gray = img.convert("L")
+        np_arr = np.frombuffer(img_bytes, np.uint8)
+        cv_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-        # Auto-contrast normalization
-        contrasted = ImageOps.autocontrast(gray, cutoff=2)
+        if cv_img is None:
+            # Fallback to Pillow
+            stream = io.BytesIO(img_bytes)
+            with Image.open(stream) as img:
+                gray = img.convert("L")
+                contrasted = ImageOps.autocontrast(gray, cutoff=2)
+                return ImageEnhance.Sharpness(contrasted).enhance(1.5)
 
-        # Mild sharpness enhancement
-        enhancer = ImageEnhance.Sharpness(contrasted)
-        sharpened = enhancer.enhance(1.5)
+        gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        equalized = clahe.apply(gray)
+        blurred = cv2.GaussianBlur(equalized, (3, 3), 0)
+        sharpened = cv2.addWeighted(equalized, 1.5, blurred, -0.5, 0)
+        return Image.fromarray(sharpened)
 
-        return sharpened
+    def _preprocess_pass_b(self, img_bytes: bytes) -> Image.Image:
+        """
+        Pass B: Deskewed Otsu adaptive thresholding.
+        Optimal for rotated, shaded, or low-contrast packaging.
+        """
+        np_arr = np.frombuffer(img_bytes, np.uint8)
+        cv_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-    def extract_text(self, image_bytes: bytes) -> tuple[str, float | None]:
+        if cv_img is None:
+            stream = io.BytesIO(img_bytes)
+            with Image.open(stream) as img:
+                return img.convert("L").point(lambda p: 255 if p > 128 else 0)
+
+        gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
+        skew_angle = _estimate_skew_angle(gray)
+
+        # Deskew if angle is notable
+        if 1.0 < abs(skew_angle) < 45.0:
+            h, w = gray.shape[:2]
+            center = (w // 2, h // 2)
+            rot_mat = cv2.getRotationMatrix2D(center, -skew_angle, 1.0)
+            gray = cv2.warpAffine(
+                gray, rot_mat, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE
+            )
+
+        # Otsu thresholding
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        return Image.fromarray(binary)
+
+    def _run_tesseract(self, img: Image.Image, psm: int = 6) -> tuple[str, float | None]:
+        config = f"--psm {psm}"
+        raw_text = pytesseract.image_to_string(
+            img,
+            lang="eng",
+            config=config,
+            timeout=int(self.timeout_seconds),
+        )
+        data = pytesseract.image_to_data(
+            img,
+            lang="eng",
+            config=config,
+            output_type=pytesseract.Output.DICT,
+            timeout=int(self.timeout_seconds),
+        )
+        confidences = [
+            float(c) for c in data.get("conf", []) if isinstance(c, (int, float)) and c > 0
+        ]
+        avg_conf = round(sum(confidences) / len(confidences), 1) if confidences else None
+        return raw_text.strip(), avg_conf
+
+    def extract_text(self, image_bytes: bytes) -> OcrEngineOutput:
         if not self.is_available():
             raise OcrEngineUnavailableError(
                 "Tesseract OCR is not installed or configured on the server. "
@@ -129,34 +208,49 @@ class TesseractOcrAdapter(BaseOcrAdapter):
             )
 
         try:
-            stream = io.BytesIO(image_bytes)
-            with Image.open(stream) as img:
-                processed = self._preprocess_image(img)
+            # Pass A: Normalized CLAHE
+            img_a = self._preprocess_pass_a(image_bytes)
+            text_a, conf_a = self._run_tesseract(img_a, psm=6)
 
-                # 1. Extract full text structure
-                raw_text = pytesseract.image_to_string(
-                    processed,
-                    lang="eng",
-                    timeout=int(self.timeout_seconds),
-                )
+            # Pass B: Deskewed Binarization
+            img_b = self._preprocess_pass_b(image_bytes)
+            text_b, conf_b = self._run_tesseract(img_b, psm=4)
 
-                # 2. Extract confidence metrics
-                data = pytesseract.image_to_data(
-                    processed,
-                    lang="eng",
-                    output_type=pytesseract.Output.DICT,
-                    timeout=int(self.timeout_seconds),
-                )
+            # Compare Pass A and Pass B
+            words_a = set(text_a.lower().split())
+            words_b = set(text_b.lower().split())
 
-                # Compute average confidence over recognized words
-                confidences: list[float] = [
-                    float(c) for c in data.get("conf", []) if isinstance(c, (int, float)) and c > 0
-                ]
-                avg_confidence = (
-                    round(sum(confidences) / len(confidences), 1) if confidences else None
-                )
+            discrepancy = False
+            details: list[str] = []
 
-                return raw_text.strip(), avg_confidence
+            # Check word overlap
+            if words_a or words_b:
+                intersection = words_a.intersection(words_b)
+                union = words_a.union(words_b)
+                jaccard = len(intersection) / len(union) if union else 1.0
+                if jaccard < 0.40 and len(words_a) > 5 and len(words_b) > 5:
+                    discrepancy = True
+                    details.append(
+                        "Dual OCR preprocessing passes produced divergent word sets "
+                        f"(overlap: {jaccard * 100:.0f}%)."
+                    )
+
+            # Choose primary text: the richer extraction
+            if len(text_b) > len(text_a) * 1.3:
+                primary_text = text_b
+                primary_conf = conf_b
+            else:
+                primary_text = text_a
+                primary_conf = conf_a
+
+            return OcrEngineOutput(
+                raw_text=primary_text,
+                confidence=primary_conf,
+                pass_a_text=text_a,
+                pass_b_text=text_b,
+                pass_discrepancy=discrepancy,
+                discrepancy_details=details,
+            )
 
         except pytesseract.TesseractTimeoutError:
             raise OcrTimeoutError(self.timeout_seconds) from None
@@ -182,15 +276,30 @@ class MockOcrAdapter(BaseOcrAdapter):
         mock_confidence: float | None = 90.0,
         should_timeout: bool = False,
         should_fail: bool = False,
+        pass_a_text: str | None = None,
+        pass_b_text: str | None = None,
+        pass_discrepancy: bool = False,
     ) -> None:
         self.mock_text = mock_text
         self.mock_confidence = mock_confidence
         self.should_timeout = should_timeout
         self.should_fail = should_fail
+        self.pass_a_text = pass_a_text or mock_text
+        self.pass_b_text = pass_b_text or mock_text
+        self.pass_discrepancy = pass_discrepancy
 
-    def extract_text(self, image_bytes: bytes) -> tuple[str, float | None]:
+    def extract_text(self, image_bytes: bytes) -> OcrEngineOutput:
         if self.should_timeout:
             raise OcrTimeoutError(15.0)
         if self.should_fail:
             raise OcrEngineError("OCR_MOCK_FAILURE", "Simulated OCR failure.")
-        return self.mock_text, self.mock_confidence
+        return OcrEngineOutput(
+            raw_text=self.mock_text,
+            confidence=self.mock_confidence,
+            pass_a_text=self.pass_a_text,
+            pass_b_text=self.pass_b_text,
+            pass_discrepancy=self.pass_discrepancy,
+            discrepancy_details=["Simulated dual-pass discrepancy"]
+            if self.pass_discrepancy
+            else [],
+        )

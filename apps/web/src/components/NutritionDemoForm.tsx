@@ -56,6 +56,11 @@ export const NutritionDemoForm: React.FC = () => {
   const [nutritionResult, setNutritionResult] = useState<NutritionAnalysisResponse | null>(null);
   const [ingredientResult, setIngredientResult] = useState<IngredientAnalysisResponse | null>(null);
   const [activeProductName, setActiveProductName] = useState<string>("");
+  const [ocrProvenance, setOcrProvenance] = useState<{
+    isOcr: boolean;
+    isConfirmed: boolean;
+    unconfirmedCount: number;
+  } | null>(null);
 
   const handleClear = () => {
     setProductName("");
@@ -78,6 +83,7 @@ export const NutritionDemoForm: React.FC = () => {
     setNutritionResult(null);
     setIngredientResult(null);
     setActiveProductName("");
+    setOcrProvenance(null);
   };
 
   const handleLoadSample = () => {
@@ -145,6 +151,27 @@ export const NutritionDemoForm: React.FC = () => {
         setGeneralError("Serving size must be a positive number.");
         return;
       }
+    }
+
+    // Failure-safe input consistency checks before API submission
+    const parsedAdded = parseOptionalNumber(addedSugarG);
+    const parsedTotalSugar = parseOptionalNumber(totalSugarG);
+    if (parsedAdded !== null && parsedTotalSugar !== null && parsedAdded > (parsedTotalSugar + 0.05)) {
+      setGeneralError(
+        `Input Inconsistency: Added sugars (${parsedAdded}g) cannot exceed Total sugars (${parsedTotalSugar}g). ` +
+        "Please verify your package label or correct the values."
+      );
+      return;
+    }
+
+    const parsedSat = parseOptionalNumber(saturatedFatG);
+    const parsedTotalFat = parseOptionalNumber(totalFatG);
+    if (parsedSat !== null && parsedTotalFat !== null && parsedSat > (parsedTotalFat + 0.05)) {
+      setGeneralError(
+        `Input Inconsistency: Saturated fat (${parsedSat}g) cannot exceed Total fat (${parsedTotalFat}g). ` +
+        "Please check the values against the label."
+      );
+      return;
     }
 
     setLoading(true);
@@ -222,6 +249,7 @@ export const NutritionDemoForm: React.FC = () => {
   const handleTransferFromOcr = (values: TransferredValues) => {
     if (values.servingSize !== undefined && values.servingSize !== "") setServingSize(values.servingSize);
     if (values.servingUnit !== undefined) setServingUnit(values.servingUnit);
+    if (values.basis !== undefined) setBasis(values.basis);
     if (values.energyKcal !== undefined && values.energyKcal !== "") setEnergyKcal(values.energyKcal);
     if (values.proteinG !== undefined && values.proteinG !== "") setProteinG(values.proteinG);
     if (values.carbohydratesG !== undefined && values.carbohydratesG !== "") setCarbohydratesG(values.carbohydratesG);
@@ -234,7 +262,14 @@ export const NutritionDemoForm: React.FC = () => {
     if (values.cholesterolMg !== undefined && values.cholesterolMg !== "") setCholesterolMg(values.cholesterolMg);
     if (values.sodiumMg !== undefined && values.sodiumMg !== "") setSodiumMg(values.sodiumMg);
     if (values.ingredientsText !== undefined && values.ingredientsText !== "") setIngredientsText(values.ingredientsText);
+
+    setOcrProvenance({
+      isOcr: true,
+      isConfirmed: values.isConfirmed ?? false,
+      unconfirmedCount: values.unconfirmedCount ?? 0,
+    });
   };
+
 
   return (
     <>
@@ -266,6 +301,30 @@ export const NutritionDemoForm: React.FC = () => {
       <p style={{ marginTop: "0.5rem", marginBottom: "1.25rem", color: "var(--color-text-muted)" }}>
         Enter nutrition panel values and ingredients declaration from the physical package. Missing values are preserved as unknown and are never assumed to be zero.
       </p>
+
+      {/* OCR Provenance Notice */}
+      {ocrProvenance?.isOcr && (
+        <div
+          role="status"
+          style={{
+            marginBottom: "1.25rem",
+            padding: "0.6rem 0.85rem",
+            backgroundColor: ocrProvenance.isConfirmed ? "#f0fdf4" : "#fffbeb",
+            color: ocrProvenance.isConfirmed ? "#166534" : "#92400e",
+            border: `1px solid ${ocrProvenance.isConfirmed ? "#86efac" : "#fde68a"}`,
+            borderRadius: "6px",
+            fontSize: "0.85rem",
+          }}
+        >
+          {ocrProvenance.isConfirmed ? (
+            <strong>✓ Values were imported from label OCR and confirmed by the user.</strong>
+          ) : (
+            <span>
+              <strong>Notice:</strong> Values were imported from packaging OCR ({ocrProvenance.unconfirmedCount} unconfirmed). Please check values against your physical package before calculating.
+            </span>
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleAnalyze} style={{ display: "grid", gap: "1.25rem" }}>
         {/* Product Identity */}
@@ -726,6 +785,22 @@ export const NutritionDemoForm: React.FC = () => {
                     ))}
                   </div>
                 </div>
+              )}
+
+              {/* Deterministic Calculation Assumptions & Audit Trail */}
+              {nutritionResult.calculation_assumptions && Object.keys(nutritionResult.calculation_assumptions).length > 0 && (
+                <details style={{ marginTop: "1rem", fontSize: "0.75rem", color: "#64748b" }}>
+                  <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+                    Deterministic Calculation Audit &amp; Mathematical Assumptions
+                  </summary>
+                  <ul style={{ paddingLeft: "1.25rem", marginTop: "0.35rem", marginBottom: 0 }}>
+                    {Object.entries(nutritionResult.calculation_assumptions).map(([key, val]) => (
+                      <li key={key}>
+                        <strong>{key.replace(/_/g, " ")}:</strong> {val}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               )}
             </article>
           )}

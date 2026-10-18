@@ -108,3 +108,6 @@ class NutritionAnalysisResult:
 
     # Everyday quantity explanations for consumers
     everyday_explanations: list[Any] = field(default_factory=list)
+
+    # Deterministic calculation assumptions and audit trace
+    calculation_assumptions: dict[str, str] = field(default_factory=dict)

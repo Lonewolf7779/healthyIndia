@@ -81,6 +81,7 @@ export interface NutritionAnalysisResponse {
   missing_nutrients: string[];
   disclaimer: string;
   everyday_explanations?: EverydayExplanation[];
+  calculation_assumptions?: Record<string, string>;
 }
 
 export interface SourceReference {
@@ -132,12 +133,37 @@ export interface IngredientAnalysisResponse {
   disclaimer: string;
 }
 
+export interface ImageQualityMetrics {
+  width: number;
+  height: number;
+  total_pixels: number;
+  sharpness_score: number;
+  glare_ratio: number;
+  mean_luminance: number;
+  contrast_std: number;
+  estimated_skew_degrees: number;
+  min_content_margin_px: number;
+}
+
+export interface ImageQualityAssessment {
+  is_acceptable: boolean;
+  grade: "good" | "fair" | "poor";
+  metrics: ImageQualityMetrics;
+  warnings: ExtractionWarning[];
+  disclaimer: string;
+}
+
 export interface ExtractedNutrientCandidate {
   field_name: string;
   raw_text: string;
   value: number | null;
   unit: string | null;
   confidence: number | null;
+  source?: "ocr" | "manual" | "converted";
+  status?: "unconfirmed" | "confirmed" | "edited";
+  plausibility?: "plausible" | "suspicious" | "contradictory";
+  plausibility_warning?: string | null;
+  column?: string | null;
 }
 
 export interface ExtractionWarning {
@@ -147,9 +173,16 @@ export interface ExtractionWarning {
 
 export interface OcrExtractionResponse {
   raw_text: string;
+  pass_a_text?: string | null;
+  pass_b_text?: string | null;
+  pass_discrepancy?: boolean;
+  image_quality?: ImageQualityAssessment | null;
+  column_basis_detected?: string;
   nutrition_lines: string[];
   ingredients_text: string | null;
   nutrient_candidates: Record<string, ExtractedNutrientCandidate>;
+  per_100_candidates?: Record<string, ExtractedNutrientCandidate>;
+  per_serving_candidates?: Record<string, ExtractedNutrientCandidate>;
   serving_size_candidate: number | null;
   serving_unit_candidate: string | null;
   overall_confidence: number | null;
