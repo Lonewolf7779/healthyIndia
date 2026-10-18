@@ -2,6 +2,20 @@
 In-memory session state store for OCR extraction sessions.
 Maintains transient server-side extraction state to record candidate values,
 track user corrections, and enforce stateful confirmation integrity.
+
+DEPLOYMENT BEHAVIOR & ARCHITECTURAL ASSUMPTIONS:
+1. Process-Local & Volatile:
+   ExtractionSessionStore is strictly in-memory within the active server process.
+2. Deployment Constraint (MVP):
+   Requires single-process execution (e.g. uvicorn with 1 worker) or sticky-session routing
+   at the load balancer / reverse proxy layer.
+3. Fail-Closed Resilience:
+   If an instance restarts or a confirmation request routes to a worker lacking the session,
+   the server MUST fail closed (HTTP 404/410). It MUST NEVER silently fall back to issuing a
+   confirmation token without authenticating active server-side session state.
+4. Production Scaling Roadmap:
+   For distributed multi-instance horizontal scaling without sticky sessions, this in-memory
+   store should be replaced by a shared TTL key-value backend (such as Redis or Memcached).
 """
 
 import threading
@@ -75,11 +89,13 @@ class ExtractionSessionStore:
             self._sessions[extraction_id] = session
             return session
 
-    def get_session(self, extraction_id: str) -> ExtractionSession | None:
+    def get_session(
+        self, extraction_id: str, current_time: float | None = None
+    ) -> ExtractionSession | None:
         """
         Retrieves an active session by extraction_id if not expired.
         """
-        now = time.time()
+        now = current_time if current_time is not None else time.time()
         with self._lock:
             session = self._sessions.get(extraction_id)
             if session is None:
@@ -94,13 +110,14 @@ class ExtractionSessionStore:
         extraction_id: str,
         confirmed_digest: str,
         confirmed_values: dict[str, Any],
+        current_time: float | None = None,
     ) -> tuple[bool, str, ExtractionSession | None]:
         """
         Records user confirmation in the session state.
         Computes differences between original OCR candidate values and confirmed values
         to transparently track user edits and corrections.
         """
-        now = time.time()
+        now = current_time if current_time is not None else time.time()
         with self._lock:
             session = self._sessions.get(extraction_id)
             if session is None:

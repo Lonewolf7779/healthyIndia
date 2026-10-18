@@ -21,6 +21,7 @@ from app.core.security import (
 )
 from app.main import app
 from app.schemas.nutrition import compute_nutrition_values_hash
+from app.services.session_store import session_store
 
 
 @pytest.fixture
@@ -558,15 +559,140 @@ def test_api_rejects_altered_values_with_recomputed_ordinary_sha256(client):
     assert "Unkeyed SHA-256 hash or malformed token detected" in res.text
 
 
+def test_api_confirm_valid_active_session_succeeds(client):
+    """Confirming a valid active session in session_store succeeds (200 OK)."""
+    session_id = str(uuid.uuid4())
+    token = generate_extraction_token(extraction_id=session_id)
+
+    class MockCandidate:
+        def __init__(self, value):
+            self.value = value
+
+    session_store.save_session(
+        extraction_id=session_id,
+        raw_text="Sample text",
+        candidates={"energy_kcal": MockCandidate(150.0)},
+    )
+
+    req = {
+        "extraction_id": session_id,
+        "extraction_token": token,
+        "serving_size": 30.0,
+        "serving_unit": "g",
+        "basis": "per_serving",
+        "food_form": "solid",
+        "energy_kcal": 150.0,
+    }
+    res = client.post("/api/v1/extraction/confirm", json=req)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "confirmed"
+    assert data["extraction_id"] == session_id
+    assert data["confirmed_values_hash"].startswith("c1.")
+    assert data["user_modified"] is False
+
+
+def test_api_confirm_rejects_missing_session(client):
+    """
+    FAIL-CLOSED REGRESSION TEST:
+    Confirming an extraction ID that is missing from session_store must be rejected with 404.
+    A server-keyed confirmation token must NEVER be issued for an absent session.
+    """
+    missing_id = str(uuid.uuid4())
+    token = generate_extraction_token(extraction_id=missing_id)
+
+    req = {
+        "extraction_id": missing_id,
+        "extraction_token": token,
+        "serving_size": 30.0,
+        "serving_unit": "g",
+        "basis": "per_serving",
+        "food_form": "solid",
+        "energy_kcal": 150.0,
+    }
+    res = client.post("/api/v1/extraction/confirm", json=req)
+    assert res.status_code == 404
+    data = res.json()
+    assert data["error"]["code"] == "SESSION_NOT_FOUND"
+    assert "not found in active session store" in data["error"]["message"]
+
+
+def test_api_confirm_rejects_expired_session(client):
+    """
+    FAIL-CLOSED REGRESSION TEST:
+    Confirming an extraction session older than TTL (3600s) must be rejected with 410 Gone.
+    """
+    expired_id = str(uuid.uuid4())
+    token = generate_extraction_token(extraction_id=expired_id)
+
+    # Save session created 4000 seconds ago
+    session_store.save_session(
+        extraction_id=expired_id,
+        raw_text="Expired text",
+        candidates={},
+        created_at=time.time() - 4000,
+    )
+
+    req = {
+        "extraction_id": expired_id,
+        "extraction_token": token,
+        "serving_size": 30.0,
+        "serving_unit": "g",
+        "basis": "per_serving",
+        "food_form": "solid",
+        "energy_kcal": 150.0,
+    }
+    res = client.post("/api/v1/extraction/confirm", json=req)
+    assert res.status_code == 410
+    data = res.json()
+    assert data["error"]["code"] == "SESSION_EXPIRED"
+    assert "has expired" in data["error"]["message"]
+
+
+def test_api_confirm_rejects_invalid_extraction_token(client):
+    """Confirming a session with a tampered or invalid extraction token must fail with 422."""
+    session_id = str(uuid.uuid4())
+    session_store.save_session(
+        extraction_id=session_id,
+        raw_text="Valid session",
+        candidates={},
+    )
+
+    req = {
+        "extraction_id": session_id,
+        "extraction_token": "v1.invalid.token.signature",
+        "serving_size": 30.0,
+        "serving_unit": "g",
+        "basis": "per_serving",
+        "food_form": "solid",
+        "energy_kcal": 150.0,
+    }
+    res = client.post("/api/v1/extraction/confirm", json=req)
+    assert res.status_code == 422
+    assert "Extraction session authentication failed" in res.text
+
+
 def test_api_accepts_legitimate_user_corrections_via_confirmation_endpoint(client):
     """
     LEGITIMATE CORRECTION WORKFLOW:
     User inspects OCR results, corrects an OCR misread error (e.g. 74.0g sugar -> 14.0g sugar),
-    confirms the reviewed values via /api/v1/extraction/confirm, receives a server-keyed
-    confirmation token, and successfully analyzes the corrected values (200 OK).
+    confirms the reviewed values via /api/v1/extraction/confirm against an active session,
+    receives a server-keyed confirmation token, and successfully analyzes the corrected
+    values (200 OK).
     """
     extraction_id = str(uuid.uuid4())
     token = generate_extraction_token(extraction_id=extraction_id)
+
+    class MockCandidate:
+        def __init__(self, value):
+            self.value = value
+
+    # Register active session where OCR candidate initially read 74.0g sugar
+    session_store.save_session(
+        extraction_id=extraction_id,
+        raw_text="Raw OCR text with Total Sugar 74g",
+        candidates={"total_sugar_g": MockCandidate(74.0)},
+    )
 
     # User-reviewed values with correction (14.0g instead of OCR misread 74.0g)
     corrected_nutrients = {
@@ -598,6 +724,8 @@ def test_api_accepts_legitimate_user_corrections_via_confirmation_endpoint(clien
     confirm_data = confirm_res.json()
     assert confirm_data["status"] == "confirmed"
     assert confirm_data["extraction_id"] == extraction_id
+    assert confirm_data["user_modified"] is True
+    assert "total_sugar_g" in confirm_data["modified_fields"]
     server_token = confirm_data["confirmed_values_hash"]
     assert server_token.startswith("c1.")
 

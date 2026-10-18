@@ -129,17 +129,29 @@ async def confirm_ocr_values(
         nutrients=nutrients_map,
     )
 
-    # 3. Check and update server-side session state (if session exists)
-    _, _, session = session_store.confirm_session(
+    # 3. Check and update server-side session state (FAIL-CLOSED)
+    ok, session_msg, session = session_store.confirm_session(
         extraction_id=request.extraction_id,
         confirmed_digest=canonical_digest,
         confirmed_values=nutrients_map,
     )
+    if not ok or session is None:
+        status_code = (
+            status.HTTP_410_GONE if "expired" in session_msg.lower() else status.HTTP_404_NOT_FOUND
+        )
+        err_code = "SESSION_EXPIRED" if status_code == status.HTTP_410_GONE else "SESSION_NOT_FOUND"
+        raise HTTPException(
+            status_code=status_code,
+            detail={
+                "code": err_code,
+                "message": f"Server extraction session confirmation failed: {session_msg}",
+            },
+        )
 
-    user_modified = session.user_modified if session else False
-    modified_fields = session.modified_fields if session else []
+    user_modified = session.user_modified
+    modified_fields = session.modified_fields
 
-    # 4. Generate server-keyed confirmation token
+    # 4. Generate server-keyed confirmation token ONLY after verified session confirmation
     confirmation_token = generate_confirmation_token(
         extraction_id=request.extraction_id,
         values_digest=canonical_digest,
