@@ -104,6 +104,14 @@ class OcrExtractionResponse(BaseModel):
     verification_required: bool = Field(
         True, description="Always true. All OCR extraction requires manual user review."
     )
+    extraction_id: str = Field(
+        default="",
+        description="Unique identifier for this OCR extraction session.",
+    )
+    extraction_token: str = Field(
+        default="",
+        description="Cryptographic token certifying provenance of this OCR extraction.",
+    )
     disclaimer: str = Field(
         ...,
         description=(

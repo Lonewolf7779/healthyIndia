@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HealthyIndiaRealWorldLabelAnnotation",
+  "description": "Schema template for real-world packaging photo ground truth annotations in healthyIndia.",
+  "sample_id": "RFL-000",
+  "product_name": "Example Real Indian Packaged Food Name",
+  "brand": "Example Brand",
+  "fssai_license": "10012011000001",
+  "barcode": "8901030000001",
+  "category": "Savory Snacks & Extruded Namkeen",
+  "packaging_format": "pouch",
+  "image_filename": "RFL-000_sample.jpg",
+  "image_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "capture_metadata": {
+    "lighting_condition": "L1",
+    "camera_angle": "A1",
+    "framing": "F1",
+    "packaging_state": "S1",
+    "device_description": "Standard smartphone camera"
+  },
+  "ground_truth_nutrition": {
+    "declaration_basis": "per_100g",
+    "serving_size": 100.0,
+    "serving_unit": "g",
+    "food_form": "solid",
+    "nutrients": {
+      "energy_kcal": 500.0,
+      "protein_g": 7.0,
+      "carbohydrates_g": 60.0,
+      "total_sugar_g": 10.0,
+      "added_sugar_g": 5.0,
+      "dietary_fiber_g": 2.5,
+      "total_fat_g": 25.0,
+      "saturated_fat_g": 10.0,
+      "trans_fat_g": 0.1,
+      "cholesterol_mg": null,
+      "sodium_mg": 600.0
+    },
+    "dual_column_values": null
+  },
+  "ground_truth_ingredients_text": "Ingredients: Example Ingredient 1, Example Ingredient 2.",
+  "verification": {
+    "annotator_1": "AnnotatorA",
+    "annotator_2": "AnnotatorB",
+    "verified_date": "2026-10-18",
+    "status": "DOUBLE_VERIFIED"
+  }
+}

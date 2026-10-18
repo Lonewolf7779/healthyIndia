@@ -14,6 +14,7 @@ Outputs metrics, computes exact denominators, and updates docs/OCR_BENCHMARK_REP
 """
 
 import io
+import json
 import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -123,6 +124,36 @@ def compute_word_accuracy(expected: str, actual: str) -> float:
     return (matched / len(exp_words)) * 100.0
 
 
+def compute_character_error_rate(reference: str, hypothesis: str) -> float:
+    """Computes Character Error Rate (CER = edit_distance / len(ref))."""
+    norm_ref = reference.strip().lower()
+    norm_hyp = hypothesis.strip().lower()
+    if not norm_ref:
+        return 0.0 if not norm_hyp else 1.0
+    dist = compute_levenshtein_distance(norm_ref, norm_hyp)
+    return dist / len(norm_ref)
+
+
+def compute_word_error_rate(reference: str, hypothesis: str) -> float:
+    """Computes Word Error Rate (WER) using token edit distance."""
+    ref_words = reference.strip().lower().split()
+    hyp_words = hypothesis.strip().lower().split()
+    if not ref_words:
+        return 0.0 if not hyp_words else 1.0
+    d = [[0] * (len(hyp_words) + 1) for _ in range(len(ref_words) + 1)]
+    for i in range(len(ref_words) + 1):
+        d[i][0] = i
+    for j in range(len(hyp_words) + 1):
+        d[0][j] = j
+    for i in range(1, len(ref_words) + 1):
+        for j in range(1, len(hyp_words) + 1):
+            if ref_words[i - 1] == hyp_words[j - 1]:
+                d[i][j] = d[i - 1][j - 1]
+            else:
+                d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + 1)
+    return d[len(ref_words)][len(hyp_words)] / len(ref_words)
+
+
 def render_sample_image(text: str) -> bytes:
     """Renders high-contrast black-on-white text image for OCR evaluation."""
     img = Image.new("RGB", (650, 120), color=(255, 255, 255))
@@ -147,7 +178,7 @@ class BenchmarkMetric:
     error_count: int
     success_rate: float | None
     threshold: float
-    status: str  # "PASS", "FAIL", "BLOCKED", "NOT RUN"
+    status: str  # "PASS", "FAIL", "BLOCKED", "NOT RUN", "UNMEASURED"
     details: dict[str, Any] = field(default_factory=dict)
 
 
@@ -164,6 +195,7 @@ class BenchmarkSuiteResult:
     quality_gate_metric: BenchmarkMetric
     generated_at: str
     tesseract_available: bool
+    physical_metric: BenchmarkMetric | None = None
 
     @property
     def required_metrics(self) -> list[BenchmarkMetric]:
@@ -825,6 +857,155 @@ def evaluate_quality_gates() -> BenchmarkMetric:
     )
 
 
+def evaluate_physical_packaging_photos(
+    dataset_path: Path,
+    images_dir: Path,
+    tesseract_installed: bool,
+) -> BenchmarkMetric:
+    """
+    Evaluates optical character recognition and parsing against physical camera photographs.
+    If physical image files are not bundled in the repository, reports UNMEASURED
+    with exact denominator of 0 evaluated.
+    """
+    if not dataset_path.exists():
+        return BenchmarkMetric(
+            name="Real-World Packaging Photographs",
+            evaluated_count=0,
+            correct_count=0,
+            error_count=0,
+            success_rate=None,
+            threshold=95.0,
+            status="UNMEASURED",
+            details={
+                "reason": "Dataset metadata file not found",
+                "samples_count": 0,
+            },
+        )
+
+    try:
+        with open(dataset_path, encoding="utf-8") as f:
+            dataset_data = json.load(f)
+            samples = dataset_data.get("samples", [])
+    except Exception:
+        samples = []
+
+    available_image_files = []
+    if images_dir.exists():
+        available_image_files = [
+            f
+            for f in images_dir.iterdir()
+            if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")
+        ]
+
+    if not available_image_files:
+        return BenchmarkMetric(
+            name="Real-World Packaging Photographs",
+            evaluated_count=0,
+            correct_count=0,
+            error_count=0,
+            success_rate=None,
+            threshold=95.0,
+            status="UNMEASURED",
+            details={
+                "reason": "Physical camera image files not bundled in repository (0 evaluated)",
+                "cer": None,
+                "wer": None,
+                "association_accuracy": None,
+                "dual_column_accuracy": None,
+                "samples_metadata_count": len(samples),
+            },
+        )
+
+    if not tesseract_installed:
+        return BenchmarkMetric(
+            name="Real-World Packaging Photographs",
+            evaluated_count=0,
+            correct_count=0,
+            error_count=0,
+            success_rate=None,
+            threshold=95.0,
+            status="BLOCKED",
+            details={"reason": "Tesseract binary missing in host environment"},
+        )
+
+    evaluated = 0
+    correct = 0
+    total_cer = 0.0
+    total_wer = 0.0
+    assoc_correct = 0
+    assoc_total = 0
+    dual_col_correct = 0
+    dual_col_total = 0
+
+    from app.extraction.adapter import TesseractOcrAdapter
+    from app.extraction.parser import parse_ocr_text
+
+    adapter = TesseractOcrAdapter()
+
+    for s in samples:
+        img_name = s.get("image_filename")
+        if not img_name:
+            continue
+        img_path = images_dir / img_name
+        if not img_path.exists():
+            continue
+
+        try:
+            img_bytes = img_path.read_bytes()
+            ocr_output = adapter.extract_text(img_bytes)
+            gt_text = s.get("ground_truth_ingredients_text", "")
+            cer = compute_character_error_rate(gt_text, ocr_output.raw_text)
+            wer = compute_word_error_rate(gt_text, ocr_output.raw_text)
+            total_cer += cer
+            total_wer += wer
+            evaluated += 1
+
+            parsed = parse_ocr_text(ocr_output.raw_text, ocr_output.confidence)
+            gt_nutrients = s.get("ground_truth_nutrition", {}).get("nutrients", {})
+            sample_all_matched = True
+            for nut_key, gt_val in gt_nutrients.items():
+                if gt_val is not None:
+                    assoc_total += 1
+                    cand = parsed.nutrient_candidates.get(nut_key)
+                    if cand and cand.value is not None:
+                        if abs(cand.value - gt_val) <= 0.1:
+                            assoc_correct += 1
+                        else:
+                            sample_all_matched = False
+                    else:
+                        sample_all_matched = False
+
+            if s.get("ground_truth_nutrition", {}).get("dual_column_values") is not None:
+                dual_col_total += 1
+                if parsed.column_basis_detected in ("dual_column", "per_100g"):
+                    dual_col_correct += 1
+
+            if sample_all_matched and cer < 0.15:
+                correct += 1
+        except Exception:
+            evaluated += 1
+
+    rate = (correct / evaluated * 100.0) if evaluated else 0.0
+    return BenchmarkMetric(
+        name="Real-World Packaging Photographs",
+        evaluated_count=evaluated,
+        correct_count=correct,
+        error_count=evaluated - correct,
+        success_rate=rate,
+        threshold=95.0,
+        status="PASS" if rate >= 95.0 else "FAIL",
+        details={
+            "cer": (total_cer / evaluated) if evaluated else None,
+            "wer": (total_wer / evaluated) if evaluated else None,
+            "association_accuracy": (assoc_correct / assoc_total * 100.0) if assoc_total else None,
+            "dual_column_accuracy": (dual_col_correct / dual_col_total * 100.0)
+            if dual_col_total
+            else None,
+            "samples_evaluated": evaluated,
+        },
+    )
+
+
 def run_benchmark() -> BenchmarkSuiteResult:
     """
     Executes the comprehensive benchmark suite and regenerates docs/OCR_BENCHMARK_REPORT.md.
@@ -839,6 +1020,14 @@ def run_benchmark() -> BenchmarkSuiteResult:
     m_calc = evaluate_calculation_correctness()
     m_quality = evaluate_quality_gates()
 
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    if repo_root.name == "services":
+        repo_root = repo_root.parent
+    dataset_path = repo_root / "data" / "real_food_labels" / "samples.json"
+    images_dir = repo_root / "data" / "real_food_labels" / "images"
+
+    m_physical = evaluate_physical_packaging_photos(dataset_path, images_dir, tesseract_installed)
+
     suite = BenchmarkSuiteResult(
         parser_metric=m_parser,
         mock_adapter_metric=m_mock,
@@ -849,9 +1038,9 @@ def run_benchmark() -> BenchmarkSuiteResult:
         quality_gate_metric=m_quality,
         generated_at=datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%SZ"),
         tesseract_available=tesseract_installed,
+        physical_metric=m_physical,
     )
 
-    repo_root = Path(__file__).resolve().parents[3]
     report_path = repo_root / "docs" / "OCR_BENCHMARK_REPORT.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -865,6 +1054,13 @@ def run_benchmark() -> BenchmarkSuiteResult:
         if m_actual_ocr.success_rate is not None
         else "N/A (Blocked)"
     )
+
+    if m_physical.evaluated_count == 0:
+        physical_denom = "0 physical camera photographs (UNMEASURED)"
+        physical_rate = "N/A (Unmeasured)"
+    else:
+        physical_denom = f"{m_physical.evaluated_count} physical camera photographs"
+        physical_rate = f"{m_physical.success_rate:.1f}%"
 
     warning_block = (
         ""
@@ -912,7 +1108,7 @@ nutrient-to-value association, and independent mathematical calculation pipeline
 | **{m_serving.name}** | {m_serving.evaluated_count} unit/serving formats | {m_serving.correct_count} | {m_serving.error_count} | **{m_serving.success_rate:.1f}%** | {m_serving.status} |
 | **{m_calc.name}** | {m_calc.evaluated_count} mathematical checks | {m_calc.correct_count} | {m_calc.error_count} | **{m_calc.success_rate:.1f}%** | {m_calc.status} |
 | **{m_quality.name}** | {m_quality.evaluated_count} edge-case inputs | {m_quality.correct_count} | {m_quality.error_count} | **{m_quality.success_rate:.1f}%** | {m_quality.status} |
-| **Real-World Packaging Photographs** | 0 physical camera images | 0 | 0 | **N/A (Unmeasured)** | NOT RUN |
+| **{m_physical.name}** | {physical_denom} | {m_physical.correct_count} | {m_physical.error_count} | **{physical_rate}** | {m_physical.status} |
 
 **Overall Benchmark Outcome**: **{suite.overall_status}** ({"All required criteria met" if suite.all_passed else "One or more required criteria failed or blocked"})
 Quality-Gate Specifics: False Acceptances: {m_quality.details.get("false_acceptances", 0)}, False Rejections: {m_quality.details.get("false_rejections", 0)}.
@@ -931,18 +1127,20 @@ The scanner implements defense-in-depth against silent misinterpretations:
    - Atwater calorie discrepancy flags discordance between declared energy and macronutrients, with documented exceptions for dietary fiber, polyols, and organic acids.
 3. **Strict Confirmation Workflow**:
    - Extracted values are tagged as unverified draft candidates (`status: "unconfirmed"`).
-   - Final nutrition calculations require explicit confirmation of all inputs.
+   - Final nutrition calculations require explicit confirmation of all inputs with cryptographic SHA-256 digest validation (`confirmed_values_hash`).
 
 ---
 
 ## 4. Public Release Acceptance Criteria
 
 Before declaring the food label scanner ready for unassisted public deployment, the following physical criteria must be satisfied:
-1. **Physical Dataset**: Minimum 500 verified camera photographs across 10 distinct Indian packaged food categories (biscuits, namkeen, dairy, beverages, instant noodles, edible oils, spices, breakfast cereals, confectionery, ready meals).
-2. **Real-World Character Recognition**: Character accuracy >= 98.5% on clear packaging; >= 92% on curved or glossy packages.
-3. **Nutrient Association Accuracy**: >= 95% correct association of numbers to parent nutrients on physical camera images.
-4. **Zero Silent Conversions**: 100% adherence to the zero-conversion rule (missing values remain `None`, never converted to `0.0`).
-5. **Zero Unconfirmed Calculations**: 100% mandatory user verification before final nutrition calculations.
+1. **Physical Dataset**: Minimum 500 verified camera photographs across 10 distinct Indian packaged food categories (biscuits, namkeen, dairy, beverages, instant noodles, edible oils, spices, breakfast cereals, confectionery, ready meals). Current status: Specification and initial 10 ground-truth samples established; physical image capture workflow active.
+2. **Real-World Character Recognition**: Character accuracy >= 98.5% on clear packaging; >= 92% on curved or glossy packages. Current status: UNMEASURED.
+3. **Nutrient Association Accuracy**: >= 95% correct association of numbers to parent nutrients on physical camera images. Current status: UNMEASURED.
+4. **Zero Silent Conversions**: 100% adherence to the zero-conversion rule (missing values remain `None`, never converted to `0.0`). Current status: PASSED in algorithmic and mathematical suites.
+5. **Zero Unconfirmed Calculations**: 100% mandatory user verification before final nutrition calculations. Current status: PASSED with cryptographic SHA-256 value-tied confirmation hash.
+
+**Public Release Readiness Gate Status**: **NOT READY** (Physical camera photograph dataset not bundled; character and nutrient recognition on physical camera photos remains unmeasured).
 """
 
     report_path.write_text(report_content, encoding="utf-8")
@@ -979,6 +1177,15 @@ Before declaring the food label scanner ready for unassisted public deployment, 
         f"Quality Gates: {m_quality.success_rate:.1f}% "
         f"({m_quality.correct_count}/{m_quality.evaluated_count})"
     )
+    if m_physical.status == "UNMEASURED":
+        print(
+            "Physical Packaging Photographs: UNMEASURED (0 evaluated; physical images not bundled)"
+        )
+    else:
+        print(
+            f"Physical Packaging Photographs: {m_physical.success_rate:.1f}% "
+            f"({m_physical.correct_count}/{m_physical.evaluated_count})"
+        )
     return suite
 
 

@@ -1,6 +1,6 @@
 # Food Label OCR & Deterministic Parsing Benchmark Report
 
-Generated: 2026-10-18 09:54:42Z
+Generated: 2026-10-18 10:41:15Z
 Environment: Local deterministic test framework with OpenCV & Tesseract (Tesseract runtime present: True)
 Overall Suite Status: **PASS**
 
@@ -32,7 +32,7 @@ nutrient-to-value association, and independent mathematical calculation pipeline
 | **Serving-Size & Unit Interpretation** | 6 unit/serving formats | 6 | 0 | **100.0%** | PASS |
 | **Independent Numerical Calculation Correctness** | 32 mathematical checks | 32 | 0 | **100.0%** | PASS |
 | **Computer Vision Quality-Gate Decisions** | 7 edge-case inputs | 7 | 0 | **100.0%** | PASS |
-| **Real-World Packaging Photographs** | 0 physical camera images | 0 | 0 | **N/A (Unmeasured)** | NOT RUN |
+| **Real-World Packaging Photographs** | 0 physical camera photographs (UNMEASURED) | 0 | 0 | **N/A (Unmeasured)** | UNMEASURED |
 
 **Overall Benchmark Outcome**: **PASS** (All required criteria met)
 Quality-Gate Specifics: False Acceptances: 0, False Rejections: 0.
@@ -51,15 +51,17 @@ The scanner implements defense-in-depth against silent misinterpretations:
    - Atwater calorie discrepancy flags discordance between declared energy and macronutrients, with documented exceptions for dietary fiber, polyols, and organic acids.
 3. **Strict Confirmation Workflow**:
    - Extracted values are tagged as unverified draft candidates (`status: "unconfirmed"`).
-   - Final nutrition calculations require explicit confirmation of all inputs.
+   - Final nutrition calculations require explicit confirmation of all inputs with cryptographic SHA-256 digest validation (`confirmed_values_hash`).
 
 ---
 
 ## 4. Public Release Acceptance Criteria
 
 Before declaring the food label scanner ready for unassisted public deployment, the following physical criteria must be satisfied:
-1. **Physical Dataset**: Minimum 500 verified camera photographs across 10 distinct Indian packaged food categories (biscuits, namkeen, dairy, beverages, instant noodles, edible oils, spices, breakfast cereals, confectionery, ready meals).
-2. **Real-World Character Recognition**: Character accuracy >= 98.5% on clear packaging; >= 92% on curved or glossy packages.
-3. **Nutrient Association Accuracy**: >= 95% correct association of numbers to parent nutrients on physical camera images.
-4. **Zero Silent Conversions**: 100% adherence to the zero-conversion rule (missing values remain `None`, never converted to `0.0`).
-5. **Zero Unconfirmed Calculations**: 100% mandatory user verification before final nutrition calculations.
+1. **Physical Dataset**: Minimum 500 verified camera photographs across 10 distinct Indian packaged food categories (biscuits, namkeen, dairy, beverages, instant noodles, edible oils, spices, breakfast cereals, confectionery, ready meals). Current status: Specification and initial 10 ground-truth samples established; physical image capture workflow active.
+2. **Real-World Character Recognition**: Character accuracy >= 98.5% on clear packaging; >= 92% on curved or glossy packages. Current status: UNMEASURED.
+3. **Nutrient Association Accuracy**: >= 95% correct association of numbers to parent nutrients on physical camera images. Current status: UNMEASURED.
+4. **Zero Silent Conversions**: 100% adherence to the zero-conversion rule (missing values remain `None`, never converted to `0.0`). Current status: PASSED in algorithmic and mathematical suites.
+5. **Zero Unconfirmed Calculations**: 100% mandatory user verification before final nutrition calculations. Current status: PASSED with cryptographic SHA-256 value-tied confirmation hash.
+
+**Public Release Readiness Gate Status**: **NOT READY** (Physical camera photograph dataset not bundled; character and nutrient recognition on physical camera photos remains unmeasured).

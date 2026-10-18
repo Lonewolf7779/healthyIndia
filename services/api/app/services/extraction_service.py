@@ -3,6 +3,10 @@ Orchestration service for food label image extraction and OCR.
 Integrates image validation, quality gates, dual-pass OCR, and deterministic parsing.
 """
 
+import hashlib
+import hmac
+import uuid
+
 from app.core.config import Settings
 from app.extraction.adapter import (
     BaseOcrAdapter,
@@ -129,7 +133,13 @@ class ExtractionService:
                 column=cand.column,
             )
 
-        # 5. Serialize to response schema
+        # 5. Issue extraction session token for cryptographic provenance
+        extraction_id = str(uuid.uuid4())
+        secret_key = self.settings.SECRET_KEY.encode("utf-8")
+        token_msg = f"extraction:{extraction_id}:{len(result.raw_text)}".encode()
+        extraction_token = hmac.new(secret_key, token_msg, hashlib.sha256).hexdigest()
+
+        # 6. Serialize to response schema
         return OcrExtractionResponse(
             raw_text=result.raw_text,
             pass_a_text=ocr_output.pass_a_text,
@@ -151,5 +161,7 @@ class ExtractionService:
             overall_confidence=result.overall_confidence,
             warnings=all_warnings,
             verification_required=result.verification_required,
+            extraction_id=extraction_id,
+            extraction_token=extraction_token,
             disclaimer=result.disclaimer,
         )

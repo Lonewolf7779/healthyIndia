@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useRef, useEffect, useReducer } from "react";
-import { apiClient, OcrExtractionResponse } from "../lib/api/client";
+import {
+  apiClient,
+  OcrExtractionResponse,
+  computeNutritionValuesHash,
+} from "../lib/api/client";
 
 export const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 export const SUPPORTED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -24,6 +28,8 @@ export interface TransferredValues {
   isConfirmed?: boolean;
   unconfirmedCount?: number;
   basis?: "per_serving" | "per_100g" | "per_100ml";
+  extractionToken?: string;
+  confirmedValuesHash?: string;
 }
 
 export interface LabelScannerReviewFields {
@@ -463,6 +469,53 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
   const isAllConfirmed = unconfirmedCount === 0 && activeFields.length > 0;
 
   const handleTransfer = () => {
+    const basisVal: "per_100g" | "per_serving" =
+      state.selectedColumn === "per_100" ? "per_100g" : "per_serving";
+    const foodFormVal =
+      state.reviewFields.servingUnit === "ml" || state.reviewFields.servingUnit === "l"
+        ? "liquid"
+        : "solid";
+    const servingSizeNum = parseFloat(state.reviewFields.servingSize) || 100.0;
+    const nutrientsMap: Record<string, number | null> = {
+      added_sugar_g:
+        state.reviewFields.addedSugarG !== "" ? parseFloat(state.reviewFields.addedSugarG) : null,
+      carbohydrates_g:
+        state.reviewFields.carbohydratesG !== ""
+          ? parseFloat(state.reviewFields.carbohydratesG)
+          : null,
+      cholesterol_mg:
+        state.reviewFields.cholesterolMg !== ""
+          ? parseFloat(state.reviewFields.cholesterolMg)
+          : null,
+      dietary_fiber_g:
+        state.reviewFields.dietaryFiberG !== ""
+          ? parseFloat(state.reviewFields.dietaryFiberG)
+          : null,
+      energy_kcal:
+        state.reviewFields.energyKcal !== "" ? parseFloat(state.reviewFields.energyKcal) : null,
+      protein_g:
+        state.reviewFields.proteinG !== "" ? parseFloat(state.reviewFields.proteinG) : null,
+      saturated_fat_g:
+        state.reviewFields.saturatedFatG !== ""
+          ? parseFloat(state.reviewFields.saturatedFatG)
+          : null,
+      sodium_mg:
+        state.reviewFields.sodiumMg !== "" ? parseFloat(state.reviewFields.sodiumMg) : null,
+      total_fat_g:
+        state.reviewFields.totalFatG !== "" ? parseFloat(state.reviewFields.totalFatG) : null,
+      total_sugar_g:
+        state.reviewFields.totalSugarG !== "" ? parseFloat(state.reviewFields.totalSugarG) : null,
+      trans_fat_g:
+        state.reviewFields.transFatG !== "" ? parseFloat(state.reviewFields.transFatG) : null,
+    };
+    const hash = computeNutritionValuesHash(
+      servingSizeNum,
+      state.reviewFields.servingUnit,
+      basisVal,
+      foodFormVal,
+      nutrientsMap
+    );
+
     onTransferValues({
       servingSize: state.reviewFields.servingSize,
       servingUnit: state.reviewFields.servingUnit,
@@ -480,7 +533,9 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
       ingredientsText: state.reviewFields.ingredientsText,
       isConfirmed: isAllConfirmed,
       unconfirmedCount,
-      basis: state.selectedColumn === "per_100" ? "per_100g" : "per_serving",
+      basis: basisVal,
+      extractionToken: state.ocrResult?.extraction_token,
+      confirmedValuesHash: isAllConfirmed ? hash : undefined,
     });
     dispatch({ type: "VALUES_TRANSFERRED" });
   };

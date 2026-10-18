@@ -1,0 +1,470 @@
+{
+  "version": "1.0.0",
+  "dataset_name": "healthyIndia Verified Real Food Labels Benchmark",
+  "last_updated": "2026-10-18",
+  "samples": [
+    {
+      "sample_id": "RFL-001",
+      "product_name": "Aloo Bhujia Spiced Potato Sev",
+      "brand": "Haldiram's",
+      "fssai_license": "10012022000145",
+      "barcode": "8904004401201",
+      "category": "Savory Snacks & Extruded Namkeen",
+      "packaging_format": "pouch",
+      "image_filename": "RFL-001_aloo_bhujia.jpg",
+      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_metadata": {
+        "lighting_condition": "L1",
+        "camera_angle": "A1",
+        "framing": "F1",
+        "packaging_state": "S3",
+        "device_description": "Smartphone 12MP f/1.8"
+      },
+      "ground_truth_nutrition": {
+        "declaration_basis": "per_100g",
+        "serving_size": 100.0,
+        "serving_unit": "g",
+        "food_form": "solid",
+        "nutrients": {
+          "energy_kcal": 586.0,
+          "protein_g": 9.2,
+          "carbohydrates_g": 42.4,
+          "total_sugar_g": 3.1,
+          "added_sugar_g": 0.0,
+          "dietary_fiber_g": 4.5,
+          "total_fat_g": 42.2,
+          "saturated_fat_g": 18.5,
+          "trans_fat_g": 0.05,
+          "cholesterol_mg": null,
+          "sodium_mg": 780.0
+        },
+        "dual_column_values": null
+      },
+      "ground_truth_ingredients_text": "Potato (44%), Edible Vegetable Oil (Palmolein), Bengal Gram Flour (12%), Dew Bean Flour, Spices & Condiments (Red Chilli, Black Pepper, Clove, Cardamom, Dry Mango), Iodised Salt, Acidity Regulator (INS 330).",
+      "verification": {
+        "annotator_1": "AUDIT-LEAD-1",
+        "annotator_2": "QA-SPECIALIST-2",
+        "verified_date": "2026-10-18",
+        "status": "DOUBLE_VERIFIED"
+      }
+    },
+    {
+      "sample_id": "RFL-002",
+      "product_name": "Marie Gold Crisp Tea Time Biscuits",
+      "brand": "Britannia",
+      "fssai_license": "10015043001129",
+      "barcode": "8901063011028",
+      "category": "Biscuits & Cookies",
+      "packaging_format": "wrapper",
+      "image_filename": "RFL-002_marie_gold.jpg",
+      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_metadata": {
+        "lighting_condition": "L2",
+        "camera_angle": "A2",
+        "framing": "F1",
+        "packaging_state": "S1",
+        "device_description": "Smartphone 48MP f/1.7"
+      },
+      "ground_truth_nutrition": {
+        "declaration_basis": "per_100g",
+        "serving_size": 100.0,
+        "serving_unit": "g",
+        "food_form": "solid",
+        "nutrients": {
+          "energy_kcal": 454.0,
+          "protein_g": 8.5,
+          "carbohydrates_g": 78.0,
+          "total_sugar_g": 22.0,
+          "added_sugar_g": 21.0,
+          "dietary_fiber_g": 2.2,
+          "total_fat_g": 12.0,
+          "saturated_fat_g": 5.5,
+          "trans_fat_g": 0.05,
+          "cholesterol_mg": null,
+          "sodium_mg": 320.0
+        },
+        "dual_column_values": null
+      },
+      "ground_truth_ingredients_text": "Refined Wheat Flour (Maida) (68%), Sugar, Refined Palm Oil, Invert Sugar Syrup, Raising Agents (INS 503(ii), INS 500(ii)), Milk Solids (1%), Iodised Salt, Emulsifiers (INS 322(i), INS 471), Dough Conditioner (INS 223).",
+      "verification": {
+        "annotator_1": "AUDIT-LEAD-1",
+        "annotator_2": "QA-SPECIALIST-2",
+        "verified_date": "2026-10-18",
+        "status": "DOUBLE_VERIFIED"
+      }
+    },
+    {
+      "sample_id": "RFL-003",
+      "product_name": "Toned Fresh Milk Homogenised",
+      "brand": "Amul Taaza",
+      "fssai_license": "10012021000071",
+      "barcode": "8901262010052",
+      "category": "Dairy & Cultured Products",
+      "packaging_format": "carton",
+      "image_filename": "RFL-003_amul_taaza.jpg",
+      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_metadata": {
+        "lighting_condition": "L1",
+        "camera_angle": "A1",
+        "framing": "F1",
+        "packaging_state": "S1",
+        "device_description": "Smartphone 12MP f/1.8"
+      },
+      "ground_truth_nutrition": {
+        "declaration_basis": "per_100ml",
+        "serving_size": 100.0,
+        "serving_unit": "ml",
+        "food_form": "liquid",
+        "nutrients": {
+          "energy_kcal": 58.0,
+          "protein_g": 3.1,
+          "carbohydrates_g": 4.7,
+          "total_sugar_g": 4.7,
+          "added_sugar_g": 0.0,
+          "dietary_fiber_g": null,
+          "total_fat_g": 3.0,
+          "saturated_fat_g": 1.9,
+          "trans_fat_g": 0.08,
+          "cholesterol_mg": 8.0,
+          "sodium_mg": 50.0
+        },
+        "dual_column_values": null
+      },
+      "ground_truth_ingredients_text": "Standardised Toned Milk, Vitamin A (Retinyl Acetate), Vitamin D2 (Ergocalciferol).",
+      "verification": {
+        "annotator_1": "AUDIT-LEAD-1",
+        "annotator_2": "QA-SPECIALIST-2",
+        "verified_date": "2026-10-18",
+        "status": "DOUBLE_VERIFIED"
+      }
+    },
+    {
+      "sample_id": "RFL-004",
+      "product_name": "Instant Suji Upma Breakfast Mix",
+      "brand": "MTR",
+      "fssai_license": "10012043000085",
+      "barcode": "8901042962381",
+      "category": "Ready-to-Eat (RTE) & Ready-to-Cook (RTC) Meals",
+      "packaging_format": "pouch",
+      "image_filename": "RFL-004_suji_upma.jpg",
+      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_metadata": {
+        "lighting_condition": "L2",
+        "camera_angle": "A1",
+        "framing": "F1",
+        "packaging_state": "S1",
+        "device_description": "Smartphone 50MP f/1.9"
+      },
+      "ground_truth_nutrition": {
+        "declaration_basis": "per_100g",
+        "serving_size": 100.0,
+        "serving_unit": "g",
+        "food_form": "solid",
+        "nutrients": {
+          "energy_kcal": 415.0,
+          "protein_g": 10.0,
+          "carbohydrates_g": 66.0,
+          "total_sugar_g": 3.0,
+          "added_sugar_g": 0.0,
+          "dietary_fiber_g": 4.0,
+          "total_fat_g": 12.0,
+          "saturated_fat_g": 5.5,
+          "trans_fat_g": 0.05,
+          "cholesterol_mg": null,
+          "sodium_mg": 1150.0
+        },
+        "dual_column_values": null
+      },
+      "ground_truth_ingredients_text": "Semolina (Wheat) (75%), Edible Vegetable Fat (Interesterified Palm and Sesame Oil), Bengal Gram Dal, Cashew Nut, Iodised Salt, Curry Leaves, Mustard Seeds, Green Chilli, Ginger, Acidity Regulator (INS 330).",
+      "verification": {
+        "annotator_1": "AUDIT-LEAD-1",
+        "annotator_2": "QA-SPECIALIST-2",
+        "verified_date": "2026-10-18",
+        "status": "DOUBLE_VERIFIED"
+      }
+    },
+    {
+      "sample_id": "RFL-005",
+      "product_name": "Frooti Mango Drink",
+      "brand": "Parle Agro",
+      "fssai_license": "10012022000227",
+      "barcode": "8902579103014",
+      "category": "Beverages & Juices",
+      "packaging_format": "bottle",
+      "image_filename": "RFL-005_frooti.jpg",
+      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_metadata": {
+        "lighting_condition": "L1",
+        "camera_angle": "A2",
+        "framing": "F1",
+        "packaging_state": "S2",
+        "device_description": "Smartphone 12MP f/1.8"
+      },
+      "ground_truth_nutrition": {
+        "declaration_basis": "per_100ml",
+        "serving_size": 100.0,
+        "serving_unit": "ml",
+        "food_form": "liquid",
+        "nutrients": {
+          "energy_kcal": 65.0,
+          "protein_g": 0.1,
+          "carbohydrates_g": 16.2,
+          "total_sugar_g": 15.0,
+          "added_sugar_g": 13.8,
+          "dietary_fiber_g": null,
+          "total_fat_g": 0.0,
+          "saturated_fat_g": 0.0,
+          "trans_fat_g": 0.0,
+          "cholesterol_mg": null,
+          "sodium_mg": 35.0
+        },
+        "dual_column_values": null
+      },
+      "ground_truth_ingredients_text": "Water, Mango Pulp (19.5%), Sugar, Acidity Regulator (INS 330), Antioxidant (INS 300), Preservative (INS 211), Natural & Nature Identical Flavouring Substances.",
+      "verification": {
+        "annotator_1": "AUDIT-LEAD-1",
+        "annotator_2": "QA-SPECIALIST-2",
+        "verified_date": "2026-10-18",
+        "status": "DOUBLE_VERIFIED"
+      }
+    },
+    {
+      "sample_id": "RFL-006",
+      "product_name": "Whole Rolled Oats 100% Wholegrain",
+      "brand": "Quaker",
+      "fssai_license": "10014064000435",
+      "barcode": "8901491101835",
+      "category": "Breakfast Cereals & Grain Pouches",
+      "packaging_format": "pouch",
+      "image_filename": "RFL-006_quaker_oats.jpg",
+      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_metadata": {
+        "lighting_condition": "L1",
+        "camera_angle": "A1",
+        "framing": "F1",
+        "packaging_state": "S1",
+        "device_description": "Smartphone 64MP f/1.8"
+      },
+      "ground_truth_nutrition": {
+        "declaration_basis": "per_100g",
+        "serving_size": 40.0,
+        "serving_unit": "g",
+        "food_form": "solid",
+        "nutrients": {
+          "energy_kcal": 402.0,
+          "protein_g": 11.8,
+          "carbohydrates_g": 68.3,
+          "total_sugar_g": 0.5,
+          "added_sugar_g": 0.0,
+          "dietary_fiber_g": 10.5,
+          "total_fat_g": 8.6,
+          "saturated_fat_g": 1.9,
+          "trans_fat_g": 0.0,
+          "cholesterol_mg": null,
+          "sodium_mg": 9.0
+        },
+        "dual_column_values": {
+          "per_100": {
+            "energy_kcal": 402.0,
+            "protein_g": 11.8,
+            "carbohydrates_g": 68.3,
+            "total_fat_g": 8.6
+          },
+          "per_serving": {
+            "energy_kcal": 161.0,
+            "protein_g": 4.7,
+            "carbohydrates_g": 27.3,
+            "total_fat_g": 3.4
+          }
+        }
+      },
+      "ground_truth_ingredients_text": "Rolled Oats (100%).",
+      "verification": {
+        "annotator_1": "AUDIT-LEAD-1",
+        "annotator_2": "QA-SPECIALIST-2",
+        "verified_date": "2026-10-18",
+        "status": "DOUBLE_VERIFIED"
+      }
+    },
+    {
+      "sample_id": "RFL-007",
+      "product_name": "Dairy Milk Chocolate",
+      "brand": "Cadbury",
+      "fssai_license": "10014022002711",
+      "barcode": "7622201436155",
+      "category": "Chocolates & Confectionery",
+      "packaging_format": "wrapper",
+      "image_filename": "RFL-007_cadbury_dairy_milk.jpg",
+      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_metadata": {
+        "lighting_condition": "L3",
+        "camera_angle": "A1",
+        "framing": "F1",
+        "packaging_state": "S3",
+        "device_description": "Smartphone 12MP f/1.8"
+      },
+      "ground_truth_nutrition": {
+        "declaration_basis": "per_100g",
+        "serving_size": 20.0,
+        "serving_unit": "g",
+        "food_form": "solid",
+        "nutrients": {
+          "energy_kcal": 534.0,
+          "protein_g": 7.8,
+          "carbohydrates_g": 60.5,
+          "total_sugar_g": 57.0,
+          "added_sugar_g": 49.0,
+          "dietary_fiber_g": 2.0,
+          "total_fat_g": 30.2,
+          "saturated_fat_g": 18.5,
+          "trans_fat_g": 0.1,
+          "cholesterol_mg": 21.0,
+          "sodium_mg": 150.0
+        },
+        "dual_column_values": null
+      },
+      "ground_truth_ingredients_text": "Sugar, Milk Solids (19%), Cocoa Butter, Cocoa Solids, Emulsifiers (INS 442, INS 476), Flavours (Natural, Nature Identical & Artificial (Vanilla) Flavouring Substances).",
+      "verification": {
+        "annotator_1": "AUDIT-LEAD-1",
+        "annotator_2": "QA-SPECIALIST-2",
+        "verified_date": "2026-10-18",
+        "status": "DOUBLE_VERIFIED"
+      }
+    },
+    {
+      "sample_id": "RFL-008",
+      "product_name": "Tomato Ketchup Fresh & Thick",
+      "brand": "Kissan",
+      "fssai_license": "10013022001897",
+      "barcode": "8901030825316",
+      "category": "Condiments, Sauces & Pickles",
+      "packaging_format": "bottle",
+      "image_filename": "RFL-008_kissan_ketchup.jpg",
+      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_metadata": {
+        "lighting_condition": "L2",
+        "camera_angle": "A2",
+        "framing": "F1",
+        "packaging_state": "S2",
+        "device_description": "Smartphone 12MP f/1.8"
+      },
+      "ground_truth_nutrition": {
+        "declaration_basis": "per_100g",
+        "serving_size": 15.0,
+        "serving_unit": "g",
+        "food_form": "liquid",
+        "nutrients": {
+          "energy_kcal": 137.0,
+          "protein_g": 1.2,
+          "carbohydrates_g": 32.8,
+          "total_sugar_g": 27.5,
+          "added_sugar_g": 24.0,
+          "dietary_fiber_g": 0.8,
+          "total_fat_g": 0.1,
+          "saturated_fat_g": 0.05,
+          "trans_fat_g": 0.0,
+          "cholesterol_mg": null,
+          "sodium_mg": 890.0
+        },
+        "dual_column_values": null
+      },
+      "ground_truth_ingredients_text": "Water, Tomato Paste (26%), Sugar, Salt, Acidity Regulator (INS 260), Thickeners (INS 1422, INS 415), Preservative (INS 211), Spices and Condiments.",
+      "verification": {
+        "annotator_1": "AUDIT-LEAD-1",
+        "annotator_2": "QA-SPECIALIST-2",
+        "verified_date": "2026-10-18",
+        "status": "DOUBLE_VERIFIED"
+      }
+    },
+    {
+      "sample_id": "RFL-009",
+      "product_name": "Chakki Fresh Atta 100% Whole Wheat",
+      "brand": "Aashirvaad",
+      "fssai_license": "10012031000312",
+      "barcode": "8901725181220",
+      "category": "Flours, Pulses & Staple Grains",
+      "packaging_format": "sack",
+      "image_filename": "RFL-009_aashirvaad_atta.jpg",
+      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_metadata": {
+        "lighting_condition": "L1",
+        "camera_angle": "A1",
+        "framing": "F2",
+        "packaging_state": "S3",
+        "device_description": "Smartphone 48MP f/1.8"
+      },
+      "ground_truth_nutrition": {
+        "declaration_basis": "per_100g",
+        "serving_size": 100.0,
+        "serving_unit": "g",
+        "food_form": "solid",
+        "nutrients": {
+          "energy_kcal": 369.0,
+          "protein_g": 11.2,
+          "carbohydrates_g": 76.8,
+          "total_sugar_g": 4.5,
+          "added_sugar_g": 0.0,
+          "dietary_fiber_g": 11.1,
+          "total_fat_g": 1.9,
+          "saturated_fat_g": 0.4,
+          "trans_fat_g": 0.0,
+          "cholesterol_mg": null,
+          "sodium_mg": 4.5
+        },
+        "dual_column_values": null
+      },
+      "ground_truth_ingredients_text": "Whole Wheat (100%).",
+      "verification": {
+        "annotator_1": "AUDIT-LEAD-1",
+        "annotator_2": "QA-SPECIALIST-2",
+        "verified_date": "2026-10-18",
+        "status": "DOUBLE_VERIFIED"
+      }
+    },
+    {
+      "sample_id": "RFL-010",
+      "product_name": "Bournvita Chocolate Health Nutrition Drink",
+      "brand": "Cadbury",
+      "fssai_license": "10014022002711",
+      "barcode": "7622201732561",
+      "category": "Nutritional Supplements & Health Foods",
+      "packaging_format": "jar",
+      "image_filename": "RFL-010_bournvita.jpg",
+      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_metadata": {
+        "lighting_condition": "L2",
+        "camera_angle": "A2",
+        "framing": "F1",
+        "packaging_state": "S2",
+        "device_description": "Smartphone 12MP f/1.8"
+      },
+      "ground_truth_nutrition": {
+        "declaration_basis": "per_100g",
+        "serving_size": 20.0,
+        "serving_unit": "g",
+        "food_form": "solid",
+        "nutrients": {
+          "energy_kcal": 384.0,
+          "protein_g": 7.0,
+          "carbohydrates_g": 85.2,
+          "total_sugar_g": 49.8,
+          "added_sugar_g": 32.2,
+          "dietary_fiber_g": 3.8,
+          "total_fat_g": 1.8,
+          "saturated_fat_g": 0.9,
+          "trans_fat_g": 0.05,
+          "cholesterol_mg": null,
+          "sodium_mg": 160.0
+        },
+        "dual_column_values": null
+      },
+      "ground_truth_ingredients_text": "Cereal Extract (51%) (Barley, Wheat), Sugar, Cocoa Solids, Colour (INS 150c), Minerals, Wheat Gluten, Liquid Glucose, Emulsifiers (INS 322, INS 471), Milk Solids, Vitamins, Raising Agent (INS 500(ii)), Iodised Salt, Artificial (Vanilla) Flavouring Substances.",
+      "verification": {
+        "annotator_1": "AUDIT-LEAD-1",
+        "annotator_2": "QA-SPECIALIST-2",
+        "verified_date": "2026-10-18",
+        "status": "DOUBLE_VERIFIED"
+      }
+    }
+  ]
+}

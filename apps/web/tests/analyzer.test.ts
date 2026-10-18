@@ -4,6 +4,7 @@ import {
   NutritionAnalysisResponse,
   IngredientAnalysisResponse,
   ApiClientError,
+  computeNutritionValuesHash,
 } from "../src/lib/api/client";
 
 describe("Frontend Nutrition & Ingredient Analysis Logic", () => {
@@ -163,6 +164,84 @@ describe("Frontend Nutrition & Ingredient Analysis Logic", () => {
       expect(ocrData.serving_size_candidate).toBe(30);
       expect(ocrData.nutrient_candidates.energy_kcal.value).toBe(140);
       expect(ocrData.warnings[0].code).toBe("LOW_CONFIDENCE");
+    });
+  });
+
+  describe("computeNutritionValuesHash", () => {
+    it("computes deterministic SHA-256 hash matching backend canonical format", () => {
+      const nutrients = {
+        added_sugar_g: 12.5,
+        carbohydrates_g: 55.0,
+        cholesterol_mg: null,
+        dietary_fiber_g: 3.2,
+        energy_kcal: 420.0,
+        protein_g: 8.0,
+        saturated_fat_g: 4.5,
+        sodium_mg: 350.0,
+        total_fat_g: 15.0,
+        total_sugar_g: 20.0,
+        trans_fat_g: 0.0,
+      };
+
+      const hash1 = computeNutritionValuesHash(30, "g", "per_serving", "solid", nutrients);
+      const hash2 = computeNutritionValuesHash(30, "g", "per_serving", "solid", nutrients);
+
+      expect(hash1).toBe(hash2);
+      expect(hash1).toBe("c47fddbe51641e511f79178e72d01525a96d875bda2da4fd11f4ad7db3a2b329");
+    });
+
+    it("breaks hash equality when any nutrient is modified", () => {
+      const baseNutrients = {
+        added_sugar_g: 12.5,
+        carbohydrates_g: 55.0,
+        cholesterol_mg: null,
+        dietary_fiber_g: 3.2,
+        energy_kcal: 420.0,
+        protein_g: 8.0,
+        saturated_fat_g: 4.5,
+        sodium_mg: 350.0,
+        total_fat_g: 15.0,
+        total_sugar_g: 20.0,
+        trans_fat_g: 0.0,
+      };
+
+      const baseHash = computeNutritionValuesHash(30, "g", "per_serving", "solid", baseNutrients);
+
+      // Mutate one value
+      const modifiedNutrients = { ...baseNutrients, added_sugar_g: 12.6 };
+      const modifiedHash = computeNutritionValuesHash(30, "g", "per_serving", "solid", modifiedNutrients);
+
+      expect(modifiedHash).not.toBe(baseHash);
+    });
+
+    it("breaks hash equality when foodForm, servingUnit, or basis is modified", () => {
+      const baseNutrients = {
+        added_sugar_g: 12.5,
+        carbohydrates_g: 55.0,
+        cholesterol_mg: null,
+        dietary_fiber_g: 3.2,
+        energy_kcal: 420.0,
+        protein_g: 8.0,
+        saturated_fat_g: 4.5,
+        sodium_mg: 350.0,
+        total_fat_g: 15.0,
+        total_sugar_g: 20.0,
+        trans_fat_g: 0.0,
+      };
+
+      const baseHash = computeNutritionValuesHash(30, "g", "per_serving", "solid", baseNutrients);
+
+      // Change foodForm
+      const liquidHash = computeNutritionValuesHash(30, "g", "per_serving", "liquid", baseNutrients);
+      expect(liquidHash).not.toBe(baseHash);
+
+      // Change servingUnit
+      const mlHash = computeNutritionValuesHash(30, "ml", "per_serving", "solid", baseNutrients);
+      expect(mlHash).not.toBe(baseHash);
+
+      // Change basis
+      const per100Hash = computeNutritionValuesHash(30, "g", "per_100g", "solid", baseNutrients);
+      expect(per100Hash).not.toBe(baseHash);
     });
   });
 });

@@ -2,12 +2,38 @@
 Pydantic schemas for nutrition analysis requests and responses.
 """
 
+import hashlib
 from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
 from app.nutrition.models import ServingBasis, ServingUnit
 from app.nutrition.standards import FlagSeverity, FoodForm, RegulatoryStatus
+
+
+def compute_nutrition_values_hash(
+    serving_size: float,
+    serving_unit: str,
+    basis: str,
+    food_form: str,
+    nutrients: dict[str, float | None],
+) -> str:
+    """
+    Computes a deterministic SHA-256 hash across all input parameters to guarantee that
+    confirmation cannot be reused if any value or structural parameter is altered.
+    """
+    items = [
+        f"serving_size:{serving_size:.4f}",
+        f"serving_unit:{serving_unit}",
+        f"basis:{basis}",
+        f"food_form:{food_form}",
+    ]
+    for k in sorted(nutrients.keys()):
+        v = nutrients[k]
+        val_str = f"{float(v):.4f}" if v is not None else "null"
+        items.append(f"{k}:{val_str}")
+    canonical_repr = "|".join(items)
+    return hashlib.sha256(canonical_repr.encode("utf-8")).hexdigest()
 
 
 class NutritionAnalysisRequest(BaseModel):
@@ -119,10 +145,23 @@ class NutritionAnalysisRequest(BaseModel):
         examples=[180.0],
     )
 
+    data_source: str = Field(
+        default="manual",
+        description="Source of data: 'manual' or 'ocr'.",
+        examples=["manual"],
+    )
     is_confirmed: bool = Field(
         default=True,
         description="Explicit user confirmation that input values have been reviewed.",
         examples=[True],
+    )
+    extraction_token: str | None = Field(
+        default=None,
+        description="Verification token issued by /api/v1/extraction/ocr for OCR-derived payloads.",
+    )
+    confirmed_values_hash: str | None = Field(
+        default=None,
+        description="Cryptographic SHA-256 digest of confirmed nutrient values and dimensions.",
     )
 
     @model_validator(mode="after")
@@ -132,6 +171,48 @@ class NutritionAnalysisRequest(BaseModel):
             raise ValueError(
                 "Final nutrition calculation requires explicit confirmation of input values."
             )
+
+        if self.data_source not in ("manual", "ocr"):
+            raise ValueError("data_source must be either 'manual' or 'ocr'.")
+
+        nutrient_vals = {
+            "added_sugar_g": self.added_sugar_g,
+            "carbohydrates_g": self.carbohydrates_g,
+            "cholesterol_mg": self.cholesterol_mg,
+            "dietary_fiber_g": self.dietary_fiber_g,
+            "energy_kcal": self.energy_kcal,
+            "protein_g": self.protein_g,
+            "saturated_fat_g": self.saturated_fat_g,
+            "sodium_mg": self.sodium_mg,
+            "total_fat_g": self.total_fat_g,
+            "total_sugar_g": self.total_sugar_g,
+            "trans_fat_g": self.trans_fat_g,
+        }
+
+        if self.data_source == "ocr":
+            if not self.extraction_token:
+                raise ValueError(
+                    "OCR-derived data requires a valid extraction_token issued by the scanner."
+                )
+            if not self.confirmed_values_hash:
+                raise ValueError("OCR-derived data requires an explicit confirmed_values_hash.")
+            expected_hash = compute_nutrition_values_hash(
+                serving_size=self.serving_size,
+                serving_unit=self.serving_unit.value,
+                basis=self.basis.value,
+                food_form=self.food_form.value,
+                nutrients=nutrient_vals,
+            )
+            if self.confirmed_values_hash != expected_hash:
+                raise ValueError(
+                    "Confirmed values hash does not match submitted values; "
+                    "values were modified after confirmation without re-verifying."
+                )
+        elif self.data_source == "manual":
+            if self.extraction_token is not None:
+                raise ValueError(
+                    "Manual data source cannot carry an extraction_token; use data_source='ocr'."
+                )
 
         # 2. Incompatible unit checks: mass vs volume without density
         if self.food_form == FoodForm.SOLID:
@@ -158,19 +239,6 @@ class NutritionAnalysisRequest(BaseModel):
                 )
 
         # 3. Non-negative nutrient checks
-        nutrient_vals = {
-            "energy_kcal": self.energy_kcal,
-            "protein_g": self.protein_g,
-            "carbohydrates_g": self.carbohydrates_g,
-            "total_sugar_g": self.total_sugar_g,
-            "added_sugar_g": self.added_sugar_g,
-            "dietary_fiber_g": self.dietary_fiber_g,
-            "total_fat_g": self.total_fat_g,
-            "saturated_fat_g": self.saturated_fat_g,
-            "trans_fat_g": self.trans_fat_g,
-            "cholesterol_mg": self.cholesterol_mg,
-            "sodium_mg": self.sodium_mg,
-        }
         for k, v in nutrient_vals.items():
             if v is not None and v < 0:
                 raise ValueError(f"Nutrient '{k}' cannot be negative ({v}).")

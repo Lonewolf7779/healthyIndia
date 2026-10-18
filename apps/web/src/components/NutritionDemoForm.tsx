@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   apiClient,
   NutritionAnalysisRequest,
   NutritionAnalysisResponse,
   IngredientAnalysisRequest,
   IngredientAnalysisResponse,
+  computeNutritionValuesHash,
 } from "../lib/api/client";
 import { LabelScanner, TransferredValues } from "./LabelScanner";
 
@@ -56,19 +57,111 @@ export const NutritionDemoForm: React.FC = () => {
   const [nutritionResult, setNutritionResult] = useState<NutritionAnalysisResponse | null>(null);
   const [ingredientResult, setIngredientResult] = useState<IngredientAnalysisResponse | null>(null);
   const [activeProductName, setActiveProductName] = useState<string>("");
+  const activeRequestIdRef = useRef<number>(0);
   const [ocrProvenance, setOcrProvenance] = useState<{
     isOcr: boolean;
     isConfirmed: boolean;
     unconfirmedCount: number;
+    extractionToken?: string;
+    confirmedValuesHash?: string;
   } | null>(null);
 
   const handleFieldChange = (setter: React.Dispatch<React.SetStateAction<string>>, val: string) => {
     setter(val);
-    if (ocrProvenance?.isOcr && ocrProvenance.isConfirmed) {
+    if (ocrProvenance?.isOcr) {
       setOcrProvenance((prev) =>
-        prev ? { ...prev, isConfirmed: false, unconfirmedCount: Math.max(1, prev.unconfirmedCount) } : null
+        prev
+          ? {
+              ...prev,
+              isConfirmed: false,
+              confirmedValuesHash: undefined,
+              unconfirmedCount: Math.max(1, prev.unconfirmedCount),
+            }
+          : null
       );
     }
+  };
+
+  const handleServingUnitChange = (val: "g" | "ml" | "kg" | "l" | "piece" | "portion") => {
+    setServingUnit(val);
+    if (ocrProvenance?.isOcr) {
+      setOcrProvenance((prev) =>
+        prev
+          ? {
+              ...prev,
+              isConfirmed: false,
+              confirmedValuesHash: undefined,
+              unconfirmedCount: Math.max(1, prev.unconfirmedCount),
+            }
+          : null
+      );
+    }
+  };
+
+  const handleBasisChange = (val: "per_serving" | "per_100g" | "per_100ml") => {
+    setBasis(val);
+    if (ocrProvenance?.isOcr) {
+      setOcrProvenance((prev) =>
+        prev
+          ? {
+              ...prev,
+              isConfirmed: false,
+              confirmedValuesHash: undefined,
+              unconfirmedCount: Math.max(1, prev.unconfirmedCount),
+            }
+          : null
+      );
+    }
+  };
+
+  const handleFoodFormChange = (val: "solid" | "liquid") => {
+    setFoodForm(val);
+    if (ocrProvenance?.isOcr) {
+      setOcrProvenance((prev) =>
+        prev
+          ? {
+              ...prev,
+              isConfirmed: false,
+              confirmedValuesHash: undefined,
+              unconfirmedCount: Math.max(1, prev.unconfirmedCount),
+            }
+          : null
+      );
+    }
+  };
+
+  const handleConfirmOcrValues = () => {
+    const parsedServing = Number(servingSize) || 100.0;
+    const nutrientsMap: Record<string, number | null> = {
+      added_sugar_g: parseOptionalNumber(addedSugarG),
+      carbohydrates_g: parseOptionalNumber(carbohydratesG),
+      cholesterol_mg: parseOptionalNumber(cholesterolMg),
+      dietary_fiber_g: parseOptionalNumber(dietaryFiberG),
+      energy_kcal: parseOptionalNumber(energyKcal),
+      protein_g: parseOptionalNumber(proteinG),
+      saturated_fat_g: parseOptionalNumber(saturatedFatG),
+      sodium_mg: parseOptionalNumber(sodiumMg),
+      total_fat_g: parseOptionalNumber(totalFatG),
+      total_sugar_g: parseOptionalNumber(totalSugarG),
+      trans_fat_g: parseOptionalNumber(transFatG),
+    };
+    const hash = computeNutritionValuesHash(
+      parsedServing,
+      servingUnit,
+      basis,
+      foodForm,
+      nutrientsMap
+    );
+    setOcrProvenance((prev) =>
+      prev
+        ? {
+            ...prev,
+            isConfirmed: true,
+            unconfirmedCount: 0,
+            confirmedValuesHash: hash,
+          }
+        : null
+    );
   };
 
   const handleClear = () => {
@@ -146,11 +239,15 @@ export const NutritionDemoForm: React.FC = () => {
 
     if (!hasIngredients && !hasServingSize && !hasAnyNutrient) {
       setGeneralError("Please enter nutrition label values or an ingredients list to analyze.");
+      setNutritionResult(null);
+      setIngredientResult(null);
       return;
     }
 
     if (hasAnyNutrient && !hasServingSize) {
       setGeneralError("Serving size is required to calculate nutrition values.");
+      setNutritionResult(null);
+      setIngredientResult(null);
       return;
     }
 
@@ -158,6 +255,8 @@ export const NutritionDemoForm: React.FC = () => {
       const parsedServing = Number(servingSize);
       if (Number.isNaN(parsedServing) || parsedServing <= 0) {
         setGeneralError("Serving size must be a positive number.");
+        setNutritionResult(null);
+        setIngredientResult(null);
         return;
       }
     }
@@ -170,6 +269,8 @@ export const NutritionDemoForm: React.FC = () => {
         `Input Inconsistency: Added sugars (${parsedAdded}g) cannot exceed Total sugars (${parsedTotalSugar}g). ` +
         "Please verify your package label or correct the values."
       );
+      setNutritionResult(null);
+      setIngredientResult(null);
       return;
     }
 
@@ -180,6 +281,8 @@ export const NutritionDemoForm: React.FC = () => {
         `Input Inconsistency: Saturated fat (${parsedSat}g) cannot exceed Total fat (${parsedTotalFat}g). ` +
         "Please check the values against the label."
       );
+      setNutritionResult(null);
+      setIngredientResult(null);
       return;
     }
 
@@ -187,9 +290,46 @@ export const NutritionDemoForm: React.FC = () => {
       setGeneralError(
         "Please confirm all scanned and edited values before running nutrition analysis."
       );
+      setNutritionResult(null);
+      setIngredientResult(null);
       return;
     }
 
+    const nutrientsMap: Record<string, number | null> = {
+      added_sugar_g: parseOptionalNumber(addedSugarG),
+      carbohydrates_g: parseOptionalNumber(carbohydratesG),
+      cholesterol_mg: parseOptionalNumber(cholesterolMg),
+      dietary_fiber_g: parseOptionalNumber(dietaryFiberG),
+      energy_kcal: parseOptionalNumber(energyKcal),
+      protein_g: parseOptionalNumber(proteinG),
+      saturated_fat_g: parseOptionalNumber(saturatedFatG),
+      sodium_mg: parseOptionalNumber(sodiumMg),
+      total_fat_g: parseOptionalNumber(totalFatG),
+      total_sugar_g: parseOptionalNumber(totalSugarG),
+      trans_fat_g: parseOptionalNumber(transFatG),
+    };
+
+    let confirmedHash: string | undefined = undefined;
+    if (ocrProvenance?.isOcr) {
+      const currentHash = computeNutritionValuesHash(
+        Number(servingSize),
+        servingUnit,
+        basis,
+        foodForm,
+        nutrientsMap
+      );
+      if (ocrProvenance.confirmedValuesHash !== currentHash) {
+        setGeneralError(
+          "Values have been modified since confirmation. Please review and confirm the updated values before calculating."
+        );
+        setNutritionResult(null);
+        setIngredientResult(null);
+        return;
+      }
+      confirmedHash = ocrProvenance.confirmedValuesHash;
+    }
+
+    const requestId = ++activeRequestIdRef.current;
     setLoading(true);
     setActiveProductName(productName.trim());
 
@@ -202,31 +342,38 @@ export const NutritionDemoForm: React.FC = () => {
         serving_unit: servingUnit,
         basis: basis,
         food_form: foodForm,
-        energy_kcal: parseOptionalNumber(energyKcal),
-        protein_g: parseOptionalNumber(proteinG),
-        carbohydrates_g: parseOptionalNumber(carbohydratesG),
-        total_sugar_g: parseOptionalNumber(totalSugarG),
-        added_sugar_g: parseOptionalNumber(addedSugarG),
-        dietary_fiber_g: parseOptionalNumber(dietaryFiberG),
-        total_fat_g: parseOptionalNumber(totalFatG),
-        saturated_fat_g: parseOptionalNumber(saturatedFatG),
-        trans_fat_g: parseOptionalNumber(transFatG),
-        cholesterol_mg: parseOptionalNumber(cholesterolMg),
-        sodium_mg: parseOptionalNumber(sodiumMg),
+        energy_kcal: nutrientsMap.energy_kcal,
+        protein_g: nutrientsMap.protein_g,
+        carbohydrates_g: nutrientsMap.carbohydrates_g,
+        total_sugar_g: nutrientsMap.total_sugar_g,
+        added_sugar_g: nutrientsMap.added_sugar_g,
+        dietary_fiber_g: nutrientsMap.dietary_fiber_g,
+        total_fat_g: nutrientsMap.total_fat_g,
+        saturated_fat_g: nutrientsMap.saturated_fat_g,
+        trans_fat_g: nutrientsMap.trans_fat_g,
+        cholesterol_mg: nutrientsMap.cholesterol_mg,
+        sodium_mg: nutrientsMap.sodium_mg,
+        data_source: ocrProvenance?.isOcr ? "ocr" : "manual",
         is_confirmed: ocrProvenance ? ocrProvenance.isConfirmed : true,
+        extraction_token: ocrProvenance?.isOcr ? ocrProvenance.extractionToken : undefined,
+        confirmed_values_hash: confirmedHash,
       };
 
       requests.push(
         apiClient
           .analyzeNutrition(nutritionPayload)
           .then((res) => {
-            setNutritionResult(res);
+            if (activeRequestIdRef.current === requestId) {
+              setNutritionResult(res);
+            }
           })
           .catch((err: unknown) => {
-            setNutritionResult(null);
-            setNutritionError(
-              err instanceof Error ? err.message : "Nutrition analysis request failed."
-            );
+            if (activeRequestIdRef.current === requestId) {
+              setNutritionResult(null);
+              setNutritionError(
+                err instanceof Error ? err.message : "Nutrition analysis request failed."
+              );
+            }
           })
       );
     } else {
@@ -243,13 +390,17 @@ export const NutritionDemoForm: React.FC = () => {
         apiClient
           .analyzeIngredients(ingredientPayload)
           .then((res) => {
-            setIngredientResult(res);
+            if (activeRequestIdRef.current === requestId) {
+              setIngredientResult(res);
+            }
           })
           .catch((err: unknown) => {
-            setIngredientResult(null);
-            setIngredientError(
-              err instanceof Error ? err.message : "Ingredient analysis request failed."
-            );
+            if (activeRequestIdRef.current === requestId) {
+              setIngredientResult(null);
+              setIngredientError(
+                err instanceof Error ? err.message : "Ingredient analysis request failed."
+              );
+            }
           })
       );
     } else {
@@ -259,7 +410,9 @@ export const NutritionDemoForm: React.FC = () => {
     try {
       await Promise.all(requests);
     } finally {
-      setLoading(false);
+      if (activeRequestIdRef.current === requestId) {
+        setLoading(false);
+      }
     }
   };
 
@@ -284,6 +437,8 @@ export const NutritionDemoForm: React.FC = () => {
       isOcr: true,
       isConfirmed: values.isConfirmed ?? false,
       unconfirmedCount: values.unconfirmedCount ?? 0,
+      extractionToken: values.extractionToken,
+      confirmedValuesHash: values.confirmedValuesHash,
     });
   };
 
@@ -342,7 +497,7 @@ export const NutritionDemoForm: React.FC = () => {
               </span>
               <button
                 type="button"
-                onClick={() => setOcrProvenance((prev) => (prev ? { ...prev, isConfirmed: true, unconfirmedCount: 0 } : null))}
+                onClick={handleConfirmOcrValues}
                 className="btn-retry"
                 style={{ fontSize: "0.8rem", padding: "0.25rem 0.5rem", whiteSpace: "nowrap" }}
               >
@@ -396,14 +551,11 @@ export const NutritionDemoForm: React.FC = () => {
               <select
                 id="servingUnit"
                 value={servingUnit}
-                onChange={(e) => {
-                  setServingUnit(e.target.value as "g" | "ml" | "kg" | "l" | "piece" | "portion");
-                  if (ocrProvenance?.isOcr && ocrProvenance.isConfirmed) {
-                    setOcrProvenance((prev) =>
-                      prev ? { ...prev, isConfirmed: false, unconfirmedCount: Math.max(1, prev.unconfirmedCount) } : null
-                    );
-                  }
-                }}
+                onChange={(e) =>
+                  handleServingUnitChange(
+                    e.target.value as "g" | "ml" | "kg" | "l" | "piece" | "portion"
+                  )
+                }
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               >
                 <option value="g">Grams (g)</option>
@@ -422,14 +574,9 @@ export const NutritionDemoForm: React.FC = () => {
               <select
                 id="basis"
                 value={basis}
-                onChange={(e) => {
-                  setBasis(e.target.value as "per_serving" | "per_100g" | "per_100ml");
-                  if (ocrProvenance?.isOcr && ocrProvenance.isConfirmed) {
-                    setOcrProvenance((prev) =>
-                      prev ? { ...prev, isConfirmed: false, unconfirmedCount: Math.max(1, prev.unconfirmedCount) } : null
-                    );
-                  }
-                }}
+                onChange={(e) =>
+                  handleBasisChange(e.target.value as "per_serving" | "per_100g" | "per_100ml")
+                }
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               >
                 <option value="per_serving">Per Serving</option>
@@ -445,7 +592,7 @@ export const NutritionDemoForm: React.FC = () => {
               <select
                 id="foodForm"
                 value={foodForm}
-                onChange={(e) => setFoodForm(e.target.value as "solid" | "liquid")}
+                onChange={(e) => handleFoodFormChange(e.target.value as "solid" | "liquid")}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               >
                 <option value="solid">Solid Food</option>
