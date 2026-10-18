@@ -11,7 +11,6 @@ def test_additive_dataset_provenance_and_schema() -> None:
     assert len(ins_idx) > 0
     assert len(alias_idx) > 0
 
-    # Ensure unique additives from indexes
     all_entries = {entry.id: entry for entry in list(ins_idx.values()) + list(alias_idx.values())}
     assert len(all_entries) >= 8, f"Expected at least 8 additives, found {len(all_entries)}"
 
@@ -63,7 +62,56 @@ def test_audit_ingredient_data_validator_passes() -> None:
     audit_results = audit_ingredient_data()
     assert audit_results["total_records"] >= 8
     assert audit_results["verified_count"] >= 8
-    assert len(audit_results["errors"]) == 0, f"Integrity errors found: {audit_results['errors']}"
-    assert len(audit_results["warnings"]) == 0, (
-        f"Integrity warnings found: {audit_results['warnings']}"
-    )
+    assert len(audit_results["completeness_errors"]) == 0
+    assert len(audit_results["citation_errors"]) == 0
+    assert len(audit_results["scientific_errors"]) == 0
+    assert len(audit_results["regulatory_errors"]) == 0
+    assert len(audit_results["all_errors"]) == 0
+    assert len(audit_results["warnings"]) == 0
+
+
+def test_aspartame_consumption_claim_regression() -> None:
+    ins_idx, _ = load_ingredient_reference()
+    aspartame = ins_idx.get("951")
+    assert aspartame is not None
+    ev = aspartame.health_effects_evidence
+
+    # Regression: ensure the erroneous "12-36 cans" is never present
+    assert "12–36" not in ev
+    assert "12-36" not in ev
+
+    # Regression: correct calculation for 60 kg adult at 40 mg/kg bw = 2,400 mg
+    assert "2,400 mg" in ev
+    # 200 mg/can -> 12 cans; 300 mg/can -> 8 cans
+    assert "12 cans" in ev
+    assert "8 cans" in ev
+    # Reaching vs exceeding distinction
+    assert "reaching the adi is not equivalent to exceeding it" in ev.lower()
+    assert "more than" in ev.lower()
+
+    # Check everyday explanation structure
+    exp = aspartame.everyday_quantity_explanation
+    assert exp is not None
+    assert exp["original_value"] == 40.0
+    assert exp["guidance_type"] == "acceptable_daily_intake"
+    assert "2,400 mg" in exp["everyday_comparison"]
+    assert "safety boundary" in exp["plain_language_summary"].lower()
+
+
+def test_no_unsupported_absolute_safety_claims() -> None:
+    ins_idx, alias_idx = load_ingredient_reference()
+    all_entries = {entry.id: entry for entry in list(ins_idx.values()) + list(alias_idx.values())}
+
+    prohibited = [
+        "non-toxic at all",
+        "non-toxic at permitted",
+        "completely harmless",
+        "zero risk under any condition",
+    ]
+
+    for entry_id, entry in all_entries.items():
+        text = (entry.health_effects_evidence + " " + entry.regulatory_status).lower()
+        for phrase in prohibited:
+            assert phrase not in text, (
+                f"Record '{entry_id}' contains unsupported absolute '{phrase}'"
+            )

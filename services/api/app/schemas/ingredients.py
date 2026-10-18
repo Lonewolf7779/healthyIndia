@@ -2,6 +2,8 @@
 Pydantic schemas for ingredient analysis requests and responses.
 """
 
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from app.ingredients.models import MatchType
@@ -49,6 +51,7 @@ class AdditiveEntrySchema(BaseModel):
     health_effects_evidence: str | None = None
     acceptable_daily_intake: str | None = None
     population_sensitivities: str | None = None
+    everyday_quantity_explanation: dict[str, Any] | None = None
     sources: list[SourceReferenceSchema]
 
 

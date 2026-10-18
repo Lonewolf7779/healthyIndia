@@ -43,6 +43,7 @@ class AdditiveEntry:
     health_effects_evidence: str = ""
     acceptable_daily_intake: str = ""
     population_sensitivities: str = ""
+    everyday_quantity_explanation: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)

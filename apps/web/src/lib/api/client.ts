@@ -50,6 +50,24 @@ export interface NutritionFlag {
   metadata?: Record<string, unknown>;
 }
 
+export interface EverydayExplanation {
+  original_value: number | string;
+  original_unit: string;
+  guidance_type:
+    | "actual_serving_quantity"
+    | "recommended_dietary_intake"
+    | "acceptable_daily_intake"
+    | "maximum_permitted_concentration"
+    | "exposure_estimate";
+  plain_language_summary: string;
+  everyday_comparison: string;
+  formula?: string | null;
+  assumptions: string[];
+  reference_source?: string | null;
+  limitations_and_uncertainty: string;
+  is_conversion_available: boolean;
+}
+
 export interface NutritionAnalysisResponse {
   status: string;
   serving_size: number;
@@ -62,6 +80,7 @@ export interface NutritionAnalysisResponse {
   is_complete: boolean;
   missing_nutrients: string[];
   disclaimer: string;
+  everyday_explanations?: EverydayExplanation[];
 }
 
 export interface SourceReference {
@@ -89,6 +108,7 @@ export interface AdditiveEntry {
   health_effects_evidence?: string;
   acceptable_daily_intake?: string;
   population_sensitivities?: string;
+  everyday_quantity_explanation?: EverydayExplanation;
   sources: SourceReference[];
 }
 

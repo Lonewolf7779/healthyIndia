@@ -94,6 +94,7 @@ def load_ingredient_reference() -> tuple[dict[str, AdditiveEntry], dict[str, Add
             health_effects_evidence=item.get("health_effects_evidence", ""),
             acceptable_daily_intake=item.get("acceptable_daily_intake", ""),
             population_sensitivities=item.get("population_sensitivities", ""),
+            everyday_quantity_explanation=item.get("everyday_quantity_explanation"),
         )
 
         # Index by normalized INS code if present

@@ -680,6 +680,53 @@ export const NutritionDemoForm: React.FC = () => {
                   </ul>
                 )}
               </div>
+
+              {/* Everyday Quantity Explanations */}
+              {nutritionResult.everyday_explanations && nutritionResult.everyday_explanations.length > 0 && (
+                <div style={{ marginTop: "1rem", paddingTop: "0.75rem", borderTop: "1px solid var(--color-border)" }}>
+                  <strong style={{ fontSize: "0.9rem", display: "block", marginBottom: "0.5rem" }}>
+                    Everyday Quantity Explanations:
+                  </strong>
+                  <div style={{ display: "grid", gap: "0.6rem" }}>
+                    {nutritionResult.everyday_explanations.map((exp, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: "0.6rem 0.75rem",
+                          backgroundColor: "#f1f5f9",
+                          borderRadius: "6px",
+                          fontSize: "0.825rem",
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.25rem" }}>
+                          <span style={{ fontWeight: 600, color: "#1e293b" }}>
+                            {exp.everyday_comparison}
+                          </span>
+                          <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
+                            Declared: {exp.original_value} {exp.original_unit}
+                          </span>
+                        </div>
+                        <div style={{ marginTop: "0.2rem", color: "#334155" }}>
+                          {exp.plain_language_summary}
+                        </div>
+                        {exp.formula && (
+                          <div style={{ marginTop: "0.2rem", fontSize: "0.75rem", color: "#475569", fontFamily: "monospace" }}>
+                            Formula: {exp.formula}
+                          </div>
+                        )}
+                        {exp.assumptions.length > 0 && (
+                          <div style={{ marginTop: "0.2rem", fontSize: "0.725rem", color: "#64748b" }}>
+                            <em>Assumptions:</em> {exp.assumptions.join(" ")}
+                          </div>
+                        )}
+                        <div style={{ marginTop: "0.2rem", fontSize: "0.725rem", color: "#64748b" }}>
+                          <em>Notice:</em> {exp.limitations_and_uncertainty}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </article>
           )}
 
@@ -769,6 +816,35 @@ export const NutritionDemoForm: React.FC = () => {
                         {item.additive.population_sensitivities && (
                           <div style={{ marginTop: "0.25rem", fontSize: "0.8rem", color: "#991b1b", backgroundColor: "#fef2f2", padding: "0.35rem 0.5rem", borderRadius: "4px" }}>
                             <strong>Sensitivities &amp; Population Cautions:</strong> {item.additive.population_sensitivities}
+                          </div>
+                        )}
+
+                        {item.additive.everyday_quantity_explanation && (
+                          <div
+                            style={{
+                              marginTop: "0.4rem",
+                              padding: "0.5rem 0.65rem",
+                              backgroundColor: "#f0fdf4",
+                              border: "1px solid #bbf7d0",
+                              borderRadius: "4px",
+                              fontSize: "0.8rem",
+                            }}
+                          >
+                            <strong style={{ color: "#166534" }}>Everyday Quantity Explanation:</strong>
+                            <div style={{ marginTop: "0.15rem", color: "#15803d", fontWeight: 600 }}>
+                              {item.additive.everyday_quantity_explanation.everyday_comparison}
+                            </div>
+                            <div style={{ marginTop: "0.15rem", color: "#334155", fontSize: "0.775rem" }}>
+                              {item.additive.everyday_quantity_explanation.plain_language_summary}
+                            </div>
+                            {item.additive.everyday_quantity_explanation.formula && (
+                              <div style={{ marginTop: "0.15rem", fontSize: "0.725rem", color: "#475569", fontFamily: "monospace" }}>
+                                Calculation: {item.additive.everyday_quantity_explanation.formula}
+                              </div>
+                            )}
+                            <div style={{ marginTop: "0.15rem", fontSize: "0.7rem", color: "#64748b" }}>
+                              <em>Limitations:</em> {item.additive.everyday_quantity_explanation.limitations_and_uncertainty}
+                            </div>
                           </div>
                         )}
 

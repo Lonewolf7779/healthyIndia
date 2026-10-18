@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "dataset_name": "healthyIndia Curated and Verified Food Additive Reference",
   "last_updated": "2026-10-18",
   "license": "Open Reference Dataset for Consumer Transparency",
@@ -14,9 +14,23 @@
         "Flavour enhancer"
       ],
       "chemical_identity": "CAS 142-47-2 | Molecular Formula: C5H8NO4Na | Monosodium salt of L-glutamic acid",
-      "acceptable_daily_intake": "ADI 'not specified' (allocated by JECFA in 1987 to substances of very low toxicity where total dietary intake does not represent a hazard to health)",
-      "health_effects_evidence": "Extensive double-blind placebo-controlled challenge studies (Geha et al., 2000; JECFA, 1987) demonstrated no consistent or reproducible causal relationship between dietary MSG intake and acute adverse symptoms in the general population. Transient symptoms (flushing, numbness, mild headache) have been documented in a small subset of sensitive individuals only after large oral bolus doses (>3g) administered without food. Oral dietary glutamate does not cross the intact adult blood-brain barrier in significant amounts.",
+      "acceptable_daily_intake": "ADI 'not specified' (allocated by JECFA in 1987, 31st Report, TRS 759)",
+      "health_effects_evidence": "Extensive double-blind placebo-controlled challenge studies (Geha et al., 2000; JECFA, 1987) demonstrated no reproducible causal relationship between customary dietary MSG consumption and acute adverse reactions in the general population. Transient symptoms (such as mild facial flushing, numbness, or headache) have been observed in clinical trials only in a small subset of sensitive individuals after large oral bolus challenges of 3g or more administered without food. Oral glutamate is largely metabolized by intestinal enterocytes and does not cross the intact adult blood-brain barrier in significant amounts.",
       "population_sensitivities": "Prohibited in foods manufactured for infants below 12 months under Indian regulations. Sensitive individuals reporting sensitivity should monitor high-dose culinary seasonings.",
+      "everyday_quantity_explanation": {
+        "original_value": "not specified",
+        "original_unit": "ADI category",
+        "guidance_type": "acceptable_daily_intake",
+        "plain_language_summary": "Acceptable Daily Intake (ADI) is an estimate of lifetime safe intake. JECFA allocates 'not specified' to substances of very low systemic toxicity where dietary intake for functional purposes does not pose a hazard to health. It is a safety assessment, not a recommended intake target.",
+        "everyday_comparison": "No numerical mg/kg daily ceiling is set by JECFA because customary dietary seasoning levels are considered safe. However, Indian regulations strictly prohibit its use in foods intended for infants below 12 months.",
+        "formula": null,
+        "assumptions": [
+          "Used within customary culinary levels and Good Manufacturing Practice (GMP)."
+        ],
+        "reference_source": "Joint FAO/WHO Expert Committee on Food Additives (JECFA, 1987) & FSSAI (2011, 2020)",
+        "limitations_and_uncertainty": "An ADI of 'not specified' does not mean infinite consumption is harmless. Individual oral bolus doses above 3g without food have produced transient sensitivity reactions in clinical challenges.",
+        "is_conversion_available": true
+      },
       "aliases": [
         "msg",
         "monosodium glutamate",
@@ -65,7 +79,7 @@
           "publication_date": "1987-03-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "WHO Technical Report Series 759 (31st Report), Monograph 2464",
-          "supported_claims": "Allocated ADI 'not specified', concluding that dietary exposure to glutamate does not represent a toxicological hazard."
+          "supported_claims": "Allocated an ADI 'not specified', indicating that dietary intake necessary for technological purpose does not represent a hazard to health."
         }
       ],
       "jurisdiction": "India (FSSAI) & Codex Alimentarius",
@@ -82,9 +96,25 @@
         "Non-nutritive sweetener"
       ],
       "chemical_identity": "CAS 22839-47-0 | Molecular Formula: C14H18N2O5 | N-L-alpha-Aspartyl-L-phenylalanine 1-methyl ester",
-      "acceptable_daily_intake": "ADI: 0–40 mg/kg body weight (established by JECFA in 1981, reaffirmed in July 2023)",
-      "health_effects_evidence": "In July 2023, WHO IARC classified aspartame as Group 2B ('possibly carcinogenic to humans' based on limited evidence in humans for hepatocellular carcinoma), while the Joint FAO/WHO Expert Committee on Food Additives (JECFA) reaffirmed that current intake levels are safe and maintained the ADI at 0–40 mg/kg bw, finding no convincing evidence of adverse effects within this limit. An adult weighing 60 kg would need to consume 12–36 cans of diet soda containing 200–300 mg aspartame daily to exceed the ADI, assuming no other dietary sources.",
+      "acceptable_daily_intake": "ADI: 0–40 mg/kg body weight/day (established by JECFA in 1981, reaffirmed in July 2023)",
+      "health_effects_evidence": "In July 2023, WHO IARC classified aspartame as Group 2B ('possibly carcinogenic to humans' based on limited evidence in humans for hepatocellular carcinoma), while the Joint FAO/WHO Expert Committee on Food Additives (JECFA) reaffirmed the established ADI of 0–40 mg/kg body weight/day, concluding that evaluated evidence indicated no sufficient reason to change the previously established ADI. In consumption context, WHO noted that for a 70 kg adult consuming diet soft drinks containing 200–300 mg aspartame per can, more than 9–14 cans daily would be required to exceed the ADI, assuming no other dietary sources. For a 60 kg reference adult, the calculated ADI is 2,400 mg/day (40 mg/kg × 60 kg); consuming 12 cans (at 200 mg/can) or 8 cans (at 300 mg/can) reaches the calculated ADI, and more than 8–12 cans would be required to exceed it. Reaching the ADI is not equivalent to exceeding it, and an ADI is a lifetime safety threshold, not a daily target.",
       "population_sensitivities": "Severe metabolic hazard for individuals suffering from Phenylketonuria (PKU), who lack the enzyme phenylalanine hydroxylase needed to metabolize phenylalanine. Requires prominent statutory packaging warning.",
+      "everyday_quantity_explanation": {
+        "original_value": 40.0,
+        "original_unit": "mg/kg body weight/day",
+        "guidance_type": "acceptable_daily_intake",
+        "plain_language_summary": "Acceptable Daily Intake (ADI) is the maximum amount of a food additive that can be safely consumed daily over an entire lifetime without appreciable health risk. It is a toxicological safety boundary, not a nutritional goal or recommended intake.",
+        "everyday_comparison": "For a 60 kg adult (the standard ICMR-NIN Indian reference adult), the daily ADI limit is 2,400 mg (2.4 grams). For diet soft drinks containing 200–300 mg aspartame per can, consuming 8 to 12 cans reaches this daily limit, and more than 8 to 12 cans daily would be required to exceed it.",
+        "formula": "Body Weight (kg) × 40 mg/kg/day = Daily ADI Limit (mg/day)",
+        "assumptions": [
+          "Calculated for a standard reference adult weight of 60 kg (ICMR-NIN 2020) and 70 kg (WHO global reference).",
+          "Soft drink cans contain approximately 200 mg to 300 mg aspartame per 330 ml can (typical commercial formulations).",
+          "Assumes no other dietary sources of aspartame on that day."
+        ],
+        "reference_source": "Joint FAO/WHO Expert Committee on Food Additives (JECFA, 2023) & ICMR-NIN (2020)",
+        "limitations_and_uncertainty": "Reaching an ADI is not the same as exceeding it. Commercial beverage recipes vary in sweetener concentration, and exceeding the ADI on an occasional day does not indicate acute toxicity.",
+        "is_conversion_available": true
+      },
       "aliases": [
         "aspartame",
         "artificial sweetener aspartame",
@@ -144,9 +174,24 @@
         "Food colour"
       ],
       "chemical_identity": "CAS 8028-89-5 | Complex polymeric colouring material prepared by controlled heat treatment of carbohydrates with ammonium and sulfite compounds",
-      "acceptable_daily_intake": "ADI: 0–200 mg/kg body weight (established by JECFA in 1985 on solids basis, reaffirmed in 2000)",
-      "health_effects_evidence": "Toxicological evaluations focus on 4-methylimidazole (4-MEI), a trace processing byproduct formed during ammonia caramel manufacturing. High doses of isolated 4-MEI in animal bioassays produced alveolar/bronchiolar neoplasms in mice. JECFA, EFSA, and FSSAI established strict statutory purity specifications limiting 4-MEI to maximum 250 mg/kg in commercial Caramel IV (on equivalent colour basis). At regulatory purity standards, human dietary exposure to 4-MEI is negligible and toxicologically safe within the ADI.",
+      "acceptable_daily_intake": "Group ADI: 0–200 mg/kg body weight/day on solids basis (established by JECFA in 1985, reaffirmed in 2000, WHO Food Additives Series 44)",
+      "health_effects_evidence": "Toxicological evaluations by JECFA (1985, 2000) and EFSA (2011) assessed 4-methylimidazole (4-MEI), a trace manufacturing byproduct formed during ammonium caramel production. High doses of isolated 4-MEI in rodent bioassays produced alveolar/bronchiolar neoplasms in mice. International and Indian statutory standards established a strict purity threshold limiting 4-MEI to maximum 250 mg/kg in commercial Caramel IV (on an equivalent colour basis). JECFA and EFSA concluded that when Caramel IV complies with these purity specifications, human dietary intake within the group ADI of 0–200 mg/kg bw does not indicate a health concern.",
       "population_sensitivities": "May contain trace bound sulfur dioxide/sulfites from the manufacturing process. Individuals diagnosed with severe sulfite hypersensitivity should check product allergen statements.",
+      "everyday_quantity_explanation": {
+        "original_value": 200.0,
+        "original_unit": "mg/kg body weight/day (solids basis)",
+        "guidance_type": "acceptable_daily_intake",
+        "plain_language_summary": "Acceptable Daily Intake (ADI) is the maximum estimated intake that can be safely consumed daily over a lifetime. It represents an upper toxicological boundary, not a recommended consumption amount.",
+        "everyday_comparison": "For a 60 kg adult, the group daily ADI ceiling corresponds to 12,000 mg (12 grams) of caramel colour solids per day. Typical servings of caramel-coloured beverages contribute a small fraction of this lifetime threshold.",
+        "formula": "60 kg × 200 mg/kg/day = 12,000 mg/day (12 g/day)",
+        "assumptions": [
+          "Calculated for a reference 60 kg adult.",
+          "Expressed on a solids basis as specified by JECFA."
+        ],
+        "reference_source": "Joint FAO/WHO Expert Committee on Food Additives (JECFA, 2000)",
+        "limitations_and_uncertainty": "Actual caramel content is not declared in quantitative milligrams on Indian beverage labels. Category-specific maximum concentration limits apply under FSSAI rules.",
+        "is_conversion_available": true
+      },
       "aliases": [
         "caramel iv",
         "caramel iv - sulphite ammonia caramel",
@@ -204,9 +249,23 @@
         "Antioxidant"
       ],
       "chemical_identity": "CAS 8002-43-5 | Complex mixture of polar phosphatides (phosphatidylcholine, phosphatidylethanolamine, phosphatidylinositol, phosphatidic acid)",
-      "acceptable_daily_intake": "ADI 'not limited' / 'not specified' (established by JECFA in 1973)",
-      "health_effects_evidence": "Lecithins are naturally occurring structural lipids found in egg yolk, soybeans, sunflower seeds, and all animal and plant cell membranes. Metabolized as normal dietary fats into choline, fatty acids, and glycerol. Non-toxic at all dietary exposure levels.",
+      "acceptable_daily_intake": "ADI 'not limited' / 'not specified' (established by JECFA in 1973, WHO TRS 539)",
+      "health_effects_evidence": "Lecithins are structural phosphoglycerides found naturally in cell membranes of plants and animals, and in high concentrations in egg yolk and soybeans. Ingested lecithins are metabolized through standard physiological lipid pathways into choline, fatty acids, and glycerol. Toxicological feeding studies have demonstrated no systemic adverse effects at practical dietary concentrations, leading JECFA to allocate an ADI 'not limited' / 'not specified'.",
       "population_sensitivities": "When derived from soybeans (common in commercial packaged foods), traces of residual soy protein can trigger allergic reactions in individuals with severe IgE-mediated soya allergy. FSSAI mandates explicit declaration of the botanical allergen source.",
+      "everyday_quantity_explanation": {
+        "original_value": "not specified",
+        "original_unit": "ADI category",
+        "guidance_type": "acceptable_daily_intake",
+        "plain_language_summary": "Acceptable Daily Intake (ADI) of 'not specified' indicates that dietary intake levels necessary for technological emulsification in food do not pose a toxicological hazard. It is not a nutritional recommendation.",
+        "everyday_comparison": "Lecithins are normal dietary fats naturally present in foods like eggs and soybeans. Because they are metabolized as standard lipids, no specific mg/kg daily intake restriction is needed.",
+        "formula": null,
+        "assumptions": [
+          "Used in accordance with Good Manufacturing Practice (GMP) for emulsification and stabilization."
+        ],
+        "reference_source": "Joint FAO/WHO Expert Committee on Food Additives (JECFA, 1973)",
+        "limitations_and_uncertainty": "Individuals with soya allergies must check whether lecithin is soy-derived, as small protein residues can provoke immune reactions regardless of toxicological safety.",
+        "is_conversion_available": true
+      },
       "aliases": [
         "lecithin",
         "lecithins",
@@ -277,9 +336,25 @@
         "Preservative"
       ],
       "chemical_identity": "CAS 532-32-1 | Molecular Formula: C7H5NaO2 | Sodium salt of benzenecarboxylic acid",
-      "acceptable_daily_intake": "ADI: 0–5 mg/kg body weight (established by JECFA in 1996, expressed as benzoic acid equivalent)",
-      "health_effects_evidence": "Sodium benzoate is absorbed and rapidly conjugated with glycine in the liver to form hippuric acid, which is excreted in urine within 24 hours. In acidic beverages formulated with both sodium benzoate and ascorbic acid (Vitamin C), trace catalytic decarboxylation can form benzene under heat and UV exposure. Strict manufacturing controls, pH management, and statutory surveillance ensure benzene formation remains well below the WHO drinking water guideline of 10 ppb (0.01 mg/L). Non-toxic at permitted statutory concentrations.",
+      "acceptable_daily_intake": "Group ADI: 0–5 mg/kg body weight/day (established by JECFA in 1996, expressed as benzoic acid equivalent)",
+      "health_effects_evidence": "Sodium benzoate is absorbed and rapidly conjugated with glycine in the liver to form hippuric acid, which is excreted in urine within 24 hours. In acidic beverages formulated with both sodium benzoate and ascorbic acid (Vitamin C), trace catalytic decarboxylation can form benzene under heat and UV exposure. Strict manufacturing controls, pH management, and statutory surveillance ensure benzene formation remains well below the WHO drinking water guideline of 10 ppb (0.01 mg/L). Within the established ADI of 0–5 mg/kg bw and statutory maximum limits, dietary exposure is effectively metabolized without observed systemic toxicity.",
       "population_sensitivities": "Non-immunological pseudo-allergic reactions (urticaria, contact dermatitis, asthma exacerbation) have been reported in a small fraction of individuals with pre-existing aspirin-sensitive asthma or chronic idiopathic urticaria.",
+      "everyday_quantity_explanation": {
+        "original_value": 5.0,
+        "original_unit": "mg/kg body weight/day (as benzoic acid)",
+        "guidance_type": "acceptable_daily_intake",
+        "plain_language_summary": "Acceptable Daily Intake (ADI) is an upper toxicological boundary for daily lifetime consumption. It is not a nutritional target or recommended allowance.",
+        "everyday_comparison": "For a 60 kg adult, the daily ADI ceiling is 300 mg of benzoic acid equivalents. Under Indian food law, a 500 ml serving of carbonated fruit beverage (max 120 ppm) can contain up to 60 mg benzoate, which is about 20% of this daily ADI limit.",
+        "formula": "60 kg × 5 mg/kg/day = 300 mg/day",
+        "assumptions": [
+          "Calculated for a reference 60 kg adult.",
+          "Expressed as benzoic acid equivalents as defined by JECFA.",
+          "Comparison beverage contains maximum permitted FSSAI concentration of 120 ppm (120 mg/L)."
+        ],
+        "reference_source": "Joint FAO/WHO Expert Committee on Food Additives (JECFA, 1996) & FSSAI (2011)",
+        "limitations_and_uncertainty": "Actual preservative concentrations in commercial foods are typically lower than the statutory ceiling, but precise milligram quantities are rarely disclosed on packaging.",
+        "is_conversion_available": true
+      },
       "aliases": [
         "sodium benzoate",
         "benzoate of soda",
@@ -332,9 +407,23 @@
         "Sequestering agent"
       ],
       "chemical_identity": "CAS 77-92-9 | Molecular Formula: C6H8O7 | 2-Hydroxypropane-1,2,3-tricarboxylic acid",
-      "acceptable_daily_intake": "ADI 'not limited' / 'not specified' (established by JECFA in 1973)",
-      "health_effects_evidence": "Citric acid is a fundamental intermediate in the citric acid (Krebs) cycle of cellular metabolism in all aerobic organisms. It is completely metabolized into carbon dioxide and water; non-toxic at all dietary intake levels. Frequent, prolonged dietary contact with high-concentration acidic beverages can promote dental enamel demineralization (erosion).",
+      "acceptable_daily_intake": "ADI 'not limited' / 'not specified' (established by JECFA in 1973, WHO TRS 539)",
+      "health_effects_evidence": "Citric acid is an essential organic acid occurring naturally in citrus fruits and serving as a fundamental intermediate in the aerobic citric acid (Krebs) cycle in human cells. Ingested citric acid is oxidized to carbon dioxide and water through normal metabolic pathways. JECFA determined that its technological use does not represent a systemic health hazard, allocating an ADI 'not limited'. However, frequent, prolonged oral exposure to acidic beverages with high citric acid content can promote dental enamel demineralization (erosion).",
       "population_sensitivities": "No recognized dietary allergy. Concentrated solutions can cause transient local oral mucosal irritation.",
+      "everyday_quantity_explanation": {
+        "original_value": "not specified",
+        "original_unit": "ADI category",
+        "guidance_type": "acceptable_daily_intake",
+        "plain_language_summary": "Acceptable Daily Intake (ADI) of 'not specified' means the substance is of very low systemic toxicity and standard technological levels do not present a health risk. It is not an intake requirement.",
+        "everyday_comparison": "Citric acid is the same natural organic acid that gives lemons and limes their sour taste. Because the body completely breaks it down during energy production, no numerical mg/kg daily ceiling is set.",
+        "formula": null,
+        "assumptions": [
+          "Used in accordance with Good Manufacturing Practice (GMP) as an acidity regulator."
+        ],
+        "reference_source": "Joint FAO/WHO Expert Committee on Food Additives (JECFA, 1973)",
+        "limitations_and_uncertainty": "Frequent, direct contact with high-acid beverages can erode tooth enamel over time, independent of toxicological safety.",
+        "is_conversion_available": true
+      },
       "aliases": [
         "citric acid",
         "acidity regulator (330)",
@@ -384,10 +473,25 @@
       "functional_classes": [
         "Synthetic food colour"
       ],
-      "chemical_identity": "CAS 1934-21-0 | Molecular Formula: C16H9N4Na3O9S2 | Trisodium 5-hydroxy-1-(4-sulfonatophenyl)-4-(4-sulfonatophenylazo)-H-pyrazole-3-carboxylate",
-      "acceptable_daily_intake": "ADI: 0–10 mg/kg body weight (established by JECFA in 2016, increased from earlier 0-7.5 mg/kg bw based on comprehensive multigenerational reproductive and neurobehavioral studies)",
-      "health_effects_evidence": "Comprehensive toxicological evaluations by JECFA (2016), EFSA (2009), and US FDA found no evidence of genotoxicity, carcinogenicity, or neurotoxicity in animal bioassays at dietary exposure levels. A small proportion (<0.1%) of the population, predominantly individuals with known aspirin-induced asthma, exhibits clinical pseudo-allergic cross-reactivity (urticaria, rhinitis, bronchospasm). The 2007 Southampton study observed slight increases in hyperactivity in children consuming a mixture of synthetic colours and sodium benzoate, but JECFA and EFSA concluded the evidence does not establish a causal neurological relationship for the general population.",
+      "chemical_identity": "CAS 1934-21-0 | Molecular Formula: C16H9N4Na3O9S2 | Trisodium 5-hydroxy-1-(4-sulfonatophenyl)-4-(4-sulfonatophenylazo)-1H-pyrazole-3-carboxylate",
+      "acceptable_daily_intake": "ADI: 0–10 mg/kg body weight/day (established by JECFA in 2016, WHO FAS 73, based on NOAEL of 984 mg/kg bw/day)",
+      "health_effects_evidence": "Comprehensive toxicological reviews by JECFA (2016), EFSA (2009), and the US FDA evaluated extensive multi-generational reproductive, neurobehavioral, and chronic bioassays, concluding that tartrazine is not genotoxic or carcinogenic at dietary exposure levels. Clinical trials indicate that a small fraction of individuals (<0.1%), particularly those with aspirin-induced asthma or chronic urticaria, can experience intolerance or pseudo-allergic cross-reactions (bronchospasm, rhinitis, urticaria). While the 2007 Southampton study reported small behavioral changes in children consuming synthetic colour mixtures, subsequent assessments by JECFA and EFSA concluded that the findings did not substantiate a causal neurotoxic relationship for the general population.",
       "population_sensitivities": "Cross-sensitivity in patients with aspirin-sensitive asthma or chronic idiopathic urticaria. Mandatory bold statutory packaging disclosure required in India.",
+      "everyday_quantity_explanation": {
+        "original_value": 10.0,
+        "original_unit": "mg/kg body weight/day",
+        "guidance_type": "acceptable_daily_intake",
+        "plain_language_summary": "Acceptable Daily Intake (ADI) is the estimated maximum intake that can be safely consumed daily over a lifetime without appreciable health risk. It is a safety limit, not a dietary target.",
+        "everyday_comparison": "For a 60 kg adult, the daily ADI limit is 600 mg. Under Indian regulations, synthetic colour is capped at a maximum of 100 mg/kg (ppm) in most foods. A person would have to eat 6 kg of brightly coloured food with maximum dye content daily to reach the ADI.",
+        "formula": "60 kg × 10 mg/kg/day = 600 mg/day",
+        "assumptions": [
+          "Calculated for a standard reference 60 kg adult.",
+          "Finished food contains the maximum statutory FSSAI colour concentration of 100 ppm (100 mg per kg of food)."
+        ],
+        "reference_source": "Joint FAO/WHO Expert Committee on Food Additives (JECFA, 2016) & FSSAI (2011)",
+        "limitations_and_uncertainty": "Even though toxicological intake limits are high, individuals with known aspirin intolerance can react to very small traces of tartrazine.",
+        "is_conversion_available": true
+      },
       "aliases": [
         "tartrazine",
         "fd&c yellow 5",
@@ -456,9 +560,24 @@
         "Stabilizer"
       ],
       "chemical_identity": "CAS 144-55-8 | Molecular Formula: NaHCO3 | Monosodium salt of carbonic acid (commonly known as baking soda / sodium bicarbonate)",
-      "acceptable_daily_intake": "ADI 'not specified' (established by JECFA in 1985)",
-      "health_effects_evidence": "Completely dissociates into sodium (Na+) and bicarbonate (HCO3-) ions in the gastrointestinal tract, reacting with gastric acid to release carbon dioxide gas and water. Both ions are homeostatically regulated in human physiology. Non-toxic. Contributes to total dietary sodium intake (27.4% sodium by weight).",
+      "acceptable_daily_intake": "Group ADI 'not specified' (established by JECFA in 1985, WHO FAS 20)",
+      "health_effects_evidence": "In the gastrointestinal tract, sodium bicarbonate dissociates into sodium and bicarbonate ions, reacting with gastric hydrochloric acid to produce carbon dioxide gas, water, and sodium chloride. Both sodium and bicarbonate ions are tightly regulated homeostatically. JECFA allocated an ADI 'not specified' for sodium and potassium carbonates. However, the compound contains 27.4% sodium by mass, so substantial culinary use contributes to overall dietary sodium intake.",
       "population_sensitivities": "Individuals placed on severe therapeutic sodium-restricted diets (e.g. for congestive heart failure or severe hypertension) should account for sodium contributed by chemical leaveners.",
+      "everyday_quantity_explanation": {
+        "original_value": "not specified",
+        "original_unit": "ADI category",
+        "guidance_type": "acceptable_daily_intake",
+        "plain_language_summary": "Acceptable Daily Intake (ADI) of 'not specified' reflects the very low systemic toxicity of carbonates at technological levels. It is not an invitation to consume unlimited quantities.",
+        "everyday_comparison": "Commonly known as baking soda, it dissociates into normal physiological minerals. One level standardized 5 ml metric teaspoon of baking soda weighs about 4.8 grams and contributes approximately 1,315 mg of sodium (over 65% of the daily 2,000 mg sodium limit).",
+        "formula": "Baking soda mass (g) × 0.274 = Sodium mass (g)",
+        "assumptions": [
+          "Standard metric 5 ml level teaspoon of baking soda density is approximately 0.96 g/ml (~4.8 g per teaspoon).",
+          "Contains 27.37% elemental sodium by chemical stoichiometry."
+        ],
+        "reference_source": "Joint FAO/WHO Expert Committee on Food Additives (JECFA, 1985) & ICMR-NIN (2020)",
+        "limitations_and_uncertainty": "Household spoons vary significantly from standardized measuring spoons. Those on sodium-restricted diets must track total sodium intake from all sources.",
+        "is_conversion_available": true
+      },
       "aliases": [
         "sodium hydrogen carbonate",
         "sodium bicarbonate",

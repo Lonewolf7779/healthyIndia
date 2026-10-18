@@ -193,6 +193,19 @@ class NutritionFlagSchema(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class EverydayExplanationSchema(BaseModel):
+    original_value: float | str
+    original_unit: str
+    guidance_type: str
+    plain_language_summary: str
+    everyday_comparison: str
+    formula: str | None = None
+    assumptions: list[str] = Field(default_factory=list)
+    reference_source: str | None = None
+    limitations_and_uncertainty: str
+    is_conversion_available: bool = True
+
+
 class NutritionAnalysisResponse(BaseModel):
     status: str = Field(
         ...,
@@ -225,4 +238,8 @@ class NutritionAnalysisResponse(BaseModel):
     )
     disclaimer: str = Field(
         ..., description="Scientific limitations and legal transparency statement."
+    )
+    everyday_explanations: list[EverydayExplanationSchema] = Field(
+        default_factory=list,
+        description="Plain-language quantity explanations and everyday comparisons.",
     )

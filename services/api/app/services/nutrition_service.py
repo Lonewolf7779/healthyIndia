@@ -6,6 +6,7 @@ Decouples FastAPI route handlers from the pure domain calculation engine.
 from app.nutrition.calculator import analyze_nutrition
 from app.nutrition.models import RawNutrientInput
 from app.schemas.nutrition import (
+    EverydayExplanationSchema,
     NutrientComparisonSchema,
     NutritionAnalysisRequest,
     NutritionAnalysisResponse,
@@ -65,6 +66,24 @@ class NutritionService:
             for f in result.flags
         ]
 
+        everyday_explanations = [
+            EverydayExplanationSchema(
+                original_value=e.original_value,
+                original_unit=e.original_unit,
+                guidance_type=e.guidance_type.value
+                if hasattr(e.guidance_type, "value")
+                else str(e.guidance_type),
+                plain_language_summary=e.plain_language_summary,
+                everyday_comparison=e.everyday_comparison,
+                formula=e.formula,
+                assumptions=e.assumptions,
+                reference_source=e.reference_source,
+                limitations_and_uncertainty=e.limitations_and_uncertainty,
+                is_conversion_available=e.is_conversion_available,
+            )
+            for e in result.everyday_explanations
+        ]
+
         return NutritionAnalysisResponse(
             status=result.status,
             serving_size=result.serving_size,
@@ -77,4 +96,5 @@ class NutritionService:
             is_complete=result.is_complete,
             missing_nutrients=result.missing_nutrients,
             disclaimer=result.disclaimer,
+            everyday_explanations=everyday_explanations,
         )

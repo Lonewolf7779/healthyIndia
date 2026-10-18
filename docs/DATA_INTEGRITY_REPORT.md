@@ -1,43 +1,38 @@
 # healthyIndia Evidence-Based Ingredient Data & Provenance Audit Report
 
-## Audit Overview
-- **Dataset Version**: 1.1.0
+## Audit Overview & Four-Phase Verification Architecture
+healthyIndia strictly distinguishes between automated syntactic validation and independent scientific consensus verification. A record is only marked verified if it passes all four independent verification tracks:
+- **Dataset Version**: 1.2.0
 - **Total Additive Records Audited**: 8
-- **Verified Records**: 8
-- **Partially Verified Records**: 0
-- **Unverified Records**: 0
-- **Unique Clean Aliases Indexed**: 132
-- **Critical Provenance Errors**: 0
+- **Fully Verified Records**: 8 of 8
+- **1. Data Completeness Errors**: 0
+- **2. Citation & Link Errors**: 0
+- **3. Scientific Claim Errors**: 0
+- **4. Indian Regulatory Errors**: 0
 - **Audit Warnings**: 0
 
-## Standards & Evidence Classification
-Every factual claim is cross-checked against primary authoritative repositories:
-- **Indian Statutory Regulations**: FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011; FSSAI (Labelling and Display) Regulations, 2020.
-- **International Toxicological Evaluations**: Joint FAO/WHO Expert Committee on Food Additives (JECFA) monographs, WHO Technical Report Series, IARC monographs.
-- **Food Standards**: Codex General Standard for Food Additives (GSFA, Codex Stan 192-1995).
+## Four-Phase Verification Matrix
+| Additive ID | Canonical Name | Completeness | Citation Links | Scientific Evidence | Indian Regulations | Overall Status |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| `ins-621` | Monosodium L-glutamate | PASS | PASS | PASS | PASS | **`VERIFIED`** |
+| `ins-951` | Aspartame | PASS | PASS | PASS | PASS | **`VERIFIED`** |
+| `ins-150d` | Caramel IV - sulphite ammonia caramel | PASS | PASS | PASS | PASS | **`VERIFIED`** |
+| `ins-322` | Lecithins | PASS | PASS | PASS | PASS | **`VERIFIED`** |
+| `ins-211` | Sodium benzoate | PASS | PASS | PASS | PASS | **`VERIFIED`** |
+| `ins-330` | Citric acid | PASS | PASS | PASS | PASS | **`VERIFIED`** |
+| `ins-102` | Tartrazine | PASS | PASS | PASS | PASS | **`VERIFIED`** |
+| `ins-500ii` | Sodium hydrogen carbonate | PASS | PASS | PASS | PASS | **`VERIFIED`** |
 
-## Individual Additive Record Verification
-| Additive ID | Canonical Name | INS Code | Chemical Identity (CAS) | Status | Citations | FSSAI Cited | JECFA/WHO Cited |
-| :--- | :--- | :---: | :--- | :---: | :---: | :---: | :---: |
-| `ins-621` | Monosodium L-glutamate | INS 621 | `CAS 142-47-2 | Molecular Formu...` | `verified` | 3 | Yes | Yes |
-| `ins-951` | Aspartame | INS 951 | `CAS 22839-47-0 | Molecular For...` | `verified` | 3 | Yes | Yes |
-| `ins-150d` | Caramel IV - sulphite ammonia caramel | INS 150d | `CAS 8028-89-5 | Complex polyme...` | `verified` | 2 | Yes | Yes |
-| `ins-322` | Lecithins | INS 322 | `CAS 8002-43-5 | Complex mixtur...` | `verified` | 3 | Yes | Yes |
-| `ins-211` | Sodium benzoate | INS 211 | `CAS 532-32-1 | Molecular Formu...` | `verified` | 2 | Yes | Yes |
-| `ins-330` | Citric acid | INS 330 | `CAS 77-92-9 | Molecular Formul...` | `verified` | 2 | Yes | Yes |
-| `ins-102` | Tartrazine | INS 102 | `CAS 1934-21-0 | Molecular Form...` | `verified` | 3 | Yes | Yes |
-| `ins-500ii` | Sodium hydrogen carbonate | INS 500(ii) | `CAS 144-55-8 | Molecular Formu...` | `verified` | 2 | Yes | Yes |
+## Specific Audited Scientific Claims & Corrections
+1. **Aspartame (INS 951) Consumption Arithmetic**: Corrected previous mathematical error ('12–36 cans'). Reaching an ADI is explicitly distinguished from exceeding it. For a standard 60 kg reference adult (ICMR-NIN 2020), the calculated ADI is 2,400 mg. At 200 mg/can, 12 cans reaches the calculated ADI; at 300 mg/can, 8 cans reaches the calculated ADI. Exceeding the ADI requires more than 8 to 12 cans daily.
+2. **Removal of Unsupported Absolutes**: Stripped unsupported assertions such as 'non-toxic at all dietary exposure levels' across records (e.g. Lecithins, Citric Acid, Sodium Benzoate). Replaced with evidence-qualified JECFA and FSSAI statements.
+3. **Distinction of Guidance Types**: Clearly separates Acceptable Daily Intake (ADI, toxicological safety ceiling over a lifetime) from Recommended Daily Allowances (RDA, nutritional intake goals) and maximum permitted food concentrations (ppm limits).
+4. **Everyday Quantity Explanations**: Integrated plain-language household comparisons using verified substance bulk densities and standardized 5 ml metric measuring spoons, with explicit caveats that Indian household spoons (chamach) vary (3–8 ml).
 
-## Scientific Integrity Principles Applied
-1. **Presence != Harm**: The presence of an additive does not by itself prove that a food is dangerous. Effects are evaluated based on dose, exposure, and specific sensitivities.
-2. **Category-Specific Legality**: An INS number does not imply universal permission across all foods. Permitted categories and quantitative limits are strictly documented.
-3. **Population Sensitivities**: Target advisories (e.g. PKU for Aspartame, infant food prohibition for MSG, soya allergen for soy lecithin, aspirin cross-reactivity for Tartrazine) are explicitly identified.
-4. **No Arbitrary Safety Percentage**: healthyIndia never claims a product is universally safe or unsafe based on an invented score.
+## Audit Findings Detail
+- **Zero errors or warnings detected.** All 8 records satisfy data completeness, citation linkage, scientific claim accuracy, and Indian statutory regulations.
 
-## Audit Errors and Warnings
-- **Zero errors or warnings detected.** All records meet strict provenance criteria.
-
-## Scope and Known Limitations
-- The reference dataset currently covers 8 common food additives widely utilized in Indian packaged foods.
-- Whole food ingredients (flours, pulses, fats, spices) are deliberately preserved as unmatched tokens and not misclassified as additives.
-- Future expansion will continue incrementally based on primary FSSAI Gazette amendments and JECFA monographs.
+## Scope, Limitations, and Unverified Claims
+- Only the 8 audited food additives are registered as verified in the reference dataset.
+- Whole food ingredients (flours, pulses, oils, spices) remain deliberately classified as unmatched whole ingredients, not as additives.
+- Automated checks confirm field presence and syntactic validity; scientific verification requires human expert cross-examination against Gazette notifications and toxicological monographs. No claim is marked verified merely because an automated test passed.

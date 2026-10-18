@@ -105,3 +105,6 @@ class NutritionAnalysisResult:
 
     # Scientific and legal limitations
     disclaimer: str
+
+    # Everyday quantity explanations for consumers
+    everyday_explanations: list[Any] = field(default_factory=list)

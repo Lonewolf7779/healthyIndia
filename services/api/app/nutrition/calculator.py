@@ -9,6 +9,7 @@ Strict Rules:
 5. Flags clearly distinguish binding FSSAI regulations from proposed draft guidance and RDAs.
 """
 
+from app.nutrition.explainer import generate_nutrition_quantity_explanations
 from app.nutrition.models import (
     NutrientComparison,
     NutritionAnalysisResult,
@@ -315,6 +316,11 @@ def analyze_nutrition(input_data: RawNutrientInput) -> NutritionAnalysisResult:
         input_data.serving_unit,
         missing_mandatory,
     )
+    everyday_explanations = generate_nutrition_quantity_explanations(
+        per_serving=per_serving,
+        serving_size=input_data.serving_size,
+        serving_unit=input_data.serving_unit.value,
+    )
 
     return NutritionAnalysisResult(
         status=status,
@@ -328,4 +334,5 @@ def analyze_nutrition(input_data: RawNutrientInput) -> NutritionAnalysisResult:
         is_complete=is_complete,
         missing_nutrients=missing_mandatory,
         disclaimer=DISCLAIMER,
+        everyday_explanations=everyday_explanations,
     )
