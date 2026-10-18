@@ -116,11 +116,13 @@ class TestNutrientValueAssociation:
         assert len(res.per_serving_candidates) >= 5
 
         # Check per-100 column
+        assert res.per_100_candidates["energy_kcal"].value == 480.0
         assert res.per_100_candidates["protein_g"].value == 7.0
         assert res.per_100_candidates["total_sugar_g"].value == 25.0
         assert res.per_100_candidates["total_fat_g"].value == 18.0
 
         # Check per-serving column
+        assert res.per_serving_candidates["energy_kcal"].value == 144.0
         assert res.per_serving_candidates["protein_g"].value == 2.1
         assert res.per_serving_candidates["total_sugar_g"].value == 7.5
         assert res.per_serving_candidates["total_fat_g"].value == 5.4

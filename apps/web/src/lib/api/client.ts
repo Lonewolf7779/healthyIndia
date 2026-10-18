@@ -148,6 +148,7 @@ export interface ImageQualityMetrics {
 export interface ImageQualityAssessment {
   is_acceptable: boolean;
   grade: "good" | "fair" | "poor";
+  gate_outcome?: "ACCEPT" | "WARN" | "REJECT";
   metrics: ImageQualityMetrics;
   warnings: ExtractionWarning[];
   disclaimer: string;

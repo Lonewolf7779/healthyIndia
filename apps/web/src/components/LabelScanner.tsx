@@ -686,7 +686,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                       q.grade === "good" ? "#166534" : q.grade === "fair" ? "#92400e" : "#991b1b",
                   }}
                 >
-                  CV Quality: {q.grade.toUpperCase()} ({q.metrics.sharpness_score > 100 ? "Sharp" : "Soft Focus"})
+                  CV Quality: {q.gate_outcome || q.grade.toUpperCase()} ({q.metrics.sharpness_score >= 100 ? "Sharp" : "Soft Focus"})
                 </span>
               )}
               {state.ocrResult.overall_confidence !== null && (

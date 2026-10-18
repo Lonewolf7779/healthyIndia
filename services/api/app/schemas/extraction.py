@@ -26,6 +26,10 @@ class ExtractionWarningSchema(BaseModel):
 class ImageQualityAssessmentSchema(BaseModel):
     is_acceptable: bool
     grade: str = Field(..., description="Overall image quality grade: 'good', 'fair', or 'poor'")
+    gate_outcome: str = Field(
+        "ACCEPT",
+        description="Quality gate disposition: 'ACCEPT', 'WARN', or 'REJECT'",
+    )
     metrics: ImageQualityMetricsSchema
     warnings: list[ExtractionWarningSchema] = Field(default_factory=list)
     disclaimer: str

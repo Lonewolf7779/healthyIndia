@@ -32,9 +32,15 @@ MIN_RECOMMENDED_WIDTH = 600
 MIN_RECOMMENDED_HEIGHT = 400
 MIN_RECOMMENDED_PIXELS = 300_000  # ~0.3 MP
 
+# Absolute minimum dimensions below which characters cannot be resolved
+MIN_ABSOLUTE_WIDTH = 200
+MIN_ABSOLUTE_HEIGHT = 200
+
+BLUR_THRESHOLD_EXTREME = 20.0  # Severe blur rendering characters illegible
 BLUR_THRESHOLD_POOR = 50.0
 BLUR_THRESHOLD_FAIR = 100.0
 
+GLARE_THRESHOLD_EXTREME = 0.25  # Extreme glare obliterating >25% of image
 GLARE_THRESHOLD_POOR = 0.15  # 15% saturated pixels
 GLARE_THRESHOLD_FAIR = 0.08  # 8% saturated pixels
 
@@ -72,11 +78,13 @@ class ImageQualityAssessment:
     metrics: QualityMetrics
     warnings: list[ExtractionWarning] = field(default_factory=list)
     disclaimer: str = QUALITY_DISCLAIMER
+    gate_outcome: str = "ACCEPT"  # "ACCEPT", "WARN", "REJECT"
 
     def to_dict(self) -> dict:
         return {
             "is_acceptable": self.is_acceptable,
             "grade": self.grade,
+            "gate_outcome": self.gate_outcome,
             "metrics": {
                 "width": self.metrics.width,
                 "height": self.metrics.height,
@@ -353,20 +361,31 @@ def assess_image_quality(image_bytes: bytes) -> ImageQualityAssessment:
         )
         mild_issues += 1
 
-    # Determine overall quality grade
-    if severe_issues >= 2 or (severe_issues >= 1 and mild_issues >= 2):
+    # Determine overall quality grade and disposition
+    if (
+        sharpness < BLUR_THRESHOLD_EXTREME
+        or glare_ratio > GLARE_THRESHOLD_EXTREME
+        or w < MIN_ABSOLUTE_WIDTH
+        or h < MIN_ABSOLUTE_HEIGHT
+        or severe_issues >= 2
+        or (severe_issues >= 1 and mild_issues >= 2)
+    ):
         grade = "poor"
         is_acceptable = False
+        gate_outcome = "REJECT"
     elif severe_issues == 1 or mild_issues >= 2:
         grade = "fair"
         is_acceptable = True
+        gate_outcome = "WARN"
     else:
         grade = "good"
         is_acceptable = True
+        gate_outcome = "ACCEPT"
 
     return ImageQualityAssessment(
         is_acceptable=is_acceptable,
         grade=grade,
         metrics=metrics,
         warnings=warnings,
+        gate_outcome=gate_outcome,
     )

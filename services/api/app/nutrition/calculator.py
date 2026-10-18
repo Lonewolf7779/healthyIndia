@@ -77,6 +77,12 @@ def normalize_nutrients(
 
     raw_dict: dict[str, float | None] = {key: getattr(input_data, key) for key in ALL_NUTRIENT_KEYS}
 
+    for key, val in raw_dict.items():
+        if val is not None and val < 0:
+            raise ValueError(
+                f"Nutrient '{key}' has negative value {val}, which is physically impossible."
+            )
+
     per_100: dict[str, float | None] = {}
     per_serving: dict[str, float | None] = {}
 

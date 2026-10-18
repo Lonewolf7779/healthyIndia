@@ -96,6 +96,7 @@ class ExtractionService:
         quality_schema = ImageQualityAssessmentSchema(
             is_acceptable=quality_assessment.is_acceptable,
             grade=quality_assessment.grade,
+            gate_outcome=quality_assessment.gate_outcome,
             metrics=ImageQualityMetricsSchema(
                 width=quality_assessment.metrics.width,
                 height=quality_assessment.metrics.height,

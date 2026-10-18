@@ -81,100 +81,6 @@ def _detect_table_columns(raw_text: str) -> tuple[str, list[str]]:
     return "single_column", ["default"]
 
 
-def _extract_energy_candidate(
-    raw_text: str,
-) -> tuple[ExtractedNutrientCandidate | None, list[ExtractionWarning]]:
-    """
-    Carefully parses energy declarations, distinguishing kcal and kJ.
-    Never treats kJ as kcal. Converts kJ to kcal if only kJ is reported,
-    with an explicit warning.
-    """
-    warnings: list[ExtractionWarning] = []
-    energy_match = re.search(
-        r"(?:energy|calories|caloric\s+value)\s*[:\.\-_=]*\s*([^\n\r;]+)",
-        raw_text,
-        re.IGNORECASE,
-    )
-    if not energy_match:
-        return None, warnings
-
-    line_text = energy_match.group(0).strip()
-    phrase = energy_match.group(1).strip()
-
-    # Clean phrase
-    phrase_clean = _clean_ocr_text(phrase)
-
-    # 1. Look for explicit kcal/cal value first
-    m_kcal = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*(?:kcal|cal)\b", phrase_clean, re.IGNORECASE)
-    if m_kcal:
-        val = float(m_kcal.group(1))
-        return (
-            ExtractedNutrientCandidate(
-                field_name="energy_kcal",
-                raw_text=line_text,
-                value=val,
-                unit="kcal",
-                source="ocr",
-                status="unconfirmed",
-            ),
-            warnings,
-        )
-
-    # 2. Look for kJ without kcal: convert deterministically via 4.184 factor
-    m_kj = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*(?:kj)\b", phrase_clean, re.IGNORECASE)
-    if m_kj:
-        kj_val = float(m_kj.group(1))
-        kcal_val = round(kj_val / KJ_TO_KCAL_FACTOR, 1)
-        warnings.append(
-            ExtractionWarning(
-                code="ENERGY_KJ_CONVERTED",
-                message=(
-                    f"Energy was declared in kJ ({kj_val} kJ) and converted to kcal "
-                    f"({kcal_val} kcal) using standard factor {KJ_TO_KCAL_FACTOR} kJ/kcal. "
-                    "Please verify against physical label."
-                ),
-            )
-        )
-        return (
-            ExtractedNutrientCandidate(
-                field_name="energy_kcal",
-                raw_text=line_text,
-                value=kcal_val,
-                unit="kcal",
-                source="converted",
-                status="unconfirmed",
-            ),
-            warnings,
-        )
-
-    # 3. Numeric value without unit: flag uncertainty
-    m_num = re.search(r"([0-9]+(?:\.[0-9]+)?)\b", phrase_clean)
-    if m_num:
-        val = float(m_num.group(1))
-        warnings.append(
-            ExtractionWarning(
-                code="ENERGY_UNIT_UNCERTAIN",
-                message=(
-                    f"Energy value ({val}) was detected without an explicit unit (kcal or kJ). "
-                    "Please verify unit against physical label."
-                ),
-            )
-        )
-        return (
-            ExtractedNutrientCandidate(
-                field_name="energy_kcal",
-                raw_text=line_text,
-                value=val,
-                unit="kcal",
-                source="ocr",
-                status="unconfirmed",
-            ),
-            warnings,
-        )
-
-    return None, warnings
-
-
 def _extract_serving_candidate(raw_text: str) -> tuple[float | None, str, str]:
     """
     Extracts serving size candidate, giving precedence to parenthesized metric weights
@@ -245,6 +151,147 @@ def _extract_all_numbers_from_line(line: str) -> list[tuple[float, str | None]]:
         except ValueError:
             continue
     return results
+
+
+def _extract_energy_candidate(
+    raw_text: str,
+    column_basis_detected: str = "single_column",
+) -> tuple[
+    ExtractedNutrientCandidate | None,
+    ExtractedNutrientCandidate | None,
+    ExtractedNutrientCandidate | None,
+    list[ExtractionWarning],
+]:
+    """
+    Carefully parses energy declarations, distinguishing kcal and kJ across single and dual columns.
+    Converts kJ to kcal if only kJ is reported, with an explicit warning.
+    Returns (primary_candidate, cand_100, cand_serving, warnings).
+    """
+    warnings: list[ExtractionWarning] = []
+    u_spec = r"(?:\s*\((?:kcal|kj|cal)\))?"
+    energy_match = re.search(
+        r"(?:energy|calories|caloric\s+value)" + u_spec + r"\s*[:\.\-_=]*\s*([^\n\r;]+)",
+        raw_text,
+        re.IGNORECASE,
+    )
+    if not energy_match:
+        return None, None, None, warnings
+
+    line_text = energy_match.group(0).strip()
+    phrase = energy_match.group(1).strip()
+    phrase_clean = _clean_ocr_text(phrase)
+
+    is_kj = bool(re.search(r"\bkj\b", line_text, re.IGNORECASE))
+    is_kcal = bool(re.search(r"\b(?:kcal|cal)\b", line_text, re.IGNORECASE))
+
+    numbers = _extract_all_numbers_from_line(phrase_clean)
+    num_vals = [n[0] for n in numbers if n[1] != "%"]
+    if not num_vals:
+        num_vals = [n[0] for n in numbers]
+
+    if not num_vals:
+        return None, None, None, warnings
+
+    m_kcal_explicit = re.search(
+        r"([0-9]+(?:\.[0-9]+)?)\s*(?:kcal|cal)\b", phrase_clean, re.IGNORECASE
+    )
+    m_kj_explicit = re.search(r"([0-9]+(?:\.[0-9]+)?)\s*(?:kj)\b", phrase_clean, re.IGNORECASE)
+
+    def process_val(v: float) -> tuple[float, str, str]:
+        if is_kj and not is_kcal:
+            kcal_v = round(v / KJ_TO_KCAL_FACTOR, 1)
+            return kcal_v, "kcal", "converted"
+        return v, "kcal", "ocr"
+
+    if len(num_vals) >= 2 and column_basis_detected == "dual_column":
+        val_100, unit_100, src_100 = process_val(num_vals[0])
+        val_serv, unit_serv, src_serv = process_val(num_vals[1])
+        if is_kj and not is_kcal:
+            warnings.append(
+                ExtractionWarning(
+                    code="ENERGY_KJ_CONVERTED",
+                    message=(
+                        f"Energy was declared in kJ and converted to kcal "
+                        f"using standard factor {KJ_TO_KCAL_FACTOR} kJ/kcal. "
+                        "Please verify against physical label."
+                    ),
+                )
+            )
+        cand_100 = ExtractedNutrientCandidate(
+            field_name="energy_kcal",
+            raw_text=line_text,
+            value=val_100,
+            unit=unit_100,
+            source=src_100,
+            status="unconfirmed",
+            column="per_100g",
+        )
+        cand_serv = ExtractedNutrientCandidate(
+            field_name="energy_kcal",
+            raw_text=line_text,
+            value=val_serv,
+            unit=unit_serv,
+            source=src_serv,
+            status="unconfirmed",
+            column="per_serving",
+        )
+        return cand_serv, cand_100, cand_serv, warnings
+
+    # Single column or dual-unit representation on a single row
+    if m_kcal_explicit:
+        val_single = float(m_kcal_explicit.group(1))
+        unit_single = "kcal"
+        src_single = "ocr"
+    elif m_kj_explicit:
+        val_single = round(float(m_kj_explicit.group(1)) / KJ_TO_KCAL_FACTOR, 1)
+        unit_single = "kcal"
+        src_single = "converted"
+        warnings.append(
+            ExtractionWarning(
+                code="ENERGY_KJ_CONVERTED",
+                message=(
+                    f"Energy was declared in kJ and converted to kcal "
+                    f"using standard factor {KJ_TO_KCAL_FACTOR} kJ/kcal. "
+                    "Please verify against physical label."
+                ),
+            )
+        )
+    else:
+        val_single, unit_single, src_single = process_val(num_vals[0])
+        if is_kj and not is_kcal:
+            warnings.append(
+                ExtractionWarning(
+                    code="ENERGY_KJ_CONVERTED",
+                    message=(
+                        f"Energy was declared in kJ and converted to kcal "
+                        f"using standard factor {KJ_TO_KCAL_FACTOR} kJ/kcal. "
+                        "Please verify against physical label."
+                    ),
+                )
+            )
+        elif not is_kcal and not is_kj:
+            warnings.append(
+                ExtractionWarning(
+                    code="ENERGY_UNIT_UNCERTAIN",
+                    message=(
+                        f"Energy value ({num_vals[0]}) was detected without an explicit unit "
+                        "(kcal or kJ). Please verify unit against physical label."
+                    ),
+                )
+            )
+
+    cand = ExtractedNutrientCandidate(
+        field_name="energy_kcal",
+        raw_text=line_text,
+        value=val_single,
+        unit=unit_single,
+        source=src_single,
+        status="unconfirmed",
+        column=column_basis_detected,
+    )
+    cand_100 = cand if column_basis_detected == "per_100g" else None
+    cand_serv = cand if column_basis_detected == "per_serving" else None
+    return cand, cand_100, cand_serv, warnings
 
 
 def parse_ocr_text(raw_text: str, confidence: float | None = None) -> OcrExtractionResult:
@@ -343,10 +390,16 @@ def parse_ocr_text(raw_text: str, confidence: float | None = None) -> OcrExtract
     per_serving_candidates: dict[str, ExtractedNutrientCandidate] = {}
 
     # Energy candidate
-    energy_candidate, energy_warnings = _extract_energy_candidate(cleaned_text)
+    energy_cand, energy_100, energy_serv, energy_warnings = _extract_energy_candidate(
+        cleaned_text, column_basis_detected
+    )
     warnings.extend(energy_warnings)
-    if energy_candidate:
-        candidates["energy_kcal"] = energy_candidate
+    if energy_cand:
+        candidates["energy_kcal"] = energy_cand
+    if energy_100:
+        per_100_candidates["energy_kcal"] = energy_100
+    if energy_serv:
+        per_serving_candidates["energy_kcal"] = energy_serv
 
     # Optional parenthesized unit spec on nutrient label: e.g. 'Protein (g)' or 'Energy (kcal)'
     u_spec = r"(?:\s*\((?:g|mg|kcal|kj)\))?"
@@ -483,39 +536,80 @@ def parse_ocr_text(raw_text: str, confidence: float | None = None) -> OcrExtract
 
     # 6. Salt Detection & Conversion to Sodium
     if "sodium_mg" not in candidates:
-        salt_m = re.search(
-            r"(?:salt|iodized\s+salt|table\s+salt)\s*[:\.\-_=]*\s*([0-9]+(?:\.[0-9]+)?)\s*(g|mg)?\b",
-            cleaned_text,
-            re.IGNORECASE,
+        salt_regex = (
+            r"(?:salt|iodized\s+salt|table\s+salt)"
+            + u_spec
+            + r"\s*[:\.\-_=]*\s*((?:[\.\-_\s]*[0-9]+[^\n\r;]*))"
         )
+        salt_m = re.search(salt_regex, cleaned_text, re.IGNORECASE)
         if salt_m:
-            salt_val = float(salt_m.group(1))
-            salt_unit = (salt_m.group(2) or "g").lower()
-            if salt_unit == "mg":
-                salt_g = salt_val / 1000.0
-            else:
-                salt_g = salt_val
-
-            sodium_mg_val = round(salt_g * SALT_TO_SODIUM_MG_FACTOR, 1)
-            warnings.append(
-                ExtractionWarning(
-                    code="SALT_CONVERTED_TO_SODIUM",
-                    message=(
-                        f"Label declared Salt ({salt_val}{salt_unit}). Converted to equivalent "
-                        f"Sodium ({sodium_mg_val}mg Na) using FSSAI 393.4 mg/g factor. "
-                        "Please verify against physical label."
-                    ),
+            raw_match = salt_m.group(0).strip()
+            phrase = salt_m.group(1).strip()
+            numbers = _extract_all_numbers_from_line(phrase)
+            if numbers:
+                unit_is_mg = bool(
+                    re.search(r"\bmg\b", raw_match, re.IGNORECASE)
+                    or (numbers[0][1] and numbers[0][1].lower() == "mg")
                 )
-            )
-            candidates["sodium_mg"] = ExtractedNutrientCandidate(
-                field_name="sodium_mg",
-                raw_text=salt_m.group(0).strip(),
-                value=sodium_mg_val,
-                unit="mg",
-                confidence=confidence,
-                source="converted",
-                status="unconfirmed",
-            )
+
+                def conv_salt(val_num: float) -> float:
+                    salt_g = (val_num / 1000.0) if unit_is_mg else val_num
+                    return round(salt_g * SALT_TO_SODIUM_MG_FACTOR, 1)
+
+                warnings.append(
+                    ExtractionWarning(
+                        code="SALT_CONVERTED_TO_SODIUM",
+                        message=(
+                            f"Label declared Salt. Converted to equivalent Sodium (mg Na) "
+                            f"using FSSAI {SALT_TO_SODIUM_MG_FACTOR} mg/g factor. "
+                            "Please verify against physical label."
+                        ),
+                    )
+                )
+
+                if len(numbers) >= 2 and column_basis_detected == "dual_column":
+                    s100_val = conv_salt(numbers[0][0])
+                    sserv_val = conv_salt(numbers[1][0])
+                    cand_100 = ExtractedNutrientCandidate(
+                        field_name="sodium_mg",
+                        raw_text=raw_match,
+                        value=s100_val,
+                        unit="mg",
+                        confidence=confidence,
+                        source="converted",
+                        status="unconfirmed",
+                        column="per_100g",
+                    )
+                    cand_serv = ExtractedNutrientCandidate(
+                        field_name="sodium_mg",
+                        raw_text=raw_match,
+                        value=sserv_val,
+                        unit="mg",
+                        confidence=confidence,
+                        source="converted",
+                        status="unconfirmed",
+                        column="per_serving",
+                    )
+                    per_100_candidates["sodium_mg"] = cand_100
+                    per_serving_candidates["sodium_mg"] = cand_serv
+                    candidates["sodium_mg"] = cand_serv if serving_val is not None else cand_100
+                else:
+                    s_val = conv_salt(numbers[0][0])
+                    cand = ExtractedNutrientCandidate(
+                        field_name="sodium_mg",
+                        raw_text=raw_match,
+                        value=s_val,
+                        unit="mg",
+                        confidence=confidence,
+                        source="converted",
+                        status="unconfirmed",
+                        column=column_basis_detected,
+                    )
+                    candidates["sodium_mg"] = cand
+                    if column_basis_detected == "per_100g":
+                        per_100_candidates["sodium_mg"] = cand
+                    elif column_basis_detected == "per_serving":
+                        per_serving_candidates["sodium_mg"] = cand
 
     # 7. Audit Physical Plausibility
     cand_values = {k: v.value for k, v in candidates.items()}
