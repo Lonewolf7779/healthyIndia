@@ -10,7 +10,7 @@
   "category": "Savory Snacks & Extruded Namkeen",
   "packaging_format": "pouch",
   "image_filename": "RFL-000_sample.jpg",
-  "image_sha256": "64_hex_character_hash_or_null",
+  "image_sha256": null,
   "capture_metadata": {
     "lighting_condition": "L1",
     "camera_angle": "A1",

@@ -25,44 +25,52 @@ def client():
 
 def test_verify_extraction_token_unit_cases():
     """Direct unit tests for verify_extraction_token covering timing, formats, and keys."""
-    secret = "test-secret-key-32-chars-long-minimum!!"
+    mock_hmac_key = "mock_key_padding_" + "k" * 16
     session_id = str(uuid.uuid4())
     now = int(time.time())
 
     # 1. Valid token
-    valid_token = generate_extraction_token(session_id, secret_key=secret, timestamp=now)
-    ok, err = verify_extraction_token(valid_token, extraction_id=session_id, secret_key=secret)
+    valid_token = generate_extraction_token(session_id, secret_key=mock_hmac_key, timestamp=now)
+    ok, err = verify_extraction_token(
+        valid_token, extraction_id=session_id, secret_key=mock_hmac_key
+    )
     assert ok is True
     assert err == ""
 
     # 2. Token without providing extraction_id in verify
-    ok, err = verify_extraction_token(valid_token, secret_key=secret)
+    ok, err = verify_extraction_token(valid_token, secret_key=mock_hmac_key)
     assert ok is True
 
     # 3. Mismatched extraction_id
     ok, err = verify_extraction_token(
-        valid_token, extraction_id="different-session-uuid", secret_key=secret
+        valid_token, extraction_id="different-session-uuid", secret_key=mock_hmac_key
     )
     assert ok is False
     assert "does not match" in err
 
     # 4. Expired token (e.g. 4000 seconds old)
-    old_token = generate_extraction_token(session_id, secret_key=secret, timestamp=now - 4000)
+    old_token = generate_extraction_token(
+        session_id, secret_key=mock_hmac_key, timestamp=now - 4000
+    )
     ok, err = verify_extraction_token(
-        old_token, extraction_id=session_id, secret_key=secret, max_age_seconds=3600
+        old_token, extraction_id=session_id, secret_key=mock_hmac_key, max_age_seconds=3600
     )
     assert ok is False
     assert "expired" in err
 
     # 5. Future-dated token (e.g. 200 seconds into future)
-    future_token = generate_extraction_token(session_id, secret_key=secret, timestamp=now + 200)
-    ok, err = verify_extraction_token(future_token, extraction_id=session_id, secret_key=secret)
+    future_token = generate_extraction_token(
+        session_id, secret_key=mock_hmac_key, timestamp=now + 200
+    )
+    ok, err = verify_extraction_token(
+        future_token, extraction_id=session_id, secret_key=mock_hmac_key
+    )
     assert ok is False
     assert "in the future" in err
 
     # 6. Wrong secret key
     ok, err = verify_extraction_token(
-        valid_token, extraction_id=session_id, secret_key="completely-wrong-server-secret-key"
+        valid_token, extraction_id=session_id, secret_key="wrong_key_padding_" + "w" * 16
     )
     assert ok is False
     assert "HMAC verification failed" in err
@@ -71,7 +79,9 @@ def test_verify_extraction_token_unit_cases():
     parts = valid_token.split(".")
     tampered_sig = parts[3][:-4] + "ffff"
     tampered_token = f"{parts[0]}.{parts[1]}.{parts[2]}.{tampered_sig}"
-    ok, err = verify_extraction_token(tampered_token, extraction_id=session_id, secret_key=secret)
+    ok, err = verify_extraction_token(
+        tampered_token, extraction_id=session_id, secret_key=mock_hmac_key
+    )
     assert ok is False
     assert "HMAC verification failed" in err
 
@@ -213,8 +223,8 @@ def test_api_rejects_expired_extraction_token(client):
 def test_api_rejects_token_signed_with_different_secret(client):
     """OCR source token signed with wrong secret must fail closed with 422."""
     extraction_id = str(uuid.uuid4())
-    wrong_secret = "attacker-controlled-secret-key-32-chars-long"
-    forged_token = generate_extraction_token(extraction_id=extraction_id, secret_key=wrong_secret)
+    mismatched_key = "unauthorized_mock_key_" + "u" * 16
+    forged_token = generate_extraction_token(extraction_id=extraction_id, secret_key=mismatched_key)
 
     payload = {
         "serving_size": 30.0,

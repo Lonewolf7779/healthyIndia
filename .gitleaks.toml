@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow mock test fixtures, mock HMAC keys, and dataset metadata"
+paths = [
+    '''services/api/tests/''',
+    '''data/real_food_labels/'''
+]
