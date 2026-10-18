@@ -740,6 +740,12 @@ export const NutritionDemoForm: React.FC = () => {
                           <strong>Functional Class:</strong> {item.additive.functional_classes.join(", ")}
                         </div>
 
+                        {item.additive.chemical_identity && (
+                          <div style={{ marginTop: "0.25rem", color: "#64748b", fontSize: "0.8rem" }}>
+                            <strong>Chemical Identity:</strong> {item.additive.chemical_identity}
+                          </div>
+                        )}
+
                         <div style={{ marginTop: "0.25rem" }}>
                           <strong>Regulatory Status:</strong> {item.additive.regulatory_status}
                         </div>
@@ -747,6 +753,24 @@ export const NutritionDemoForm: React.FC = () => {
                         <div style={{ marginTop: "0.25rem", color: "#64748b", fontSize: "0.8rem" }}>
                           <strong>Scope Limitations:</strong> {item.additive.scope_limitations}
                         </div>
+
+                        {item.additive.acceptable_daily_intake && (
+                          <div style={{ marginTop: "0.25rem", fontSize: "0.8rem" }}>
+                            <strong>Acceptable Daily Intake (ADI):</strong> {item.additive.acceptable_daily_intake}
+                          </div>
+                        )}
+
+                        {item.additive.health_effects_evidence && (
+                          <div style={{ marginTop: "0.25rem", fontSize: "0.8rem", color: "#334155" }}>
+                            <strong>Scientific Evidence &amp; Health Assessment:</strong> {item.additive.health_effects_evidence}
+                          </div>
+                        )}
+
+                        {item.additive.population_sensitivities && (
+                          <div style={{ marginTop: "0.25rem", fontSize: "0.8rem", color: "#991b1b", backgroundColor: "#fef2f2", padding: "0.35rem 0.5rem", borderRadius: "4px" }}>
+                            <strong>Sensitivities &amp; Population Cautions:</strong> {item.additive.population_sensitivities}
+                          </div>
+                        )}
 
                         {item.additive.sources.length > 0 && (
                           <div style={{ marginTop: "0.35rem", fontSize: "0.75rem", color: "#475569" }}>

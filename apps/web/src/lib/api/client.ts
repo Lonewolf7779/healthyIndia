@@ -69,6 +69,10 @@ export interface SourceReference {
   url: string;
   source_type: string;
   retrieval_date: string;
+  organization?: string;
+  publication_date?: string;
+  supported_claims?: string;
+  section_or_regulation?: string;
 }
 
 export interface AdditiveEntry {
@@ -81,6 +85,10 @@ export interface AdditiveEntry {
   regulatory_status: string;
   status_verification: string;
   scope_limitations: string;
+  chemical_identity?: string;
+  health_effects_evidence?: string;
+  acceptable_daily_intake?: string;
+  population_sensitivities?: string;
   sources: SourceReference[];
 }
 

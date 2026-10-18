@@ -20,6 +20,10 @@ class SourceReference:
     url: str
     source_type: str
     retrieval_date: str
+    organization: str = ""
+    publication_date: str = ""
+    supported_claims: str = ""
+    section_or_regulation: str = ""
 
 
 @dataclass(frozen=True)
@@ -35,6 +39,10 @@ class AdditiveEntry:
     regulatory_status: str
     status_verification: str  # "verified" | "unverified"
     scope_limitations: str
+    chemical_identity: str = ""
+    health_effects_evidence: str = ""
+    acceptable_daily_intake: str = ""
+    population_sensitivities: str = ""
 
 
 @dataclass(frozen=True)

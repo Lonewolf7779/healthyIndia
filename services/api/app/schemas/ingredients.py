@@ -29,6 +29,10 @@ class SourceReferenceSchema(BaseModel):
     url: str
     source_type: str
     retrieval_date: str
+    organization: str | None = None
+    publication_date: str | None = None
+    supported_claims: str | None = None
+    section_or_regulation: str | None = None
 
 
 class AdditiveEntrySchema(BaseModel):
@@ -41,6 +45,10 @@ class AdditiveEntrySchema(BaseModel):
     regulatory_status: str
     status_verification: str
     scope_limitations: str
+    chemical_identity: str | None = None
+    health_effects_evidence: str | None = None
+    acceptable_daily_intake: str | None = None
+    population_sensitivities: str | None = None
     sources: list[SourceReferenceSchema]
 
 

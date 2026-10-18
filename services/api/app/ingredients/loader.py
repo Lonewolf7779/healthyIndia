@@ -70,6 +70,10 @@ def load_ingredient_reference() -> tuple[dict[str, AdditiveEntry], dict[str, Add
                 url=s.get("url", ""),
                 source_type=s.get("source_type", ""),
                 retrieval_date=s.get("retrieval_date", ""),
+                organization=s.get("organization", ""),
+                publication_date=s.get("publication_date", ""),
+                supported_claims=s.get("supported_claims", ""),
+                section_or_regulation=s.get("section_or_regulation", ""),
             )
             for s in item.get("sources", [])
         ]
@@ -86,6 +90,10 @@ def load_ingredient_reference() -> tuple[dict[str, AdditiveEntry], dict[str, Add
             regulatory_status=item.get("regulatory_status", "unverified"),
             status_verification=item.get("status_verification", "unverified"),
             scope_limitations=item.get("scope_limitations", ""),
+            chemical_identity=item.get("chemical_identity", ""),
+            health_effects_evidence=item.get("health_effects_evidence", ""),
+            acceptable_daily_intake=item.get("acceptable_daily_intake", ""),
+            population_sensitivities=item.get("population_sensitivities", ""),
         )
 
         # Index by normalized INS code if present
