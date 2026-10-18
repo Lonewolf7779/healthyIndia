@@ -14,19 +14,23 @@ Outputs metrics, computes exact denominators, and updates docs/OCR_BENCHMARK_REP
 """
 
 import io
-import shutil
 import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 # Ensure app is in path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.extraction.adapter import MockOcrAdapter, TesseractOcrAdapter
+from app.extraction.adapter import (
+    BaseOcrAdapter,
+    MockOcrAdapter,
+    OcrEngineOutput,
+    TesseractOcrAdapter,
+)
 from app.extraction.parser import parse_ocr_text
 from app.extraction.quality import assess_image_quality
 from app.extraction.validator import ImageValidationError, validate_image_payload
@@ -34,6 +38,103 @@ from app.nutrition.calculator import analyze_nutrition
 from app.nutrition.models import RawNutrientInput, ServingBasis, ServingUnit
 from app.nutrition.standards import FoodForm
 from tests.fixtures.realistic_fixtures import load_realistic_fixtures
+
+
+@dataclass(frozen=True)
+class OcrGroundTruthSample:
+    """Independent ground truth sample for optical character recognition testing."""
+
+    sample_id: str
+    expected_text: str
+    source_type: str  # "rendered_synthetic" vs "physical_photograph"
+    description: str
+
+
+RENDERED_OCR_GROUND_TRUTH: list[OcrGroundTruthSample] = [
+    OcrGroundTruthSample(
+        sample_id="synth_render_energy",
+        expected_text="Energy: 140 kcal",
+        source_type="rendered_synthetic",
+        description="Standard energy declaration with unit in kcal",
+    ),
+    OcrGroundTruthSample(
+        sample_id="synth_render_protein",
+        expected_text="Protein: 2.5 g",
+        source_type="rendered_synthetic",
+        description="Single-decimal protein declaration with gram unit",
+    ),
+    OcrGroundTruthSample(
+        sample_id="synth_render_fat",
+        expected_text="Total Fat: 5.0 g",
+        source_type="rendered_synthetic",
+        description="Two-word macronutrient with decimal value and unit",
+    ),
+    OcrGroundTruthSample(
+        sample_id="synth_render_carbs",
+        expected_text="Carbohydrates: 22.0 g",
+        source_type="rendered_synthetic",
+        description="Multisyllabic nutrient name with decimal value",
+    ),
+    OcrGroundTruthSample(
+        sample_id="synth_render_sodium",
+        expected_text="Sodium: 150 mg",
+        source_type="rendered_synthetic",
+        description="Milligram micronutrient declaration",
+    ),
+]
+
+
+def compute_levenshtein_distance(s1: str, s2: str) -> int:
+    """Computes standard edit distance between two strings."""
+    if len(s1) < len(s2):
+        return compute_levenshtein_distance(s2, s1)
+    if len(s2) == 0:
+        return len(s1)
+
+    previous_row = list(range(len(s2) + 1))
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1
+            deletions = current_row[j] + 1
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+    return previous_row[-1]
+
+
+def compute_char_accuracy(expected: str, actual: str) -> float:
+    """Calculates character recognition accuracy (0.0 to 100.0)."""
+    norm_exp = expected.strip().lower()
+    norm_act = actual.strip().lower()
+    if not norm_exp:
+        return 100.0 if not norm_act else 0.0
+    dist = compute_levenshtein_distance(norm_exp, norm_act)
+    return max(0.0, (1.0 - dist / max(len(norm_exp), len(norm_act)))) * 100.0
+
+
+def compute_word_accuracy(expected: str, actual: str) -> float:
+    """Calculates word token recognition accuracy (0.0 to 100.0)."""
+    exp_words = expected.strip().lower().split()
+    act_words = actual.strip().lower().split()
+    if not exp_words:
+        return 100.0 if not act_words else 0.0
+    matched = sum(1 for w in exp_words if w in act_words)
+    return (matched / len(exp_words)) * 100.0
+
+
+def render_sample_image(text: str) -> bytes:
+    """Renders high-contrast black-on-white text image for OCR evaluation."""
+    img = Image.new("RGB", (650, 120), color=(255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    try:
+        font = ImageFont.load_default(size=28)
+    except TypeError:
+        font = ImageFont.load_default()
+    draw.text((30, 40), text, fill=(0, 0, 0), font=font)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
 
 
 @dataclass
@@ -44,9 +145,9 @@ class BenchmarkMetric:
     evaluated_count: int
     correct_count: int
     error_count: int
-    success_rate: float
+    success_rate: float | None
     threshold: float
-    status: str
+    status: str  # "PASS", "FAIL", "BLOCKED", "NOT RUN"
     details: dict[str, Any] = field(default_factory=dict)
 
 
@@ -55,7 +156,8 @@ class BenchmarkSuiteResult:
     """Aggregated benchmark suite outcome."""
 
     parser_metric: BenchmarkMetric
-    ocr_metric: BenchmarkMetric
+    mock_adapter_metric: BenchmarkMetric
+    actual_ocr_metric: BenchmarkMetric
     association_metric: BenchmarkMetric
     serving_metric: BenchmarkMetric
     calculation_metric: BenchmarkMetric
@@ -64,17 +166,45 @@ class BenchmarkSuiteResult:
     tesseract_available: bool
 
     @property
+    def required_metrics(self) -> list[BenchmarkMetric]:
+        """All required metrics that must individually PASS for overall suite success."""
+        return [
+            self.parser_metric,
+            self.mock_adapter_metric,
+            self.actual_ocr_metric,
+            self.association_metric,
+            self.serving_metric,
+            self.calculation_metric,
+            self.quality_gate_metric,
+        ]
+
+    @property
+    def overall_status(self) -> str:
+        """
+        Calculates the explicit overall status across all required metrics:
+        - 'FAIL': If ANY required metric has status 'FAIL'.
+        - 'BLOCKED': If ANY required metric has status 'BLOCKED' and none is 'FAIL'.
+        - 'NOT RUN': If ANY required metric has status 'NOT RUN' and none is 'FAIL' or 'BLOCKED'.
+        - 'PASS': If and only if EVERY required metric has status 'PASS'.
+        """
+        statuses = [m.status for m in self.required_metrics]
+        if any(s == "FAIL" for s in statuses):
+            return "FAIL"
+        if any(s == "BLOCKED" for s in statuses):
+            return "BLOCKED"
+        if any(s == "NOT RUN" for s in statuses):
+            return "NOT RUN"
+        if all(s == "PASS" for s in statuses):
+            return "PASS"
+        return "FAIL"
+
+    @property
     def all_passed(self) -> bool:
-        return all(
-            m.status == "PASS"
-            for m in [
-                self.parser_metric,
-                self.association_metric,
-                self.serving_metric,
-                self.calculation_metric,
-                self.quality_gate_metric,
-            ]
-        )
+        """
+        Strict pass determination: True ONLY if overall_status is 'PASS'.
+        A metric that is FAIL, BLOCKED, or NOT RUN must not silently produce an overall PASS.
+        """
+        return self.overall_status == "PASS"
 
 
 def evaluate_parser_correctness(fixtures: list[dict]) -> BenchmarkMetric:
@@ -113,63 +243,200 @@ def evaluate_parser_correctness(fixtures: list[dict]) -> BenchmarkMetric:
     )
 
 
-def evaluate_ocr_recognition() -> tuple[BenchmarkMetric, bool]:
+def evaluate_mock_adapter_integration() -> BenchmarkMetric:
     """
-    Evaluates optical character recognition on rendered synthetic images.
-    Distinguishes OCR recognition from parser text matching.
-    """
-    tesseract_installed = shutil.which("tesseract") is not None
-    test_phrases = [
-        "Energy: 140 kcal",
-        "Protein: 2.5 g",
-        "Total Fat: 5.0 g",
-        "Carbohydrates: 22.0 g",
-    ]
+    Validates Python adapter interfaces, confidence unpacking, and discrepancy
+    detection using controlled mock payloads.
 
-    evaluated = len(test_phrases)
+    CRITICAL INTEGRITY PRINCIPLE:
+    This evaluates software plumbing and adapter interface compliance only.
+    It contributes 0% to the reported optical character recognition accuracy.
+    """
+    checks_evaluated = 0
+    checks_passed = 0
+
+    # 1. Output dataclass and 2-tuple unpacking
+    checks_evaluated += 1
+    mock_1 = MockOcrAdapter(
+        mock_text="Energy: 100 kcal",
+        mock_confidence=92.0,
+        pass_a_text="Energy: 100 kcal",  # noqa: S106
+        pass_b_text="Energy: 100 kcal",  # noqa: S106
+        pass_discrepancy=False,
+    )
+    out_1 = mock_1.extract_text(b"mock_bytes")
+    text_unpacked, conf_unpacked = out_1
+    if (
+        text_unpacked == "Energy: 100 kcal"
+        and conf_unpacked == 92.0
+        and isinstance(out_1, OcrEngineOutput)
+    ):
+        checks_passed += 1
+
+    # 2. Dual-pass discrepancy flag activation
+    checks_evaluated += 1
+    mock_2 = MockOcrAdapter(
+        mock_text="Pass A text",
+        mock_confidence=80.0,
+        pass_a_text="Protein: 10g",  # noqa: S106
+        pass_b_text="Protein: 18g",  # noqa: S106
+        pass_discrepancy=True,
+    )
+    out_2 = mock_2.extract_text(b"mock_bytes")
+    if out_2.pass_discrepancy is True and len(out_2.discrepancy_details) > 0:
+        checks_passed += 1
+
+    # 3. Discrepancy details array retention
+    checks_evaluated += 1
+    if any("discrepancy" in d.lower() or "pass" in d.lower() for d in out_2.discrepancy_details):
+        checks_passed += 1
+
+    # 4. Zero/None confidence handling
+    checks_evaluated += 1
+    mock_3 = MockOcrAdapter(mock_text="Text without conf", mock_confidence=None)
+    out_3 = mock_3.extract_text(b"mock_bytes")
+    if out_3.confidence is None:
+        checks_passed += 1
+
+    errors = checks_evaluated - checks_passed
+    rate = (checks_passed / checks_evaluated * 100.0) if checks_evaluated else 0.0
+    threshold = 100.0
+    return BenchmarkMetric(
+        name="OCR Adapter Plumbing (Mock Integration)",
+        evaluated_count=checks_evaluated,
+        correct_count=checks_passed,
+        error_count=errors,
+        success_rate=rate,
+        threshold=threshold,
+        status="PASS" if rate >= threshold else "FAIL",
+        details={
+            "scope": "Adapter plumbing and interface contract verification",
+            "uses_real_ocr": False,
+            "contributes_to_ocr_accuracy": False,
+        },
+    )
+
+
+def evaluate_actual_ocr_recognition(
+    adapter: BaseOcrAdapter | None = None,
+    samples: list[OcrGroundTruthSample] | None = None,
+) -> tuple[BenchmarkMetric, bool]:
+    """
+    Evaluates real optical character recognition on rendered synthetic images
+    using the installed OCR engine (Tesseract).
+
+    CRITICAL INTEGRITY PRINCIPLES:
+    1. A mock adapter or mock text must NEVER contribute to actual OCR accuracy.
+    2. If the Tesseract executable is unavailable, status is BLOCKED and success rate is None.
+    3. Missing or failed recognitions must NEVER be substituted with expected text.
+    4. Evaluates character accuracy (CER-based) and word-level accuracy against independent ground truth.
+    """
+    ground_truth = samples if samples is not None else RENDERED_OCR_GROUND_TRUTH
+    sample_count = len(ground_truth)
+
+    if adapter is not None:
+        if isinstance(adapter, MockOcrAdapter):
+            # MOCK ADAPTERS ARE STRICTLY FORBIDDEN FROM REPORTING ACTUAL OCR ACCURACY
+            return (
+                BenchmarkMetric(
+                    name="Rendered-Image OCR Recognition (Tesseract)",
+                    evaluated_count=0,
+                    correct_count=0,
+                    error_count=0,
+                    success_rate=None,
+                    threshold=85.0,
+                    status="BLOCKED",
+                    details={
+                        "engine": "Rejected (Mock adapter cannot contribute to real OCR score)",
+                        "tesseract_binary_present": False,
+                        "blocked_reason": (
+                            "Mock OCR adapter was supplied. Mocks are forbidden "
+                            "from contributing to actual OCR recognition metrics."
+                        ),
+                        "sample_count": sample_count,
+                    },
+                ),
+                False,
+            )
+
+        ocr_engine = adapter
+        available = getattr(ocr_engine, "is_available", lambda: True)()
+    else:
+        ocr_engine = TesseractOcrAdapter()
+        available = ocr_engine.is_available()
+
+    if not available:
+        return (
+            BenchmarkMetric(
+                name="Rendered-Image OCR Recognition (Tesseract)",
+                evaluated_count=0,
+                correct_count=0,
+                error_count=0,
+                success_rate=None,
+                threshold=85.0,
+                status="BLOCKED",
+                details={
+                    "engine": "None (Tesseract binary missing)",
+                    "tesseract_binary_present": False,
+                    "blocked_reason": (
+                        "Tesseract binary not found in system PATH. "
+                        "Benchmark blocked pending runtime installation."
+                    ),
+                    "sample_count": sample_count,
+                },
+            ),
+            False,
+        )
+
+    evaluated = sample_count
     correct = 0
     errors = 0
+    exact_matches = 0
+    char_accs: list[float] = []
+    word_accs: list[float] = []
+    sample_results: list[dict[str, Any]] = []
 
-    if tesseract_installed:
-        adapter = TesseractOcrAdapter()
-        for phrase in test_phrases:
-            img = Image.new("RGB", (400, 80), color=(255, 255, 255))
-            draw = ImageDraw.Draw(img)
-            draw.text((20, 25), phrase, fill=(0, 0, 0))
-            buf = io.BytesIO()
-            img.save(buf, format="PNG")
-            try:
-                out = adapter.extract_text(buf.getvalue())
-                if phrase.lower().replace(" ", "") in out.raw_text.lower().replace(" ", ""):
-                    correct += 1
-                else:
-                    errors += 1
-            except Exception:
-                errors += 1
-        rate = (correct / evaluated * 100.0) if evaluated else 0.0
-        threshold = 85.0
-        status = "PASS" if rate >= threshold else "FAIL"
-    else:
-        # Tesseract not in host PATH: use controlled adapter and record status
-        adapter = MockOcrAdapter(
-            mock_text="\n".join(test_phrases),
-            mock_confidence=95.0,
-            pass_a_text="\n".join(test_phrases),
-            pass_b_text="\n".join(test_phrases),
+    for s in ground_truth:
+        img_bytes = render_sample_image(s.expected_text)
+        try:
+            out = ocr_engine.extract_text(img_bytes)
+            actual_text = out.raw_text.strip()
+        except Exception:
+            # Strictly do NOT substitute expected text when recognition fails
+            actual_text = ""
+
+        c_acc = compute_char_accuracy(s.expected_text, actual_text)
+        w_acc = compute_word_accuracy(s.expected_text, actual_text)
+        char_accs.append(c_acc)
+        word_accs.append(w_acc)
+
+        is_exact = s.expected_text.strip().lower() == actual_text.strip().lower()
+        if is_exact:
+            exact_matches += 1
+
+        # High word and character accuracy required on rendered test images
+        if is_exact or (w_acc >= 80.0 and c_acc >= 80.0):
+            correct += 1
+        else:
+            errors += 1
+
+        sample_results.append(
+            {
+                "sample_id": s.sample_id,
+                "expected": s.expected_text,
+                "recognized": actual_text,
+                "char_accuracy": round(c_acc, 1),
+                "word_accuracy": round(w_acc, 1),
+                "exact_match": is_exact,
+            }
         )
-        img_bytes = b"mock_rendered_image_payload"
-        out = adapter.extract_text(img_bytes)
-        for phrase in test_phrases:
-            if phrase.lower() in out.raw_text.lower():
-                correct += 1
-            else:
-                errors += 1
-        rate = (correct / evaluated * 100.0) if evaluated else 0.0
-        threshold = 90.0
-        status = "PASS" if rate >= threshold else "FAIL"
+
+    rate = (correct / evaluated * 100.0) if evaluated else 0.0
+    threshold = 85.0
+    status = "PASS" if rate >= threshold else "FAIL"
 
     metric = BenchmarkMetric(
-        name="Rendered-Image OCR Recognition",
+        name="Rendered-Image OCR Recognition (Tesseract)",
         evaluated_count=evaluated,
         correct_count=correct,
         error_count=errors,
@@ -177,13 +444,16 @@ def evaluate_ocr_recognition() -> tuple[BenchmarkMetric, bool]:
         threshold=threshold,
         status=status,
         details={
-            "tesseract_binary_present": tesseract_installed,
-            "engine": "Tesseract (Local)"
-            if tesseract_installed
-            else "Mock Adapter (Host tesseract binary not installed)",
+            "engine": "Tesseract (Local Executable)",
+            "tesseract_binary_present": True,
+            "sample_count": evaluated,
+            "exact_matches": exact_matches,
+            "avg_char_accuracy": round(sum(char_accs) / len(char_accs), 1) if char_accs else 0.0,
+            "avg_word_accuracy": round(sum(word_accs) / len(word_accs), 1) if word_accs else 0.0,
+            "samples": sample_results,
         },
     )
-    return metric, tesseract_installed
+    return metric, True
 
 
 def evaluate_nutrient_association(fixtures: list[dict]) -> BenchmarkMetric:
@@ -562,7 +832,8 @@ def run_benchmark() -> BenchmarkSuiteResult:
     fixtures = load_realistic_fixtures()
 
     m_parser = evaluate_parser_correctness(fixtures)
-    m_ocr, tesseract_installed = evaluate_ocr_recognition()
+    m_mock = evaluate_mock_adapter_integration()
+    m_actual_ocr, tesseract_installed = evaluate_actual_ocr_recognition()
     m_assoc = evaluate_nutrient_association(fixtures)
     m_serving = evaluate_serving_interpretation()
     m_calc = evaluate_calculation_correctness()
@@ -570,7 +841,8 @@ def run_benchmark() -> BenchmarkSuiteResult:
 
     suite = BenchmarkSuiteResult(
         parser_metric=m_parser,
-        ocr_metric=m_ocr,
+        mock_adapter_metric=m_mock,
+        actual_ocr_metric=m_actual_ocr,
         association_metric=m_assoc,
         serving_metric=m_serving,
         calculation_metric=m_calc,
@@ -583,10 +855,34 @@ def run_benchmark() -> BenchmarkSuiteResult:
     report_path = repo_root / "docs" / "OCR_BENCHMARK_REPORT.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
+    ocr_denom = (
+        f"{m_actual_ocr.evaluated_count} rendered test lines"
+        if m_actual_ocr.status != "BLOCKED"
+        else f"{m_actual_ocr.details.get('sample_count', 5)} rendered test lines (0 executed)"
+    )
+    ocr_rate = (
+        f"{m_actual_ocr.success_rate:.1f}%"
+        if m_actual_ocr.success_rate is not None
+        else "N/A (Blocked)"
+    )
+
+    warning_block = (
+        ""
+        if tesseract_installed
+        else f"""> [!WARNING]
+> **Actual OCR Recognition Benchmark is BLOCKED.**
+> The host environment does not have the 'tesseract' executable installed in PATH.
+> Real optical character recognition on rendered images could NOT be executed and was NOT simulated using mocks.
+> Mock adapter plumbing was verified separately under '{m_mock.name}', but mock output is strictly prevented from counting toward OCR accuracy.
+> Overall benchmark status is BLOCKED pending installation of Tesseract-OCR.
+"""
+    )
+
     report_content = f"""# Food Label OCR & Deterministic Parsing Benchmark Report
 
 Generated: {suite.generated_at}
 Environment: Local deterministic test framework with OpenCV & Tesseract (Tesseract runtime present: {tesseract_installed})
+Overall Suite Status: **{suite.overall_status}**
 
 ---
 
@@ -602,6 +898,7 @@ nutrient-to-value association, and independent mathematical calculation pipeline
 > Real-world accuracy on varied packaging reflections, warped foil pouches, curved cylindrical cans, and
 > low-end mobile cameras remains unmeasured until comprehensive physical field testing with a verified ground-truth dataset.
 
+{warning_block}
 ---
 
 ## 2. Benchmark Metrics & Evaluated Denominators
@@ -609,12 +906,15 @@ nutrient-to-value association, and independent mathematical calculation pipeline
 | Category | Evaluated Cases (Denominator) | Correct | Errors | Success Rate | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **{m_parser.name}** | {m_parser.evaluated_count} realistic text fixtures | {m_parser.correct_count} | {m_parser.error_count} | **{m_parser.success_rate:.1f}%** | {m_parser.status} |
-| **{m_ocr.name}** | {m_ocr.evaluated_count} rendered test lines | {m_ocr.correct_count} | {m_ocr.error_count} | **{m_ocr.success_rate:.1f}%** | {m_ocr.status} |
+| **{m_mock.name}** | {m_mock.evaluated_count} mock adapter assertions | {m_mock.correct_count} | {m_mock.error_count} | **{m_mock.success_rate:.1f}%** | {m_mock.status} |
+| **{m_actual_ocr.name}** | {ocr_denom} | {m_actual_ocr.correct_count} | {m_actual_ocr.error_count} | **{ocr_rate}** | {m_actual_ocr.status} |
 | **{m_assoc.name}** | {m_assoc.evaluated_count} nutrient fields | {m_assoc.correct_count} | {m_assoc.error_count} | **{m_assoc.success_rate:.1f}%** | {m_assoc.status} |
 | **{m_serving.name}** | {m_serving.evaluated_count} unit/serving formats | {m_serving.correct_count} | {m_serving.error_count} | **{m_serving.success_rate:.1f}%** | {m_serving.status} |
 | **{m_calc.name}** | {m_calc.evaluated_count} mathematical checks | {m_calc.correct_count} | {m_calc.error_count} | **{m_calc.success_rate:.1f}%** | {m_calc.status} |
 | **{m_quality.name}** | {m_quality.evaluated_count} edge-case inputs | {m_quality.correct_count} | {m_quality.error_count} | **{m_quality.success_rate:.1f}%** | {m_quality.status} |
+| **Real-World Packaging Photographs** | 0 physical camera images | 0 | 0 | **N/A (Unmeasured)** | NOT RUN |
 
+**Overall Benchmark Outcome**: **{suite.overall_status}** ({"All required criteria met" if suite.all_passed else "One or more required criteria failed or blocked"})
 Quality-Gate Specifics: False Acceptances: {m_quality.details.get("false_acceptances", 0)}, False Rejections: {m_quality.details.get("false_rejections", 0)}.
 
 ---
@@ -646,27 +946,43 @@ Before declaring the food label scanner ready for unassisted public deployment, 
 """
 
     report_path.write_text(report_content, encoding="utf-8")
-    print(f"Benchmark completed successfully. Report written to {report_path}")
+    print(f"Benchmark completed. Report written to {report_path}")
+    print(f"Overall Status: {suite.overall_status} (all_passed={suite.all_passed})")
     print(
-        f"Parser Correctness: {m_parser.success_rate:.1f}% ({m_parser.correct_count}/{m_parser.evaluated_count})"
+        f"Parser Correctness: {m_parser.success_rate:.1f}% "
+        f"({m_parser.correct_count}/{m_parser.evaluated_count})"
     )
     print(
-        f"OCR Recognition: {m_ocr.success_rate:.1f}% ({m_ocr.correct_count}/{m_ocr.evaluated_count})"
+        f"Mock Adapter Plumbing: {m_mock.success_rate:.1f}% "
+        f"({m_mock.correct_count}/{m_mock.evaluated_count})"
+    )
+    if m_actual_ocr.status == "BLOCKED":
+        print("Actual OCR Recognition: BLOCKED (Tesseract binary missing in PATH)")
+    else:
+        print(
+            f"Actual OCR Recognition: {m_actual_ocr.success_rate:.1f}% "
+            f"({m_actual_ocr.correct_count}/{m_actual_ocr.evaluated_count})"
+        )
+    print(
+        f"Association Accuracy: {m_assoc.success_rate:.1f}% "
+        f"({m_assoc.correct_count}/{m_assoc.evaluated_count})"
     )
     print(
-        f"Association Accuracy: {m_assoc.success_rate:.1f}% ({m_assoc.correct_count}/{m_assoc.evaluated_count})"
+        f"Serving Accuracy: {m_serving.success_rate:.1f}% "
+        f"({m_serving.correct_count}/{m_serving.evaluated_count})"
     )
     print(
-        f"Serving Accuracy: {m_serving.success_rate:.1f}% ({m_serving.correct_count}/{m_serving.evaluated_count})"
+        f"Calculation Accuracy: {m_calc.success_rate:.1f}% "
+        f"({m_calc.correct_count}/{m_calc.evaluated_count})"
     )
     print(
-        f"Calculation Accuracy: {m_calc.success_rate:.1f}% ({m_calc.correct_count}/{m_calc.evaluated_count})"
-    )
-    print(
-        f"Quality Gates: {m_quality.success_rate:.1f}% ({m_quality.correct_count}/{m_quality.evaluated_count})"
+        f"Quality Gates: {m_quality.success_rate:.1f}% "
+        f"({m_quality.correct_count}/{m_quality.evaluated_count})"
     )
     return suite
 
 
 if __name__ == "__main__":
-    run_benchmark()
+    suite = run_benchmark()
+    if not suite.all_passed:
+        print(f"Benchmark finished with non-passing status: {suite.overall_status}")

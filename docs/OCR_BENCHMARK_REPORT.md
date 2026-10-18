@@ -1,7 +1,8 @@
 # Food Label OCR & Deterministic Parsing Benchmark Report
 
-Generated: 2026-10-18 08:56:50Z
-Environment: Local deterministic test framework with OpenCV & Tesseract (Tesseract runtime present: False)
+Generated: 2026-10-18 09:13:36Z
+Environment: Local deterministic test framework with OpenCV & Tesseract (Tesseract runtime present: True)
+Overall Suite Status: **PASS**
 
 ---
 
@@ -17,6 +18,7 @@ nutrient-to-value association, and independent mathematical calculation pipeline
 > Real-world accuracy on varied packaging reflections, warped foil pouches, curved cylindrical cans, and
 > low-end mobile cameras remains unmeasured until comprehensive physical field testing with a verified ground-truth dataset.
 
+
 ---
 
 ## 2. Benchmark Metrics & Evaluated Denominators
@@ -24,12 +26,15 @@ nutrient-to-value association, and independent mathematical calculation pipeline
 | Category | Evaluated Cases (Denominator) | Correct | Errors | Success Rate | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Synthetic Text Parser Correctness** | 9 realistic text fixtures | 9 | 0 | **100.0%** | PASS |
-| **Rendered-Image OCR Recognition** | 4 rendered test lines | 4 | 0 | **100.0%** | PASS |
+| **OCR Adapter Plumbing (Mock Integration)** | 4 mock adapter assertions | 4 | 0 | **100.0%** | PASS |
+| **Rendered-Image OCR Recognition (Tesseract)** | 5 rendered test lines | 5 | 0 | **100.0%** | PASS |
 | **Nutrient-to-Value Association** | 83 nutrient fields | 83 | 0 | **100.0%** | PASS |
 | **Serving-Size & Unit Interpretation** | 6 unit/serving formats | 6 | 0 | **100.0%** | PASS |
 | **Independent Numerical Calculation Correctness** | 32 mathematical checks | 32 | 0 | **100.0%** | PASS |
 | **Computer Vision Quality-Gate Decisions** | 7 edge-case inputs | 7 | 0 | **100.0%** | PASS |
+| **Real-World Packaging Photographs** | 0 physical camera images | 0 | 0 | **N/A (Unmeasured)** | NOT RUN |
 
+**Overall Benchmark Outcome**: **PASS** (All required criteria met)
 Quality-Gate Specifics: False Acceptances: 0, False Rejections: 0.
 
 ---
