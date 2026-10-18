@@ -18,7 +18,9 @@ class ServingBasis(StrEnum):
 
 class ServingUnit(StrEnum):
     G = "g"
+    KG = "kg"
     ML = "ml"
+    L = "l"
     PIECE = "piece"
     PORTION = "portion"
 

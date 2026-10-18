@@ -244,6 +244,59 @@ describe("LabelScanner Image Selection & Lifecycle", () => {
       expect(editedState.reviewFields.servingSize).toBe("35");
     });
 
+    it("invalidates field confirmation when user edits that field", () => {
+      // First confirm servingSize
+      const confirmedState = scannerReducer(initialScannerState, {
+        type: "FIELD_CONFIRMED",
+        field: "servingSize",
+        confirmed: true,
+      });
+      expect(confirmedState.confirmedFields.servingSize).toBe(true);
+
+      // Now edit servingSize
+      const editedState = scannerReducer(confirmedState, {
+        type: "FIELD_UPDATED",
+        field: "servingSize",
+        value: "45",
+      });
+      expect(editedState.reviewFields.servingSize).toBe("45");
+      expect(editedState.confirmedFields.servingSize).toBe(false);
+    });
+
+    it("resets all field confirmations when column basis is switched", () => {
+      const mockOcrData: OcrExtractionResponse = {
+        raw_text: "Serving Size: 30g",
+        nutrition_lines: ["Serving Size: 30g"],
+        ingredients_text: null,
+        nutrient_candidates: {},
+        serving_size_candidate: 30.0,
+        serving_unit_candidate: "g",
+        overall_confidence: 95.0,
+        warnings: [],
+        verification_required: true,
+        disclaimer: "User review required.",
+      };
+
+      const stateWithConfirmations: ScannerState = {
+        ...initialScannerState,
+        ocrResult: mockOcrData,
+        confirmedFields: {
+          ...initialScannerState.confirmedFields,
+          energyKcal: true,
+          proteinG: true,
+        },
+      };
+
+      const switchedState = scannerReducer(stateWithConfirmations, {
+        type: "COLUMN_BASIS_SELECTED",
+        basis: "per_100",
+      });
+
+      expect(switchedState.selectedColumn).toBe("per_100");
+      expect(switchedState.confirmedFields.energyKcal).toBe(false);
+      expect(switchedState.confirmedFields.proteinG).toBe(false);
+    });
+
     it("records verified transfer state", () => {
       const state = scannerReducer(initialScannerState, {
         type: "VALUES_TRANSFERRED",
@@ -289,6 +342,33 @@ describe("LabelScanner Image Selection & Lifecycle", () => {
       expect(fields.addedSugarG).toBe("");
       expect(fields.sodiumMg).toBe("");
       expect(fields.ingredientsText).toBe("");
+    });
+
+    it("correctly identifies kg and l serving units from OCR candidates", () => {
+      const kgOcrData: OcrExtractionResponse = {
+        raw_text: "Serving size: 1 kg",
+        nutrition_lines: [],
+        ingredients_text: null,
+        nutrient_candidates: {},
+        serving_size_candidate: 1,
+        serving_unit_candidate: "kg",
+        overall_confidence: 90,
+        warnings: [],
+        verification_required: true,
+        disclaimer: "test",
+      };
+
+      const fieldsKg = buildReviewFieldsFromOcr(kgOcrData);
+      expect(fieldsKg.servingUnit).toBe("kg");
+
+      const lOcrData: OcrExtractionResponse = {
+        ...kgOcrData,
+        serving_size_candidate: 2,
+        serving_unit_candidate: "l",
+      };
+
+      const fieldsL = buildReviewFieldsFromOcr(lOcrData);
+      expect(fieldsL.servingUnit).toBe("l");
     });
   });
 });

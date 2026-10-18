@@ -489,14 +489,28 @@ def parse_ocr_text(raw_text: str, confidence: float | None = None) -> OcrExtract
 
         # Dual column handling
         if len(gram_numbers) >= 2 and column_basis_detected == "dual_column":
-            val_100, unit_100 = gram_numbers[0]
-            val_serv, unit_serv = gram_numbers[1]
+            raw_v100, raw_u100 = gram_numbers[0]
+            raw_vserv, raw_userv = gram_numbers[1]
+
+            if default_unit == "mg" and raw_u100 and raw_u100.lower() == "g":
+                val_100, unit_100 = round(raw_v100 * 1000.0, 1), "mg"
+            elif default_unit == "g" and raw_u100 and raw_u100.lower() == "mg":
+                val_100, unit_100 = round(raw_v100 / 1000.0, 3), "g"
+            else:
+                val_100, unit_100 = raw_v100, raw_u100 or default_unit
+
+            if default_unit == "mg" and raw_userv and raw_userv.lower() == "g":
+                val_serv, unit_serv = round(raw_vserv * 1000.0, 1), "mg"
+            elif default_unit == "g" and raw_userv and raw_userv.lower() == "mg":
+                val_serv, unit_serv = round(raw_vserv / 1000.0, 3), "g"
+            else:
+                val_serv, unit_serv = raw_vserv, raw_userv or default_unit
 
             cand_100 = ExtractedNutrientCandidate(
                 field_name=field_name,
                 raw_text=raw_match_line,
                 value=val_100,
-                unit=unit_100 or default_unit,
+                unit=unit_100,
                 confidence=confidence,
                 column="per_100g",
                 source="ocr",
@@ -506,7 +520,7 @@ def parse_ocr_text(raw_text: str, confidence: float | None = None) -> OcrExtract
                 field_name=field_name,
                 raw_text=raw_match_line,
                 value=val_serv,
-                unit=unit_serv or default_unit,
+                unit=unit_serv,
                 confidence=confidence,
                 column="per_serving",
                 source="ocr",
@@ -517,12 +531,19 @@ def parse_ocr_text(raw_text: str, confidence: float | None = None) -> OcrExtract
             # Default candidates dict to per-100g or per-serving
             candidates[field_name] = cand_serv if serving_val is not None else cand_100
         else:
-            val, parsed_unit = gram_numbers[0]
+            raw_v, raw_u = gram_numbers[0]
+            if default_unit == "mg" and raw_u and raw_u.lower() == "g":
+                val, parsed_unit = round(raw_v * 1000.0, 1), "mg"
+            elif default_unit == "g" and raw_u and raw_u.lower() == "mg":
+                val, parsed_unit = round(raw_v / 1000.0, 3), "g"
+            else:
+                val, parsed_unit = raw_v, raw_u or default_unit
+
             cand = ExtractedNutrientCandidate(
                 field_name=field_name,
                 raw_text=raw_match_line,
                 value=val,
-                unit=parsed_unit or default_unit,
+                unit=parsed_unit,
                 confidence=confidence,
                 column=column_basis_detected,
                 source="ocr",

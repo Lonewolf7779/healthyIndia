@@ -13,7 +13,7 @@ export interface HealthResponse {
 
 export interface NutritionAnalysisRequest {
   serving_size: number;
-  serving_unit?: "g" | "ml" | "piece" | "portion";
+  serving_unit?: "g" | "kg" | "ml" | "l" | "piece" | "portion";
   basis?: "per_serving" | "per_100g" | "per_100ml";
   food_form?: "solid" | "liquid";
   energy_kcal?: number | null;
@@ -27,6 +27,7 @@ export interface NutritionAnalysisRequest {
   trans_fat_g?: number | null;
   cholesterol_mg?: number | null;
   sodium_mg?: number | null;
+  is_confirmed?: boolean;
 }
 
 export interface NutrientComparison {

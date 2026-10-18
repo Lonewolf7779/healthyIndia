@@ -86,6 +86,30 @@ def normalize_nutrients(
     per_100: dict[str, float | None] = {}
     per_serving: dict[str, float | None] = {}
 
+    # Incompatible unit checks: mass vs volume without density
+    if input_data.food_form == FoodForm.SOLID:
+        if input_data.serving_unit in (ServingUnit.ML, ServingUnit.L):
+            raise ValueError(
+                "Solid food cannot declare a volume-based serving unit (ml/l) "
+                "without explicit substance density."
+            )
+        if input_data.basis == ServingBasis.PER_100ML:
+            raise ValueError(
+                "Solid food cannot be analyzed on a per-100ml basis "
+                "without explicit substance density."
+            )
+    elif input_data.food_form == FoodForm.LIQUID:
+        if input_data.serving_unit in (ServingUnit.G, ServingUnit.KG):
+            raise ValueError(
+                "Liquid food cannot declare a mass-based serving unit (g/kg) "
+                "without explicit substance density."
+            )
+        if input_data.basis == ServingBasis.PER_100G:
+            raise ValueError(
+                "Liquid food cannot be analyzed on a per-100g basis "
+                "without explicit substance density."
+            )
+
     # Check for discrete units that cannot be converted to 100g without piece weight
     if input_data.serving_unit in (ServingUnit.PIECE, ServingUnit.PORTION):
         if input_data.basis == ServingBasis.PER_SERVING:
@@ -100,14 +124,19 @@ def normalize_nutrients(
             per_serving[key] = None
         return per_100, per_serving
 
+    # Effective serving size in base units (g or ml)
+    effective_serving = input_data.serving_size
+    if input_data.serving_unit in (ServingUnit.KG, ServingUnit.L):
+        effective_serving = input_data.serving_size * 1000.0
+
     if input_data.basis == ServingBasis.PER_SERVING:
-        scale_to_100 = 100.0 / input_data.serving_size
+        scale_to_100 = 100.0 / effective_serving
         for key, value in raw_dict.items():
             per_serving[key] = value
             per_100[key] = round(value * scale_to_100, 2) if value is not None else None
 
     elif input_data.basis in (ServingBasis.PER_100G, ServingBasis.PER_100ML):
-        scale_to_serving = input_data.serving_size / 100.0
+        scale_to_serving = effective_serving / 100.0
         for key, value in raw_dict.items():
             per_100[key] = value
             per_serving[key] = round(value * scale_to_serving, 2) if value is not None else None
@@ -328,9 +357,19 @@ def analyze_nutrition(input_data: RawNutrientInput) -> NutritionAnalysisResult:
         serving_unit=input_data.serving_unit.value,
     )
 
+    eff_size = input_data.serving_size
+    eff_unit = input_data.serving_unit.value
+    if input_data.serving_unit == ServingUnit.KG:
+        eff_size = input_data.serving_size * 1000.0
+        eff_unit = "g"
+    elif input_data.serving_unit == ServingUnit.L:
+        eff_size = input_data.serving_size * 1000.0
+        eff_unit = "ml"
+
     scaling_desc = (
-        f"Scaled using deterministic factor {round(100.0 / input_data.serving_size, 4)} "
-        f"based on serving size {input_data.serving_size}{input_data.serving_unit.value}."
+        f"Scaled using deterministic factor {round(100.0 / eff_size, 4)} "
+        f"based on serving size {input_data.serving_size}{input_data.serving_unit.value} "
+        f"({eff_size}{eff_unit})."
         if input_data.serving_unit not in (ServingUnit.PIECE, ServingUnit.PORTION)
         else "Discrete piece/portion units without net gram weight cannot be scaled to 100g."
     )

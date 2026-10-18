@@ -119,9 +119,63 @@ class NutritionAnalysisRequest(BaseModel):
         examples=[180.0],
     )
 
+    is_confirmed: bool = Field(
+        default=True,
+        description="Explicit user confirmation that input values have been reviewed.",
+        examples=[True],
+    )
+
     @model_validator(mode="after")
     def validate_biological_plausibility(self) -> "NutritionAnalysisRequest":
-        # Check added sugar vs total sugar
+        # 1. Enforce confirmation: unconfirmed requests are rejected fail-closed
+        if not self.is_confirmed:
+            raise ValueError(
+                "Final nutrition calculation requires explicit confirmation of input values."
+            )
+
+        # 2. Incompatible unit checks: mass vs volume without density
+        if self.food_form == FoodForm.SOLID:
+            if self.serving_unit in (ServingUnit.ML, ServingUnit.L):
+                raise ValueError(
+                    "Solid food cannot declare volume serving unit (ml/l) "
+                    "without explicit substance density."
+                )
+            if self.basis == ServingBasis.PER_100ML:
+                raise ValueError(
+                    "Solid food cannot be analyzed on a per-100ml basis "
+                    "without explicit substance density."
+                )
+        elif self.food_form == FoodForm.LIQUID:
+            if self.serving_unit in (ServingUnit.G, ServingUnit.KG):
+                raise ValueError(
+                    "Liquid food cannot declare mass serving unit (g/kg) "
+                    "without explicit substance density."
+                )
+            if self.basis == ServingBasis.PER_100G:
+                raise ValueError(
+                    "Liquid food cannot be analyzed on a per-100g basis "
+                    "without explicit substance density."
+                )
+
+        # 3. Non-negative nutrient checks
+        nutrient_vals = {
+            "energy_kcal": self.energy_kcal,
+            "protein_g": self.protein_g,
+            "carbohydrates_g": self.carbohydrates_g,
+            "total_sugar_g": self.total_sugar_g,
+            "added_sugar_g": self.added_sugar_g,
+            "dietary_fiber_g": self.dietary_fiber_g,
+            "total_fat_g": self.total_fat_g,
+            "saturated_fat_g": self.saturated_fat_g,
+            "trans_fat_g": self.trans_fat_g,
+            "cholesterol_mg": self.cholesterol_mg,
+            "sodium_mg": self.sodium_mg,
+        }
+        for k, v in nutrient_vals.items():
+            if v is not None and v < 0:
+                raise ValueError(f"Nutrient '{k}' cannot be negative ({v}).")
+
+        # 4. Check added sugar vs total sugar
         if (
             self.added_sugar_g is not None
             and self.total_sugar_g is not None
@@ -133,7 +187,7 @@ class NutritionAnalysisRequest(BaseModel):
             )
             raise ValueError(msg)
 
-        # Check total sugar vs carbohydrates
+        # 5. Check total sugar vs carbohydrates
         if (
             self.total_sugar_g is not None
             and self.carbohydrates_g is not None
@@ -145,7 +199,7 @@ class NutritionAnalysisRequest(BaseModel):
             )
             raise ValueError(msg)
 
-        # Check sub-fats vs total fat plausibility
+        # 6. Check sub-fats vs total fat plausibility
         sub_fats = (self.saturated_fat_g or 0.0) + (self.trans_fat_g or 0.0)
         if self.total_fat_g is not None and sub_fats > (self.total_fat_g + 0.05):
             raise ValueError(
@@ -153,7 +207,18 @@ class NutritionAnalysisRequest(BaseModel):
                 f"cannot exceed total fat ({self.total_fat_g}g)."
             )
 
-        # Check energy plausibility against minimum fat calories (9 kcal/g)
+        # 7. Check solid food macronutrient sum limit on per-100g basis
+        if self.basis == ServingBasis.PER_100G:
+            macro_sum = (
+                (self.protein_g or 0.0) + (self.carbohydrates_g or 0.0) + (self.total_fat_g or 0.0)
+            )
+            if macro_sum > 105.0:
+                raise ValueError(
+                    f"Sum of macronutrients ({macro_sum:.1f}g) exceeds 100g serving basis "
+                    "(105g maximum with analytical tolerance)."
+                )
+
+        # 8. Check energy plausibility against minimum fat calories (9 kcal/g)
         if (
             self.energy_kcal is not None
             and self.total_fat_g is not None

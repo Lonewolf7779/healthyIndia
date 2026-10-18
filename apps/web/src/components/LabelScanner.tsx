@@ -8,7 +8,7 @@ export const SUPPORTED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export interface TransferredValues {
   servingSize?: string;
-  servingUnit?: "g" | "ml" | "piece" | "portion";
+  servingUnit?: "g" | "ml" | "kg" | "l" | "piece" | "portion";
   energyKcal?: string;
   proteinG?: string;
   carbohydratesG?: string;
@@ -23,12 +23,12 @@ export interface TransferredValues {
   ingredientsText?: string;
   isConfirmed?: boolean;
   unconfirmedCount?: number;
-  basis?: "per_serving" | "per_100g";
+  basis?: "per_serving" | "per_100g" | "per_100ml";
 }
 
 export interface LabelScannerReviewFields {
   servingSize: string;
-  servingUnit: "g" | "ml" | "piece" | "portion";
+  servingUnit: "g" | "ml" | "kg" | "l" | "piece" | "portion";
   energyKcal: string;
   proteinG: string;
   carbohydratesG: string;
@@ -176,6 +176,10 @@ export function buildReviewFieldsFromOcr(
     servingUnit:
       data.serving_unit_candidate === "ml"
         ? "ml"
+        : data.serving_unit_candidate === "kg"
+        ? "kg"
+        : data.serving_unit_candidate === "l"
+        ? "l"
         : data.serving_unit_candidate === "piece"
         ? "piece"
         : data.serving_unit_candidate === "portion"
@@ -321,7 +325,7 @@ export function scannerReducer(state: ScannerState, action: ScannerAction): Scan
         },
         confirmedFields: {
           ...state.confirmedFields,
-          [action.field]: true, // User manual edit implies confirmation of that field
+          [action.field]: false, // Editing a value invalidates any previous confirmation associated with it
         },
       };
 
@@ -363,6 +367,7 @@ export function scannerReducer(state: ScannerState, action: ScannerAction): Scan
         ...state,
         selectedColumn: action.basis,
         reviewFields: buildReviewFieldsFromOcr(state.ocrResult, action.basis),
+        confirmedFields: initialConfirmedFields, // Switching calculation basis invalidates previous confirmations
       };
 
     case "RESET":
@@ -912,7 +917,9 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                   }}
                 >
                   <option value="g">Grams (g)</option>
+                  <option value="kg">Kilograms (kg)</option>
                   <option value="ml">Millilitres (ml)</option>
+                  <option value="l">Litres (l)</option>
                   <option value="piece">Piece</option>
                   <option value="portion">Portion</option>
                 </select>

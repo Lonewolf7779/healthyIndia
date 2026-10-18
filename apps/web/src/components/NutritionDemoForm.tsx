@@ -25,7 +25,7 @@ export const NutritionDemoForm: React.FC = () => {
   // Product & Serving Information
   const [productName, setProductName] = useState<string>("Sample Packaged Biscuits");
   const [servingSize, setServingSize] = useState<string>("30");
-  const [servingUnit, setServingUnit] = useState<"g" | "ml" | "piece" | "portion">("g");
+  const [servingUnit, setServingUnit] = useState<"g" | "ml" | "kg" | "l" | "piece" | "portion">("g");
   const [basis, setBasis] = useState<"per_serving" | "per_100g" | "per_100ml">("per_serving");
   const [foodForm, setFoodForm] = useState<"solid" | "liquid">("solid");
 
@@ -61,6 +61,15 @@ export const NutritionDemoForm: React.FC = () => {
     isConfirmed: boolean;
     unconfirmedCount: number;
   } | null>(null);
+
+  const handleFieldChange = (setter: React.Dispatch<React.SetStateAction<string>>, val: string) => {
+    setter(val);
+    if (ocrProvenance?.isOcr && ocrProvenance.isConfirmed) {
+      setOcrProvenance((prev) =>
+        prev ? { ...prev, isConfirmed: false, unconfirmedCount: Math.max(1, prev.unconfirmedCount) } : null
+      );
+    }
+  };
 
   const handleClear = () => {
     setProductName("");
@@ -174,6 +183,13 @@ export const NutritionDemoForm: React.FC = () => {
       return;
     }
 
+    if (ocrProvenance?.isOcr && !ocrProvenance.isConfirmed) {
+      setGeneralError(
+        "Please confirm all scanned and edited values before running nutrition analysis."
+      );
+      return;
+    }
+
     setLoading(true);
     setActiveProductName(productName.trim());
 
@@ -197,6 +213,7 @@ export const NutritionDemoForm: React.FC = () => {
         trans_fat_g: parseOptionalNumber(transFatG),
         cholesterol_mg: parseOptionalNumber(cholesterolMg),
         sodium_mg: parseOptionalNumber(sodiumMg),
+        is_confirmed: ocrProvenance ? ocrProvenance.isConfirmed : true,
       };
 
       requests.push(
@@ -319,9 +336,19 @@ export const NutritionDemoForm: React.FC = () => {
           {ocrProvenance.isConfirmed ? (
             <strong>✓ Values were imported from label OCR and confirmed by the user.</strong>
           ) : (
-            <span>
-              <strong>Notice:</strong> Values were imported from packaging OCR ({ocrProvenance.unconfirmedCount} unconfirmed). Please check values against your physical package before calculating.
-            </span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+              <span>
+                <strong>Notice:</strong> Values were imported from packaging OCR ({ocrProvenance.unconfirmedCount} unconfirmed or edited). Please check values against your physical package before calculating.
+              </span>
+              <button
+                type="button"
+                onClick={() => setOcrProvenance((prev) => (prev ? { ...prev, isConfirmed: true, unconfirmedCount: 0 } : null))}
+                className="btn-retry"
+                style={{ fontSize: "0.8rem", padding: "0.25rem 0.5rem", whiteSpace: "nowrap" }}
+              >
+                Confirm Values
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -357,7 +384,7 @@ export const NutritionDemoForm: React.FC = () => {
                 min="0.01"
                 placeholder="e.g. 30"
                 value={servingSize}
-                onChange={(e) => setServingSize(e.target.value)}
+                onChange={(e) => handleFieldChange(setServingSize, e.target.value)}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
@@ -369,11 +396,20 @@ export const NutritionDemoForm: React.FC = () => {
               <select
                 id="servingUnit"
                 value={servingUnit}
-                onChange={(e) => setServingUnit(e.target.value as "g" | "ml" | "piece" | "portion")}
+                onChange={(e) => {
+                  setServingUnit(e.target.value as "g" | "ml" | "kg" | "l" | "piece" | "portion");
+                  if (ocrProvenance?.isOcr && ocrProvenance.isConfirmed) {
+                    setOcrProvenance((prev) =>
+                      prev ? { ...prev, isConfirmed: false, unconfirmedCount: Math.max(1, prev.unconfirmedCount) } : null
+                    );
+                  }
+                }}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               >
                 <option value="g">Grams (g)</option>
+                <option value="kg">Kilograms (kg)</option>
                 <option value="ml">Millilitres (ml)</option>
+                <option value="l">Litres (l)</option>
                 <option value="piece">Piece (Discrete)</option>
                 <option value="portion">Portion (Discrete)</option>
               </select>
@@ -386,7 +422,14 @@ export const NutritionDemoForm: React.FC = () => {
               <select
                 id="basis"
                 value={basis}
-                onChange={(e) => setBasis(e.target.value as "per_serving" | "per_100g" | "per_100ml")}
+                onChange={(e) => {
+                  setBasis(e.target.value as "per_serving" | "per_100g" | "per_100ml");
+                  if (ocrProvenance?.isOcr && ocrProvenance.isConfirmed) {
+                    setOcrProvenance((prev) =>
+                      prev ? { ...prev, isConfirmed: false, unconfirmedCount: Math.max(1, prev.unconfirmedCount) } : null
+                    );
+                  }
+                }}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               >
                 <option value="per_serving">Per Serving</option>
@@ -432,7 +475,7 @@ export const NutritionDemoForm: React.FC = () => {
                 step="any"
                 min="0"
                 value={energyKcal}
-                onChange={(e) => setEnergyKcal(e.target.value)}
+                onChange={(e) => handleFieldChange(setEnergyKcal, e.target.value)}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
@@ -445,7 +488,7 @@ export const NutritionDemoForm: React.FC = () => {
                 step="any"
                 min="0"
                 value={proteinG}
-                onChange={(e) => setProteinG(e.target.value)}
+                onChange={(e) => handleFieldChange(setProteinG, e.target.value)}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
@@ -458,7 +501,7 @@ export const NutritionDemoForm: React.FC = () => {
                 step="any"
                 min="0"
                 value={carbohydratesG}
-                onChange={(e) => setCarbohydratesG(e.target.value)}
+                onChange={(e) => handleFieldChange(setCarbohydratesG, e.target.value)}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
@@ -471,7 +514,7 @@ export const NutritionDemoForm: React.FC = () => {
                 step="any"
                 min="0"
                 value={totalSugarG}
-                onChange={(e) => setTotalSugarG(e.target.value)}
+                onChange={(e) => handleFieldChange(setTotalSugarG, e.target.value)}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
@@ -484,7 +527,7 @@ export const NutritionDemoForm: React.FC = () => {
                 step="any"
                 min="0"
                 value={addedSugarG}
-                onChange={(e) => setAddedSugarG(e.target.value)}
+                onChange={(e) => handleFieldChange(setAddedSugarG, e.target.value)}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
@@ -497,7 +540,7 @@ export const NutritionDemoForm: React.FC = () => {
                 step="any"
                 min="0"
                 value={dietaryFiberG}
-                onChange={(e) => setDietaryFiberG(e.target.value)}
+                onChange={(e) => handleFieldChange(setDietaryFiberG, e.target.value)}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
@@ -510,7 +553,7 @@ export const NutritionDemoForm: React.FC = () => {
                 step="any"
                 min="0"
                 value={totalFatG}
-                onChange={(e) => setTotalFatG(e.target.value)}
+                onChange={(e) => handleFieldChange(setTotalFatG, e.target.value)}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
@@ -523,7 +566,7 @@ export const NutritionDemoForm: React.FC = () => {
                 step="any"
                 min="0"
                 value={saturatedFatG}
-                onChange={(e) => setSaturatedFatG(e.target.value)}
+                onChange={(e) => handleFieldChange(setSaturatedFatG, e.target.value)}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
@@ -536,7 +579,7 @@ export const NutritionDemoForm: React.FC = () => {
                 step="any"
                 min="0"
                 value={transFatG}
-                onChange={(e) => setTransFatG(e.target.value)}
+                onChange={(e) => handleFieldChange(setTransFatG, e.target.value)}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
@@ -549,7 +592,7 @@ export const NutritionDemoForm: React.FC = () => {
                 step="any"
                 min="0"
                 value={cholesterolMg}
-                onChange={(e) => setCholesterolMg(e.target.value)}
+                onChange={(e) => handleFieldChange(setCholesterolMg, e.target.value)}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
@@ -562,7 +605,7 @@ export const NutritionDemoForm: React.FC = () => {
                 step="any"
                 min="0"
                 value={sodiumMg}
-                onChange={(e) => setSodiumMg(e.target.value)}
+                onChange={(e) => handleFieldChange(setSodiumMg, e.target.value)}
                 style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
