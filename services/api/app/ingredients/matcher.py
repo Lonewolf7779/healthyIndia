@@ -83,12 +83,14 @@ def clean_raw_token(token: str) -> str:
 def extract_ins_pattern(token: str) -> str | None:
     """
     Detects INS or E number references within a token:
-    1. Explicit prefix: 'INS 322', 'E-621', 'INS. 500(ii)'
+    1. Explicit prefix: 'INS 322', 'E-621', 'INS. 500(ii)', 'INS-500ii'
     2. Functional wrapper with numeric code: 'Emulsifier (322)', 'Preservative (211)'
+    3. Trailing parenthesized code: '(621)', '(500(ii))'
+    4. Standalone code token: '500(ii)', '621'
     """
     # 1. Explicit INS or E prefix
     explicit_match = re.search(
-        r"\b(?:ins|e)\.?[\s\-_]*([0-9]{3,4}[a-z]?(?:\([a-z0-9]+\))?)\b",
+        r"(?:\b|^)(?:ins|e)\.?[\s\-_]*([0-9]{3,4}[a-z0-9]*(?:\([a-z0-9]+\))?)",
         token,
         re.IGNORECASE,
     )
@@ -97,7 +99,8 @@ def extract_ins_pattern(token: str) -> str | None:
 
     # 2. Functional prefix with parenthesized code
     pattern = (
-        FUNCTIONAL_PREFIXES_REGEX + r"\s*\(\s*(?:ins\s*)?([0-9]{3,4}[a-z]?(?:\([a-z0-9]+\))?)\s*\)"
+        FUNCTIONAL_PREFIXES_REGEX
+        + r"\s*\(\s*(?:ins\s*)?([0-9]{3,4}[a-z0-9]*(?:\([a-z0-9]+\))?)\s*\)"
     )
     functional_match = re.search(pattern, token, re.IGNORECASE)
     if functional_match:
@@ -105,11 +108,20 @@ def extract_ins_pattern(token: str) -> str | None:
 
     # 3. Trailing parenthesized 3-4 digit code e.g. '(621)'
     paren_code_match = re.search(
-        r"\(\s*([0-9]{3,4}[a-z]?(?:\([a-z0-9]+\))?)\s*\)",
+        r"\(\s*([0-9]{3,4}[a-z0-9]*(?:\([a-z0-9]+\))?)\s*\)",
         token,
     )
     if paren_code_match:
         return paren_code_match.group(1)
+
+    # 4. Standalone code token e.g. '500(ii)', '621'
+    standalone_code = re.match(
+        r"^([0-9]{3,4}[a-z0-9]*(?:\([a-z0-9]+\))?)$",
+        token.strip(),
+        re.IGNORECASE,
+    )
+    if standalone_code:
+        return standalone_code.group(1)
 
     return None
 
