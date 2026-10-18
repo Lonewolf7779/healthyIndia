@@ -126,7 +126,7 @@ Each ground-truth sample is represented by a structured JSON object adhering to 
     "annotator_1": "Identifier",
     "annotator_2": "Identifier",
     "verified_date": "YYYY-MM-DD",
-    "status": "DOUBLE_VERIFIED"
+    "status": "DOUBLE_VERIFIED | SCHEMA_VERIFIED_EVIDENCE_PENDING | UNVERIFIED"
   }
 }
 ```
@@ -140,3 +140,27 @@ To prevent subjective annotation errors:
 2. **Independent Cross-Audit (Annotator 2)**: Independently inspects the high-resolution photograph and validates all values without viewing Annotator 1's preliminary outputs.
 3. **Reconciliation**: Any discrepancy in numeric values, units, or character sequences must be flagged for physical sample review.
 4. **Plausibility Gate**: The structured ground truth must pass automated biological plausibility constraints (macronutrient mass bounds, Atwater calorie bounds, sugar/fat sub-component invariants) via `validate_dataset.py`.
+
+---
+
+## 6. Verification Status Tiers and Cryptographic Provenance
+
+To preserve data integrity, healthyIndia enforces a strict separation between schema plausibility and physical photographic evidence:
+
+1. **`DOUBLE_VERIFIED` (Full Evidential Provenance)**:
+   - Requires BOTH independent human transcription reconciliation AND physical photograph evidence.
+   - The image file specified in `image_filename` MUST physically exist on disk in `data/real_food_labels/images/`.
+   - The file size must be strictly positive (> 0 bytes).
+   - The recorded `image_sha256` must match the cryptographic SHA-256 digest of the physical image file on disk.
+   - The placeholder SHA-256 hash of an empty byte string (`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`) is strictly forbidden and rejected fail-closed.
+
+2. **`SCHEMA_VERIFIED_EVIDENCE_PENDING` (Transcribed Reference Baseline)**:
+   - Ground truth nutrition data and ingredients have been transcribed and verified against all biological plausibility constraints (macro mass conservation, Atwater limits, sugar/fat hierarchies).
+   - The corresponding physical image file is not bundled in the Git repository (e.g., pending high-resolution photograph contribution or repository bandwidth optimization).
+   - In this state, `image_sha256` is `null` and photographic OCR recognition remains **UNMEASURED**.
+
+3. **`UNVERIFIED`**:
+   - Draft annotation or unverified submission. Must not be used in benchmark score calculation.
+
+Under no circumstances may a record claim `DOUBLE_VERIFIED` when physical image files are not present in the repository.
+

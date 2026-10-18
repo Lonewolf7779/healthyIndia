@@ -10,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 from PIL import Image, ImageDraw
 
+from app.core.security import generate_extraction_token
 from app.extraction.quality import assess_image_quality
 from app.main import app
 from app.schemas.nutrition import compute_nutrition_values_hash
@@ -128,7 +129,8 @@ def test_nutrition_endpoint_strictly_rejects_ocr_tampering_without_reverificatio
         "sodium_mg": 250.0,
         "data_source": "ocr",
         "is_confirmed": True,
-        "extraction_token": "valid-token-example-1234567890abcdef",
+        "extraction_id": "test-session-12345",
+        "extraction_token": generate_extraction_token(extraction_id="test-session-12345"),
         "confirmed_values_hash": valid_hash,
     }
 

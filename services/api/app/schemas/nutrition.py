@@ -7,6 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.core.security import verify_extraction_token
 from app.nutrition.models import ServingBasis, ServingUnit
 from app.nutrition.standards import FlagSeverity, FoodForm, RegulatoryStatus
 
@@ -155,9 +156,16 @@ class NutritionAnalysisRequest(BaseModel):
         description="Explicit user confirmation that input values have been reviewed.",
         examples=[True],
     )
+    extraction_id: str | None = Field(
+        default=None,
+        description="Extraction session ID corresponding to the issued extraction_token.",
+    )
     extraction_token: str | None = Field(
         default=None,
-        description="Verification token issued by /api/v1/extraction/ocr for OCR-derived payloads.",
+        description=(
+            "Cryptographically signed verification token issued by "
+            "/api/v1/extraction/ocr for OCR-derived payloads."
+        ),
     )
     confirmed_values_hash: str | None = Field(
         default=None,
@@ -196,6 +204,15 @@ class NutritionAnalysisRequest(BaseModel):
                 )
             if not self.confirmed_values_hash:
                 raise ValueError("OCR-derived data requires an explicit confirmed_values_hash.")
+
+            # Cryptographically authenticate the extraction token against server secret
+            is_valid, err_msg = verify_extraction_token(
+                token=self.extraction_token,
+                extraction_id=self.extraction_id,
+            )
+            if not is_valid:
+                raise ValueError(f"Extraction token authentication failed: {err_msg}")
+
             expected_hash = compute_nutrition_values_hash(
                 serving_size=self.serving_size,
                 serving_unit=self.serving_unit.value,
@@ -209,9 +226,10 @@ class NutritionAnalysisRequest(BaseModel):
                     "values were modified after confirmation without re-verifying."
                 )
         elif self.data_source == "manual":
-            if self.extraction_token is not None:
+            if self.extraction_token is not None or self.extraction_id is not None:
                 raise ValueError(
-                    "Manual data source cannot carry an extraction_token; use data_source='ocr'."
+                    "Manual data source cannot carry an extraction_token or extraction_id; "
+                    "use data_source='ocr'."
                 )
 
         # 2. Incompatible unit checks: mass vs volume without density

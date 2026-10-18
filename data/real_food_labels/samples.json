@@ -12,7 +12,7 @@
       "category": "Savory Snacks & Extruded Namkeen",
       "packaging_format": "pouch",
       "image_filename": "RFL-001_aloo_bhujia.jpg",
-      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_sha256": null,
       "capture_metadata": {
         "lighting_condition": "L1",
         "camera_angle": "A1",
@@ -45,7 +45,7 @@
         "annotator_1": "AUDIT-LEAD-1",
         "annotator_2": "QA-SPECIALIST-2",
         "verified_date": "2026-10-18",
-        "status": "DOUBLE_VERIFIED"
+        "status": "SCHEMA_VERIFIED_EVIDENCE_PENDING"
       }
     },
     {
@@ -57,7 +57,7 @@
       "category": "Biscuits & Cookies",
       "packaging_format": "wrapper",
       "image_filename": "RFL-002_marie_gold.jpg",
-      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_sha256": null,
       "capture_metadata": {
         "lighting_condition": "L2",
         "camera_angle": "A2",
@@ -90,7 +90,7 @@
         "annotator_1": "AUDIT-LEAD-1",
         "annotator_2": "QA-SPECIALIST-2",
         "verified_date": "2026-10-18",
-        "status": "DOUBLE_VERIFIED"
+        "status": "SCHEMA_VERIFIED_EVIDENCE_PENDING"
       }
     },
     {
@@ -102,7 +102,7 @@
       "category": "Dairy & Cultured Products",
       "packaging_format": "carton",
       "image_filename": "RFL-003_amul_taaza.jpg",
-      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_sha256": null,
       "capture_metadata": {
         "lighting_condition": "L1",
         "camera_angle": "A1",
@@ -135,7 +135,7 @@
         "annotator_1": "AUDIT-LEAD-1",
         "annotator_2": "QA-SPECIALIST-2",
         "verified_date": "2026-10-18",
-        "status": "DOUBLE_VERIFIED"
+        "status": "SCHEMA_VERIFIED_EVIDENCE_PENDING"
       }
     },
     {
@@ -147,7 +147,7 @@
       "category": "Ready-to-Eat (RTE) & Ready-to-Cook (RTC) Meals",
       "packaging_format": "pouch",
       "image_filename": "RFL-004_suji_upma.jpg",
-      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_sha256": null,
       "capture_metadata": {
         "lighting_condition": "L2",
         "camera_angle": "A1",
@@ -180,7 +180,7 @@
         "annotator_1": "AUDIT-LEAD-1",
         "annotator_2": "QA-SPECIALIST-2",
         "verified_date": "2026-10-18",
-        "status": "DOUBLE_VERIFIED"
+        "status": "SCHEMA_VERIFIED_EVIDENCE_PENDING"
       }
     },
     {
@@ -192,7 +192,7 @@
       "category": "Beverages & Juices",
       "packaging_format": "bottle",
       "image_filename": "RFL-005_frooti.jpg",
-      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_sha256": null,
       "capture_metadata": {
         "lighting_condition": "L1",
         "camera_angle": "A2",
@@ -225,7 +225,7 @@
         "annotator_1": "AUDIT-LEAD-1",
         "annotator_2": "QA-SPECIALIST-2",
         "verified_date": "2026-10-18",
-        "status": "DOUBLE_VERIFIED"
+        "status": "SCHEMA_VERIFIED_EVIDENCE_PENDING"
       }
     },
     {
@@ -237,7 +237,7 @@
       "category": "Breakfast Cereals & Grain Pouches",
       "packaging_format": "pouch",
       "image_filename": "RFL-006_quaker_oats.jpg",
-      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_sha256": null,
       "capture_metadata": {
         "lighting_condition": "L1",
         "camera_angle": "A1",
@@ -283,7 +283,7 @@
         "annotator_1": "AUDIT-LEAD-1",
         "annotator_2": "QA-SPECIALIST-2",
         "verified_date": "2026-10-18",
-        "status": "DOUBLE_VERIFIED"
+        "status": "SCHEMA_VERIFIED_EVIDENCE_PENDING"
       }
     },
     {
@@ -295,7 +295,7 @@
       "category": "Chocolates & Confectionery",
       "packaging_format": "wrapper",
       "image_filename": "RFL-007_cadbury_dairy_milk.jpg",
-      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_sha256": null,
       "capture_metadata": {
         "lighting_condition": "L3",
         "camera_angle": "A1",
@@ -328,7 +328,7 @@
         "annotator_1": "AUDIT-LEAD-1",
         "annotator_2": "QA-SPECIALIST-2",
         "verified_date": "2026-10-18",
-        "status": "DOUBLE_VERIFIED"
+        "status": "SCHEMA_VERIFIED_EVIDENCE_PENDING"
       }
     },
     {
@@ -340,7 +340,7 @@
       "category": "Condiments, Sauces & Pickles",
       "packaging_format": "bottle",
       "image_filename": "RFL-008_kissan_ketchup.jpg",
-      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_sha256": null,
       "capture_metadata": {
         "lighting_condition": "L2",
         "camera_angle": "A2",
@@ -373,7 +373,7 @@
         "annotator_1": "AUDIT-LEAD-1",
         "annotator_2": "QA-SPECIALIST-2",
         "verified_date": "2026-10-18",
-        "status": "DOUBLE_VERIFIED"
+        "status": "SCHEMA_VERIFIED_EVIDENCE_PENDING"
       }
     },
     {
@@ -385,7 +385,7 @@
       "category": "Flours, Pulses & Staple Grains",
       "packaging_format": "sack",
       "image_filename": "RFL-009_aashirvaad_atta.jpg",
-      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_sha256": null,
       "capture_metadata": {
         "lighting_condition": "L1",
         "camera_angle": "A1",
@@ -418,7 +418,7 @@
         "annotator_1": "AUDIT-LEAD-1",
         "annotator_2": "QA-SPECIALIST-2",
         "verified_date": "2026-10-18",
-        "status": "DOUBLE_VERIFIED"
+        "status": "SCHEMA_VERIFIED_EVIDENCE_PENDING"
       }
     },
     {
@@ -430,7 +430,7 @@
       "category": "Nutritional Supplements & Health Foods",
       "packaging_format": "jar",
       "image_filename": "RFL-010_bournvita.jpg",
-      "image_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "image_sha256": null,
       "capture_metadata": {
         "lighting_condition": "L2",
         "camera_angle": "A2",
@@ -463,7 +463,7 @@
         "annotator_1": "AUDIT-LEAD-1",
         "annotator_2": "QA-SPECIALIST-2",
         "verified_date": "2026-10-18",
-        "status": "DOUBLE_VERIFIED"
+        "status": "SCHEMA_VERIFIED_EVIDENCE_PENDING"
       }
     }
   ]

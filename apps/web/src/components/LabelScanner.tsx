@@ -28,6 +28,7 @@ export interface TransferredValues {
   isConfirmed?: boolean;
   unconfirmedCount?: number;
   basis?: "per_serving" | "per_100g" | "per_100ml";
+  extractionId?: string;
   extractionToken?: string;
   confirmedValuesHash?: string;
 }
@@ -534,6 +535,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
       isConfirmed: isAllConfirmed,
       unconfirmedCount,
       basis: basisVal,
+      extractionId: state.ocrResult?.extraction_id,
       extractionToken: state.ocrResult?.extraction_token,
       confirmedValuesHash: isAllConfirmed ? hash : undefined,
     });

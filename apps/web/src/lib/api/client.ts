@@ -29,6 +29,7 @@ export interface NutritionAnalysisRequest {
   sodium_mg?: number | null;
   data_source?: "manual" | "ocr";
   is_confirmed?: boolean;
+  extraction_id?: string | null;
   extraction_token?: string | null;
   confirmed_values_hash?: string | null;
 }

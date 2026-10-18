@@ -62,6 +62,7 @@ export const NutritionDemoForm: React.FC = () => {
     isOcr: boolean;
     isConfirmed: boolean;
     unconfirmedCount: number;
+    extractionId?: string;
     extractionToken?: string;
     confirmedValuesHash?: string;
   } | null>(null);
@@ -355,6 +356,7 @@ export const NutritionDemoForm: React.FC = () => {
         sodium_mg: nutrientsMap.sodium_mg,
         data_source: ocrProvenance?.isOcr ? "ocr" : "manual",
         is_confirmed: ocrProvenance ? ocrProvenance.isConfirmed : true,
+        extraction_id: ocrProvenance?.isOcr ? ocrProvenance.extractionId : undefined,
         extraction_token: ocrProvenance?.isOcr ? ocrProvenance.extractionToken : undefined,
         confirmed_values_hash: confirmedHash,
       };
@@ -437,6 +439,7 @@ export const NutritionDemoForm: React.FC = () => {
       isOcr: true,
       isConfirmed: values.isConfirmed ?? false,
       unconfirmedCount: values.unconfirmedCount ?? 0,
+      extractionId: values.extractionId,
       extractionToken: values.extractionToken,
       confirmedValuesHash: values.confirmedValuesHash,
     });

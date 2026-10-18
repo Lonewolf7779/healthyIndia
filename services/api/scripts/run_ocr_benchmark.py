@@ -1134,7 +1134,7 @@ The scanner implements defense-in-depth against silent misinterpretations:
 ## 4. Public Release Acceptance Criteria
 
 Before declaring the food label scanner ready for unassisted public deployment, the following physical criteria must be satisfied:
-1. **Physical Dataset**: Minimum 500 verified camera photographs across 10 distinct Indian packaged food categories (biscuits, namkeen, dairy, beverages, instant noodles, edible oils, spices, breakfast cereals, confectionery, ready meals). Current status: Specification and initial 10 ground-truth samples established; physical image capture workflow active.
+1. **Physical Dataset**: Minimum 500 verified camera photographs across 10 distinct Indian packaged food categories (biscuits, namkeen, dairy, beverages, instant noodles, edible oils, spices, breakfast cereals, confectionery, ready meals). Current status: Specification and 10 transcribed reference baselines established (status: SCHEMA_VERIFIED_EVIDENCE_PENDING); physical image files are not bundled in repository (0 physical camera photos evaluated).
 2. **Real-World Character Recognition**: Character accuracy >= 98.5% on clear packaging; >= 92% on curved or glossy packages. Current status: UNMEASURED.
 3. **Nutrient Association Accuracy**: >= 95% correct association of numbers to parent nutrients on physical camera images. Current status: UNMEASURED.
 4. **Zero Silent Conversions**: 100% adherence to the zero-conversion rule (missing values remain `None`, never converted to `0.0`). Current status: PASSED in algorithmic and mathematical suites.
