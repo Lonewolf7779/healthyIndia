@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.core.security import verify_extraction_token
+from app.core.security import is_valid_uuid, verify_extraction_token
 from app.nutrition.models import ServingBasis, ServingUnit
 from app.nutrition.standards import FlagSeverity, FoodForm, RegulatoryStatus
 
@@ -198,14 +198,24 @@ class NutritionAnalysisRequest(BaseModel):
         }
 
         if self.data_source == "ocr":
-            if not self.extraction_token:
+            if not self.extraction_id or not self.extraction_id.strip():
+                raise ValueError(
+                    "OCR-derived data requires a valid, non-empty extraction_id "
+                    "issued by the scanner."
+                )
+            if not is_valid_uuid(self.extraction_id):
+                raise ValueError(
+                    f"Malformed extraction_id '{self.extraction_id}': "
+                    "must be a valid canonical UUID."
+                )
+            if not self.extraction_token or not self.extraction_token.strip():
                 raise ValueError(
                     "OCR-derived data requires a valid extraction_token issued by the scanner."
                 )
-            if not self.confirmed_values_hash:
+            if not self.confirmed_values_hash or not self.confirmed_values_hash.strip():
                 raise ValueError("OCR-derived data requires an explicit confirmed_values_hash.")
 
-            # Cryptographically authenticate the extraction token against server secret
+            # Cryptographically authenticate session token and strictly bind against extraction_id
             is_valid, err_msg = verify_extraction_token(
                 token=self.extraction_token,
                 extraction_id=self.extraction_id,

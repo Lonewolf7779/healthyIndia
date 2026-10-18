@@ -2,8 +2,12 @@
 useDefault = true
 
 [allowlist]
-description = "Allow mock test fixtures, mock HMAC keys, and dataset metadata"
+description = "Narrowly scoped exceptions for documented harmless development and test fixtures"
+stopwords = [
+    "insecure-dev-secret-key-replace-in-production-min-32-chars",
+    "a-very-secure-random-production-key-min-32-chars-long",
+    "harmless-mock-credential-fixture-for-scanner-verification",
+]
 paths = [
-    '''services/api/tests/''',
-    '''data/real_food_labels/'''
+    '''^services/api/tests/unit/test_config\.py$''',
 ]

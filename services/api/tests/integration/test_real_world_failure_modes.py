@@ -129,8 +129,10 @@ def test_nutrition_endpoint_strictly_rejects_ocr_tampering_without_reverificatio
         "sodium_mg": 250.0,
         "data_source": "ocr",
         "is_confirmed": True,
-        "extraction_id": "test-session-12345",
-        "extraction_token": generate_extraction_token(extraction_id="test-session-12345"),
+        "extraction_id": "11111111-2222-4333-8444-555555555555",
+        "extraction_token": generate_extraction_token(
+            extraction_id="11111111-2222-4333-8444-555555555555"
+        ),
         "confirmed_values_hash": valid_hash,
     }
 
