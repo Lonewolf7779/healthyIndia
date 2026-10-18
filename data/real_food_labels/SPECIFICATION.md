@@ -164,3 +164,77 @@ To preserve data integrity, healthyIndia enforces a strict separation between sc
 
 Under no circumstances may a record claim `DOUBLE_VERIFIED` when physical image files are not present in the repository.
 
+---
+
+## 7. Metric Definitions & Benchmark Scoring Rules
+
+The physical photograph OCR benchmark measures performance against ground-truth labels using field-specific tolerances, unit normalization, and strict separation of omitted fields from OCR errors.
+
+### A. Field-Level Matching Rules
+1. **Scope and Eligibility:**
+   - Only samples with verified physical image files present on disk are evaluated.
+   - Ground truth fields marked `null` (undeclared or unreadable on physical packaging) are excluded from declared scoring denominators.
+   - If OCR predicts a value for a `null` ground truth field, it is classified as an **Unexpected Prediction** (hallucination).
+   - If OCR fails to predict a declared ground truth field, it is classified as a **Missing Prediction** (omission).
+2. **Exact-Match vs Tolerance-Based Match:**
+   - **Exact Match:** Requires absolute difference \(|\hat{y} - y| \le 0.001\).
+   - **Tolerance-Based Match:** Calibrated per nutrient field based on analytical measurement and packaging rounding regulations:
+
+| Nutrient Field | Units | Absolute Tolerance | Relative Tolerance | Rationale |
+| :--- | :---: | :---: | :---: | :--- |
+| `energy_kcal` | kcal | \(\le 1.0\text{ kcal}\) | \(\le 1.0\%\) | Rounding tolerance on calorie declarations |
+| `protein_g` | g | \(\le 0.2\text{ g}\) | \(\le 2.0\%\) | Standard macronutrient rounding |
+| `carbohydrates_g` | g | \(\le 0.2\text{ g}\) | \(\le 2.0\%\) | Standard macronutrient rounding |
+| `total_sugar_g` | g | \(\le 0.2\text{ g}\) | \(\le 2.0\%\) | Standard macronutrient rounding |
+| `added_sugar_g` | g | \(\le 0.2\text{ g}\) | \(\le 2.0\%\) | Standard macronutrient rounding |
+| `dietary_fiber_g` | g | \(\le 0.2\text{ g}\) | \(\le 2.0\%\) | Standard macronutrient rounding |
+| `total_fat_g` | g | \(\le 0.2\text{ g}\) | \(\le 2.0\%\) | Standard macronutrient rounding |
+| `saturated_fat_g` | g | \(\le 0.2\text{ g}\) | \(\le 2.0\%\) | Standard macronutrient rounding |
+| `trans_fat_g` | g | \(\le 0.05\text{ g}\) | \(\le 5.0\%\) | Strict tolerance critical for FSSAI 0.2g boundary |
+| `cholesterol_mg` | mg | \(\le 1.0\text{ mg}\) | \(\le 2.0\%\) | Milligram micronutrient scale |
+| `sodium_mg` | mg | \(\le 5.0\text{ mg}\) | \(\le 2.0\%\) | Milligram micronutrient scale (integer declarations) |
+
+3. **Unit Normalization & Basis Alignment:**
+   - Compatible units are normalized (e.g., \(0.78\text{ g sodium} \rightarrow 780.0\text{ mg}\)).
+   - Incompatible units (e.g. \(g\) vs \(\text{kcal}\)) trigger a `unit_mismatch` and cannot be counted as a match.
+   - Column basis must align (`per_100g` vs `per_serving`). Explicit column conflicts trigger a `basis_mismatch`.
+
+### B. Text & Ingredient Statements (CER / WER)
+- **Character Error Rate (CER):** Normalized Levenshtein edit distance:
+  \[
+  \text{CER} = \frac{\text{Levenshtein}(\text{Reference}, \text{Hypothesis})}{\max(\text{len}(\text{Reference}), 1)}
+  \]
+- **Word Error Rate (WER):** Word-token level Levenshtein distance.
+- **Completeness:** Jaccard word-token set overlap between ground-truth and extracted ingredient text.
+
+---
+
+## 8. Benchmark Execution & Automation Commands
+
+### A. Physical Photograph Benchmark Runner
+```bash
+# Run physical photo benchmark with honest evidential reporting
+python services/api/scripts/run_real_photo_benchmark.py
+
+# Optional arguments:
+python services/api/scripts/run_real_photo_benchmark.py \
+    --dataset-path data/real_food_labels/samples.json \
+    --images-dir data/real_food_labels/images \
+    --output-json docs/real_photo_benchmark_results.json
+```
+
+### B. Dataset Integrity & Cryptographic Provenance Validator
+```bash
+# Standard schema and plausibility check
+python services/api/scripts/validate_dataset.py
+
+# Strict verification requiring all physical photograph files on disk with matching SHA-256
+python services/api/scripts/validate_dataset.py --require-images
+```
+
+### C. Automated Unit & Regression Tests
+```bash
+# Execute physical photo benchmark test suite
+pytest services/api/tests/benchmark/test_real_photo_benchmark.py
+```
+

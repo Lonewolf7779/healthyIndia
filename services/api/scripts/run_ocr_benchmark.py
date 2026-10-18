@@ -14,7 +14,6 @@ Outputs metrics, computes exact denominators, and updates docs/OCR_BENCHMARK_REP
 """
 
 import io
-import json
 import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -863,9 +862,9 @@ def evaluate_physical_packaging_photos(
     tesseract_installed: bool,
 ) -> BenchmarkMetric:
     """
-    Evaluates optical character recognition and parsing against physical camera photographs.
-    If physical image files are not bundled in the repository, reports UNMEASURED
-    with exact denominator of 0 evaluated.
+    Evaluates optical character recognition and parsing against physical camera photographs
+    using app.extraction.benchmark. If physical image files are not bundled in the repository,
+    reports UNMEASURED with exact denominator of 0 evaluated.
     """
     if not dataset_path.exists():
         return BenchmarkMetric(
@@ -882,40 +881,6 @@ def evaluate_physical_packaging_photos(
             },
         )
 
-    try:
-        with open(dataset_path, encoding="utf-8") as f:
-            dataset_data = json.load(f)
-            samples = dataset_data.get("samples", [])
-    except Exception:
-        samples = []
-
-    available_image_files = []
-    if images_dir.exists():
-        available_image_files = [
-            f
-            for f in images_dir.iterdir()
-            if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")
-        ]
-
-    if not available_image_files:
-        return BenchmarkMetric(
-            name="Real-World Packaging Photographs",
-            evaluated_count=0,
-            correct_count=0,
-            error_count=0,
-            success_rate=None,
-            threshold=95.0,
-            status="UNMEASURED",
-            details={
-                "reason": "Physical camera image files not bundled in repository (0 evaluated)",
-                "cer": None,
-                "wer": None,
-                "association_accuracy": None,
-                "dual_column_accuracy": None,
-                "samples_metadata_count": len(samples),
-            },
-        )
-
     if not tesseract_installed:
         return BenchmarkMetric(
             name="Real-World Packaging Photographs",
@@ -928,80 +893,43 @@ def evaluate_physical_packaging_photos(
             details={"reason": "Tesseract binary missing in host environment"},
         )
 
-    evaluated = 0
-    correct = 0
-    total_cer = 0.0
-    total_wer = 0.0
-    assoc_correct = 0
-    assoc_total = 0
-    dual_col_correct = 0
-    dual_col_total = 0
+    from app.extraction.benchmark import evaluate_physical_dataset
 
-    from app.extraction.adapter import TesseractOcrAdapter
-    from app.extraction.parser import parse_ocr_text
+    summary = evaluate_physical_dataset(dataset_path=dataset_path, images_dir=images_dir)
 
-    adapter = TesseractOcrAdapter()
+    if summary.samples_evaluated == 0:
+        return BenchmarkMetric(
+            name="Real-World Packaging Photographs",
+            evaluated_count=0,
+            correct_count=0,
+            error_count=0,
+            success_rate=None,
+            threshold=95.0,
+            status="UNMEASURED",
+            details={
+                "reason": summary.disclaimer,
+                "cer": None,
+                "wer": None,
+                "association_accuracy": None,
+                "samples_metadata_count": summary.total_samples_in_dataset,
+            },
+        )
 
-    for s in samples:
-        img_name = s.get("image_filename")
-        if not img_name:
-            continue
-        img_path = images_dir / img_name
-        if not img_path.exists():
-            continue
-
-        try:
-            img_bytes = img_path.read_bytes()
-            ocr_output = adapter.extract_text(img_bytes)
-            gt_text = s.get("ground_truth_ingredients_text", "")
-            cer = compute_character_error_rate(gt_text, ocr_output.raw_text)
-            wer = compute_word_error_rate(gt_text, ocr_output.raw_text)
-            total_cer += cer
-            total_wer += wer
-            evaluated += 1
-
-            parsed = parse_ocr_text(ocr_output.raw_text, ocr_output.confidence)
-            gt_nutrients = s.get("ground_truth_nutrition", {}).get("nutrients", {})
-            sample_all_matched = True
-            for nut_key, gt_val in gt_nutrients.items():
-                if gt_val is not None:
-                    assoc_total += 1
-                    cand = parsed.nutrient_candidates.get(nut_key)
-                    if cand and cand.value is not None:
-                        if abs(cand.value - gt_val) <= 0.1:
-                            assoc_correct += 1
-                        else:
-                            sample_all_matched = False
-                    else:
-                        sample_all_matched = False
-
-            if s.get("ground_truth_nutrition", {}).get("dual_column_values") is not None:
-                dual_col_total += 1
-                if parsed.column_basis_detected in ("dual_column", "per_100g"):
-                    dual_col_correct += 1
-
-            if sample_all_matched and cer < 0.15:
-                correct += 1
-        except Exception:
-            evaluated += 1
-
-    rate = (correct / evaluated * 100.0) if evaluated else 0.0
     return BenchmarkMetric(
         name="Real-World Packaging Photographs",
-        evaluated_count=evaluated,
-        correct_count=correct,
-        error_count=evaluated - correct,
-        success_rate=rate,
+        evaluated_count=summary.samples_evaluated,
+        correct_count=summary.samples_passed,
+        error_count=summary.samples_failed,
+        success_rate=summary.sample_pass_rate,
         threshold=95.0,
-        status="PASS" if rate >= 95.0 else "FAIL",
+        status="PASS" if summary.status == "PASS" else "FAIL",
         details={
-            "cer": (total_cer / evaluated) if evaluated else None,
-            "wer": (total_wer / evaluated) if evaluated else None,
-            "association_accuracy": (assoc_correct / assoc_total * 100.0) if assoc_total else None,
-            "dual_column_accuracy": (dual_col_correct / dual_col_total * 100.0)
-            if dual_col_total
-            else None,
-            "samples_evaluated": evaluated,
+            "cer": summary.mean_cer,
+            "wer": summary.mean_wer,
+            "field_exact_match_rate": summary.field_exact_match_rate,
+            "field_tolerance_match_rate": summary.field_tolerance_match_rate,
+            "field_omission_rate": summary.field_omission_rate,
+            "samples_evaluated": summary.samples_evaluated,
         },
     )
 
@@ -1181,11 +1109,17 @@ Before declaring the food label scanner ready for unassisted public deployment, 
         print(
             "Physical Packaging Photographs: UNMEASURED (0 evaluated; physical images not bundled)"
         )
-    else:
+    elif m_physical.status == "BLOCKED":
+        print(
+            "Physical Packaging Photographs: BLOCKED (Tesseract binary missing in host environment)"
+        )
+    elif m_physical.success_rate is not None:
         print(
             f"Physical Packaging Photographs: {m_physical.success_rate:.1f}% "
             f"({m_physical.correct_count}/{m_physical.evaluated_count})"
         )
+    else:
+        print(f"Physical Packaging Photographs: {m_physical.status}")
     return suite
 
 
