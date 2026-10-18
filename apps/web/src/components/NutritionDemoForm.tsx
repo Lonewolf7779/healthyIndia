@@ -131,7 +131,7 @@ export const NutritionDemoForm: React.FC = () => {
     }
   };
 
-  const handleConfirmOcrValues = () => {
+  const handleConfirmOcrValues = async () => {
     const parsedServing = Number(servingSize) || 100.0;
     const nutrientsMap: Record<string, number | null> = {
       added_sugar_g: parseOptionalNumber(addedSugarG),
@@ -146,23 +146,54 @@ export const NutritionDemoForm: React.FC = () => {
       total_sugar_g: parseOptionalNumber(totalSugarG),
       trans_fat_g: parseOptionalNumber(transFatG),
     };
-    const hash = computeNutritionValuesHash(
-      parsedServing,
-      servingUnit,
-      basis,
-      foodForm,
-      nutrientsMap
-    );
-    setOcrProvenance((prev) =>
-      prev
-        ? {
-            ...prev,
-            isConfirmed: true,
-            unconfirmedCount: 0,
-            confirmedValuesHash: hash,
-          }
-        : null
-    );
+
+    if (ocrProvenance?.isOcr && ocrProvenance.extractionId && ocrProvenance.extractionToken) {
+      try {
+        const confRes = await apiClient.confirmOcrValues({
+          extraction_id: ocrProvenance.extractionId,
+          extraction_token: ocrProvenance.extractionToken,
+          serving_size: parsedServing,
+          serving_unit: servingUnit,
+          basis: basis,
+          food_form: foodForm,
+          ...nutrientsMap,
+        });
+        setOcrProvenance((prev) =>
+          prev
+            ? {
+                ...prev,
+                isConfirmed: true,
+                unconfirmedCount: 0,
+                confirmedValuesHash: confRes.confirmed_values_hash,
+              }
+            : null
+        );
+      } catch (err: unknown) {
+        setGeneralError(
+          err instanceof Error
+            ? `Server confirmation failed: ${err.message}`
+            : "Server confirmation failed."
+        );
+      }
+    } else {
+      const hash = computeNutritionValuesHash(
+        parsedServing,
+        servingUnit,
+        basis,
+        foodForm,
+        nutrientsMap
+      );
+      setOcrProvenance((prev) =>
+        prev
+          ? {
+              ...prev,
+              isConfirmed: true,
+              unconfirmedCount: 0,
+              confirmedValuesHash: hash,
+            }
+          : null
+      );
+    }
   };
 
   const handleClear = () => {
@@ -312,14 +343,24 @@ export const NutritionDemoForm: React.FC = () => {
 
     let confirmedHash: string | undefined = undefined;
     if (ocrProvenance?.isOcr) {
-      const currentHash = computeNutritionValuesHash(
+      if (!ocrProvenance.isConfirmed || !ocrProvenance.confirmedValuesHash) {
+        setGeneralError(
+          "Please review and confirm the scanned values before calculating."
+        );
+        setNutritionResult(null);
+        setIngredientResult(null);
+        return;
+      }
+      const currentDigest = computeNutritionValuesHash(
         Number(servingSize),
         servingUnit,
         basis,
         foodForm,
         nutrientsMap
       );
-      if (ocrProvenance.confirmedValuesHash !== currentHash) {
+      const parts = ocrProvenance.confirmedValuesHash.split(".");
+      const tokenDigest = parts.length === 5 ? parts[2] : ocrProvenance.confirmedValuesHash;
+      if (tokenDigest !== currentDigest) {
         setGeneralError(
           "Values have been modified since confirmation. Please review and confirm the updated values before calculating."
         );

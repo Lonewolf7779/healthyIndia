@@ -13,7 +13,12 @@ import uuid
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.security import generate_extraction_token, verify_extraction_token
+from app.core.security import (
+    generate_confirmation_token,
+    generate_extraction_token,
+    verify_confirmation_token,
+    verify_extraction_token,
+)
 from app.main import app
 from app.schemas.nutrition import compute_nutrition_values_hash
 
@@ -100,6 +105,116 @@ def test_verify_extraction_token_unit_cases():
     assert verify_extraction_token("", extraction_id=session_id)[0] is False
 
 
+def test_verify_confirmation_token_unit_cases():
+    """Direct unit tests for verify_confirmation_token covering formats, digests, and bounds."""
+    mock_hmac_key = "mock_key_padding_" + "c" * 16
+    session_id = str(uuid.uuid4())
+    digest = "a" * 64
+    now = int(time.time())
+
+    # 1. Valid token
+    valid_token = generate_confirmation_token(
+        session_id, values_digest=digest, secret_key=mock_hmac_key, timestamp=now
+    )
+    ok, err = verify_confirmation_token(
+        valid_token,
+        extraction_id=session_id,
+        expected_digest=digest,
+        secret_key=mock_hmac_key,
+    )
+    assert ok is True
+    assert err == ""
+
+    # 2. Missing extraction_id
+    ok, err = verify_confirmation_token(
+        valid_token, extraction_id="", expected_digest=digest, secret_key=mock_hmac_key
+    )
+    assert ok is False
+    assert "required and cannot be empty" in err
+
+    # 3. Malformed extraction_id
+    ok, err = verify_confirmation_token(
+        valid_token,
+        extraction_id="not-a-uuid",
+        expected_digest=digest,
+        secret_key=mock_hmac_key,
+    )
+    assert ok is False
+    assert "Malformed extraction_id" in err
+
+    # 4. Mismatched extraction_id
+    other_uuid = str(uuid.uuid4())
+    ok, err = verify_confirmation_token(
+        valid_token,
+        extraction_id=other_uuid,
+        expected_digest=digest,
+        secret_key=mock_hmac_key,
+    )
+    assert ok is False
+    assert "does not match provided" in err
+
+    # 5. Digest mismatch (client altered values)
+    different_digest = "b" * 64
+    ok, err = verify_confirmation_token(
+        valid_token,
+        extraction_id=session_id,
+        expected_digest=different_digest,
+        secret_key=mock_hmac_key,
+    )
+    assert ok is False
+    assert "digest does not match submitted values" in err
+
+    # 6. Expired token (> 3600 seconds)
+    expired_token = generate_confirmation_token(
+        session_id, values_digest=digest, secret_key=mock_hmac_key, timestamp=now - 4000
+    )
+    ok, err = verify_confirmation_token(
+        expired_token,
+        extraction_id=session_id,
+        expected_digest=digest,
+        secret_key=mock_hmac_key,
+        max_age_seconds=3600,
+    )
+    assert ok is False
+    assert "expired" in err
+
+    # 7. Future-dated token (> 60 seconds)
+    future_token = generate_confirmation_token(
+        session_id, values_digest=digest, secret_key=mock_hmac_key, timestamp=now + 200
+    )
+    ok, err = verify_confirmation_token(
+        future_token,
+        extraction_id=session_id,
+        expected_digest=digest,
+        secret_key=mock_hmac_key,
+    )
+    assert ok is False
+    assert "in the future" in err
+
+    # 8. Unkeyed SHA-256 hash passed as token
+    ok, err = verify_confirmation_token(
+        digest,
+        extraction_id=session_id,
+        expected_digest=digest,
+        secret_key=mock_hmac_key,
+    )
+    assert ok is False
+    assert "Unkeyed SHA-256 hash or malformed token detected" in err
+
+    # 9. Tampered HMAC signature
+    parts = valid_token.split(".")
+    tampered_sig = parts[4][:-4] + "dead"
+    tampered_token = f"{parts[0]}.{parts[1]}.{parts[2]}.{parts[3]}.{tampered_sig}"
+    ok, err = verify_confirmation_token(
+        tampered_token,
+        extraction_id=session_id,
+        expected_digest=digest,
+        secret_key=mock_hmac_key,
+    )
+    assert ok is False
+    assert "HMAC verification failed" in err
+
+
 def test_api_valid_ocr_payload_with_authentic_token_succeeds(client):
     """End-to-end: authentic signed token matching extraction_id is accepted (200 OK)."""
     extraction_id = str(uuid.uuid4())
@@ -125,6 +240,10 @@ def test_api_valid_ocr_payload_with_authentic_token_succeeds(client):
         food_form="solid",
         nutrients=nutrients,
     )
+    conf_token = generate_confirmation_token(
+        extraction_id=extraction_id,
+        values_digest=digest,
+    )
 
     payload = {
         "serving_size": 30.0,
@@ -136,7 +255,7 @@ def test_api_valid_ocr_payload_with_authentic_token_succeeds(client):
         "is_confirmed": True,
         "extraction_id": extraction_id,
         "extraction_token": token,
-        "confirmed_values_hash": digest,
+        "confirmed_values_hash": conf_token,
     }
 
     res = client.post("/api/v1/nutrition/analyze", json=payload)
@@ -338,7 +457,9 @@ def test_api_rejects_extraction_id_mismatch(client):
 
 
 def test_api_rejects_altered_values_without_reconfirmation(client):
-    """Altering a nutrient value without recomputing confirmation hash must fail closed with 422."""
+    """
+    Altering a nutrient value without recomputing confirmation token must fail closed with 422.
+    """
     extraction_id = str(uuid.uuid4())
     token = generate_extraction_token(extraction_id=extraction_id)
 
@@ -362,8 +483,12 @@ def test_api_rejects_altered_values_without_reconfirmation(client):
         food_form="solid",
         nutrients=initial_nutrients,
     )
+    initial_conf_token = generate_confirmation_token(
+        extraction_id=extraction_id,
+        values_digest=initial_hash,
+    )
 
-    # Payload with altered energy_kcal (from 200 to 250) but old confirmation hash
+    # Payload with altered energy_kcal (from 200 to 250) but old confirmation token
     tampered_payload = {
         "serving_size": 30.0,
         "serving_unit": "g",
@@ -375,11 +500,269 @@ def test_api_rejects_altered_values_without_reconfirmation(client):
         "is_confirmed": True,
         "extraction_id": extraction_id,
         "extraction_token": token,
-        "confirmed_values_hash": initial_hash,
+        "confirmed_values_hash": initial_conf_token,
     }
     res = client.post("/api/v1/nutrition/analyze", json=tampered_payload)
     assert res.status_code == 422
-    assert "Confirmed values hash does not match submitted values" in res.text
+    assert "Confirmation integrity check failed" in res.text
+    assert "digest does not match submitted values" in res.text
+
+
+def test_api_rejects_altered_values_with_recomputed_ordinary_sha256(client):
+    """
+    CRITICAL ADVERSARIAL TEST:
+    A client modifies a nutrient value and recomputes the ordinary unkeyed SHA-256 hash.
+    Because an unkeyed SHA-256 cannot prove server-side confirmation or session binding,
+    the API must strictly reject this with 422 fail-closed.
+    """
+    extraction_id = str(uuid.uuid4())
+    token = generate_extraction_token(extraction_id=extraction_id)
+
+    nutrients = {
+        "added_sugar_g": 0.0,  # Fabricated low-sugar claim
+        "carbohydrates_g": 10.0,
+        "cholesterol_mg": None,
+        "dietary_fiber_g": 2.0,
+        "energy_kcal": 50.0,  # Fabricated low-calorie claim
+        "protein_g": 5.0,
+        "saturated_fat_g": 0.0,
+        "sodium_mg": 50.0,
+        "total_fat_g": 1.0,
+        "total_sugar_g": 0.0,
+        "trans_fat_g": 0.0,
+    }
+    # Client computes the unkeyed SHA-256 hash of the modified values
+    ordinary_sha256 = compute_nutrition_values_hash(
+        serving_size=30.0,
+        serving_unit="g",
+        basis="per_serving",
+        food_form="solid",
+        nutrients=nutrients,
+    )
+
+    adversarial_payload = {
+        "serving_size": 30.0,
+        "serving_unit": "g",
+        "basis": "per_serving",
+        "food_form": "solid",
+        **nutrients,
+        "data_source": "ocr",
+        "is_confirmed": True,
+        "extraction_id": extraction_id,
+        "extraction_token": token,
+        "confirmed_values_hash": ordinary_sha256,  # Unkeyed SHA-256 hash!
+    }
+    res = client.post("/api/v1/nutrition/analyze", json=adversarial_payload)
+    assert res.status_code == 422
+    assert "Confirmation integrity check failed" in res.text
+    assert "Unkeyed SHA-256 hash or malformed token detected" in res.text
+
+
+def test_api_accepts_legitimate_user_corrections_via_confirmation_endpoint(client):
+    """
+    LEGITIMATE CORRECTION WORKFLOW:
+    User inspects OCR results, corrects an OCR misread error (e.g. 74.0g sugar -> 14.0g sugar),
+    confirms the reviewed values via /api/v1/extraction/confirm, receives a server-keyed
+    confirmation token, and successfully analyzes the corrected values (200 OK).
+    """
+    extraction_id = str(uuid.uuid4())
+    token = generate_extraction_token(extraction_id=extraction_id)
+
+    # User-reviewed values with correction (14.0g instead of OCR misread 74.0g)
+    corrected_nutrients = {
+        "added_sugar_g": 8.0,
+        "carbohydrates_g": 25.0,
+        "cholesterol_mg": None,
+        "dietary_fiber_g": 1.5,
+        "energy_kcal": 160.0,
+        "protein_g": 4.0,
+        "saturated_fat_g": 2.5,
+        "sodium_mg": 150.0,
+        "total_fat_g": 6.0,
+        "total_sugar_g": 14.0,  # User-corrected value!
+        "trans_fat_g": 0.02,
+    }
+
+    # Step 1: User clicks "Confirm Values" in UI, calling server confirmation endpoint
+    confirm_req = {
+        "extraction_id": extraction_id,
+        "extraction_token": token,
+        "serving_size": 30.0,
+        "serving_unit": "g",
+        "basis": "per_serving",
+        "food_form": "solid",
+        **corrected_nutrients,
+    }
+    confirm_res = client.post("/api/v1/extraction/confirm", json=confirm_req)
+    assert confirm_res.status_code == 200
+    confirm_data = confirm_res.json()
+    assert confirm_data["status"] == "confirmed"
+    assert confirm_data["extraction_id"] == extraction_id
+    server_token = confirm_data["confirmed_values_hash"]
+    assert server_token.startswith("c1.")
+
+    # Step 2: User runs nutrition analysis with the server-authenticated confirmation token
+    analyze_payload = {
+        "serving_size": 30.0,
+        "serving_unit": "g",
+        "basis": "per_serving",
+        "food_form": "solid",
+        **corrected_nutrients,
+        "data_source": "ocr",
+        "is_confirmed": True,
+        "extraction_id": extraction_id,
+        "extraction_token": token,
+        "confirmed_values_hash": server_token,
+    }
+    analyze_res = client.post("/api/v1/nutrition/analyze", json=analyze_payload)
+    assert analyze_res.status_code == 200
+    analyze_data = analyze_res.json()
+    assert analyze_data["status"] == "complete"
+    assert analyze_data["per_serving"]["total_sugar_g"] == 14.0
+
+
+def test_api_rejects_mismatched_extraction_id_in_confirmation_token(client):
+    """Confirmation token issued for Session A reused for Session B must fail closed with 422."""
+    session_a = str(uuid.uuid4())
+    session_b = str(uuid.uuid4())
+    token_b = generate_extraction_token(extraction_id=session_b)
+
+    nutrients = {
+        "added_sugar_g": 2.0,
+        "carbohydrates_g": 20.0,
+        "cholesterol_mg": None,
+        "dietary_fiber_g": 1.0,
+        "energy_kcal": 120.0,
+        "protein_g": 3.0,
+        "saturated_fat_g": 1.0,
+        "sodium_mg": 100.0,
+        "total_fat_g": 4.0,
+        "total_sugar_g": 5.0,
+        "trans_fat_g": 0.0,
+    }
+    digest = compute_nutrition_values_hash(
+        serving_size=30.0,
+        serving_unit="g",
+        basis="per_serving",
+        food_form="solid",
+        nutrients=nutrients,
+    )
+    conf_token_a = generate_confirmation_token(extraction_id=session_a, values_digest=digest)
+
+    payload = {
+        "serving_size": 30.0,
+        "serving_unit": "g",
+        "basis": "per_serving",
+        "food_form": "solid",
+        **nutrients,
+        "data_source": "ocr",
+        "is_confirmed": True,
+        "extraction_id": session_b,  # Session B
+        "extraction_token": token_b,
+        "confirmed_values_hash": conf_token_a,  # Token issued for Session A!
+    }
+    res = client.post("/api/v1/nutrition/analyze", json=payload)
+    assert res.status_code == 422
+    assert "Confirmation integrity check failed" in res.text
+    assert "does not match provided" in res.text
+
+
+def test_api_rejects_expired_confirmation_token(client):
+    """Confirmation token older than 3600 seconds must fail closed with 422."""
+    extraction_id = str(uuid.uuid4())
+    token = generate_extraction_token(extraction_id=extraction_id)
+
+    nutrients = {
+        "added_sugar_g": 2.0,
+        "carbohydrates_g": 20.0,
+        "cholesterol_mg": None,
+        "dietary_fiber_g": 1.0,
+        "energy_kcal": 120.0,
+        "protein_g": 3.0,
+        "saturated_fat_g": 1.0,
+        "sodium_mg": 100.0,
+        "total_fat_g": 4.0,
+        "total_sugar_g": 5.0,
+        "trans_fat_g": 0.0,
+    }
+    digest = compute_nutrition_values_hash(
+        serving_size=30.0,
+        serving_unit="g",
+        basis="per_serving",
+        food_form="solid",
+        nutrients=nutrients,
+    )
+    old_conf_token = generate_confirmation_token(
+        extraction_id=extraction_id,
+        values_digest=digest,
+        timestamp=int(time.time()) - 4000,  # 4000 seconds ago
+    )
+
+    payload = {
+        "serving_size": 30.0,
+        "serving_unit": "g",
+        "basis": "per_serving",
+        "food_form": "solid",
+        **nutrients,
+        "data_source": "ocr",
+        "is_confirmed": True,
+        "extraction_id": extraction_id,
+        "extraction_token": token,
+        "confirmed_values_hash": old_conf_token,
+    }
+    res = client.post("/api/v1/nutrition/analyze", json=payload)
+    assert res.status_code == 422
+    assert "Confirmation integrity check failed" in res.text
+    assert "expired" in res.text
+
+
+def test_api_rejects_tampered_confirmation_signature(client):
+    """Confirmation token with forged or tampered signature must fail closed with 422."""
+    extraction_id = str(uuid.uuid4())
+    token = generate_extraction_token(extraction_id=extraction_id)
+
+    nutrients = {
+        "added_sugar_g": 2.0,
+        "carbohydrates_g": 20.0,
+        "cholesterol_mg": None,
+        "dietary_fiber_g": 1.0,
+        "energy_kcal": 120.0,
+        "protein_g": 3.0,
+        "saturated_fat_g": 1.0,
+        "sodium_mg": 100.0,
+        "total_fat_g": 4.0,
+        "total_sugar_g": 5.0,
+        "trans_fat_g": 0.0,
+    }
+    digest = compute_nutrition_values_hash(
+        serving_size=30.0,
+        serving_unit="g",
+        basis="per_serving",
+        food_form="solid",
+        nutrients=nutrients,
+    )
+    valid_conf_token = generate_confirmation_token(
+        extraction_id=extraction_id,
+        values_digest=digest,
+    )
+    tampered_conf_token = valid_conf_token[:-4] + "dead"
+
+    payload = {
+        "serving_size": 30.0,
+        "serving_unit": "g",
+        "basis": "per_serving",
+        "food_form": "solid",
+        **nutrients,
+        "data_source": "ocr",
+        "is_confirmed": True,
+        "extraction_id": extraction_id,
+        "extraction_token": token,
+        "confirmed_values_hash": tampered_conf_token,
+    }
+    res = client.post("/api/v1/nutrition/analyze", json=payload)
+    assert res.status_code == 422
+    assert "Confirmation integrity check failed" in res.text
+    assert "HMAC verification failed" in res.text
 
 
 def test_api_rejects_fabricated_confirmation_hash(client):
@@ -411,7 +794,7 @@ def test_api_rejects_fabricated_confirmation_hash(client):
     }
     res = client.post("/api/v1/nutrition/analyze", json=payload)
     assert res.status_code == 422
-    assert "Confirmed values hash does not match submitted values" in res.text
+    assert "Confirmation integrity check failed" in res.text
 
 
 def test_api_manual_submission_rejects_extraction_id_or_token(client):

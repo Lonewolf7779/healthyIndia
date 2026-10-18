@@ -34,6 +34,37 @@ export interface NutritionAnalysisRequest {
   confirmed_values_hash?: string | null;
 }
 
+export interface OcrConfirmationRequest {
+  extraction_id: string;
+  extraction_token: string;
+  serving_size: number;
+  serving_unit?: "g" | "kg" | "ml" | "l" | "piece" | "portion";
+  basis?: "per_serving" | "per_100g" | "per_100ml";
+  food_form?: "solid" | "liquid";
+  energy_kcal?: number | null;
+  protein_g?: number | null;
+  carbohydrates_g?: number | null;
+  total_sugar_g?: number | null;
+  added_sugar_g?: number | null;
+  dietary_fiber_g?: number | null;
+  total_fat_g?: number | null;
+  saturated_fat_g?: number | null;
+  trans_fat_g?: number | null;
+  cholesterol_mg?: number | null;
+  sodium_mg?: number | null;
+}
+
+export interface OcrConfirmationResponse {
+  status: string;
+  extraction_id: string;
+  confirmed_values_hash: string;
+  canonical_digest: string;
+  user_modified: boolean;
+  modified_fields: string[];
+  disclaimer: string;
+}
+
+
 function rightRotate(value: number, amount: number): number {
   return (value >>> amount) | (value << (32 - amount));
 }
@@ -377,6 +408,21 @@ export class ApiClient {
     return this.request<OcrExtractionResponse>("/api/v1/extraction/ocr", {
       method: "POST",
       body: formData,
+    });
+  }
+
+  /**
+   * Confirms reviewed OCR values with the server and receives a server-keyed confirmation token.
+   */
+  public async confirmOcrValues(
+    data: OcrConfirmationRequest
+  ): Promise<OcrConfirmationResponse> {
+    return this.request<OcrConfirmationResponse>("/api/v1/extraction/confirm", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
     });
   }
 

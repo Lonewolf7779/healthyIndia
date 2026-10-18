@@ -10,7 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 from PIL import Image, ImageDraw
 
-from app.core.security import generate_extraction_token
+from app.core.security import generate_confirmation_token, generate_extraction_token
 from app.extraction.quality import assess_image_quality
 from app.main import app
 from app.schemas.nutrition import compute_nutrition_values_hash
@@ -110,6 +110,10 @@ def test_nutrition_endpoint_strictly_rejects_ocr_tampering_without_reverificatio
         food_form="solid",
         nutrients=nutrients,
     )
+    valid_confirmation_token = generate_confirmation_token(
+        extraction_id="11111111-2222-4333-8444-555555555555",
+        values_digest=valid_hash,
+    )
 
     valid_payload = {
         "serving_size": 30.0,
@@ -133,7 +137,7 @@ def test_nutrition_endpoint_strictly_rejects_ocr_tampering_without_reverificatio
         "extraction_token": generate_extraction_token(
             extraction_id="11111111-2222-4333-8444-555555555555"
         ),
-        "confirmed_values_hash": valid_hash,
+        "confirmed_values_hash": valid_confirmation_token,
     }
 
     # 1. Valid payload succeeds
@@ -146,7 +150,7 @@ def test_nutrition_endpoint_strictly_rejects_ocr_tampering_without_reverificatio
 
     res_tampered = client.post("/api/v1/nutrition/analyze", json=tampered_payload)
     assert res_tampered.status_code == 422
-    assert "Confirmed values hash does not match submitted values" in res_tampered.text
+    assert "Confirmation integrity check failed" in res_tampered.text
 
     # 3. Missing extraction token for OCR data source fails
     missing_token_payload = dict(valid_payload)

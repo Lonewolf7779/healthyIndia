@@ -469,7 +469,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
   const unconfirmedCount = activeFields.filter((k) => !state.confirmedFields[k]).length;
   const isAllConfirmed = unconfirmedCount === 0 && activeFields.length > 0;
 
-  const handleTransfer = () => {
+  const handleTransfer = async () => {
     const basisVal: "per_100g" | "per_serving" =
       state.selectedColumn === "per_100" ? "per_100g" : "per_serving";
     const foodFormVal =
@@ -509,13 +509,31 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
       trans_fat_g:
         state.reviewFields.transFatG !== "" ? parseFloat(state.reviewFields.transFatG) : null,
     };
-    const hash = computeNutritionValuesHash(
-      servingSizeNum,
-      state.reviewFields.servingUnit,
-      basisVal,
-      foodFormVal,
-      nutrientsMap
-    );
+
+    let confirmedHash: string | undefined = undefined;
+    if (isAllConfirmed && state.ocrResult?.extraction_id && state.ocrResult?.extraction_token) {
+      try {
+        const confRes = await apiClient.confirmOcrValues({
+          extraction_id: state.ocrResult.extraction_id,
+          extraction_token: state.ocrResult.extraction_token,
+          serving_size: servingSizeNum,
+          serving_unit: state.reviewFields.servingUnit,
+          basis: basisVal,
+          food_form: foodFormVal,
+          ...nutrientsMap,
+        });
+        confirmedHash = confRes.confirmed_values_hash;
+      } catch (err: unknown) {
+        dispatch({
+          type: "EXTRACTION_FAILURE",
+          error:
+            err instanceof Error
+              ? `Server confirmation failed: ${err.message}`
+              : "Failed to confirm values with server.",
+        });
+        return;
+      }
+    }
 
     onTransferValues({
       servingSize: state.reviewFields.servingSize,
@@ -537,7 +555,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
       basis: basisVal,
       extractionId: state.ocrResult?.extraction_id,
       extractionToken: state.ocrResult?.extraction_token,
-      confirmedValuesHash: isAllConfirmed ? hash : undefined,
+      confirmedValuesHash: isAllConfirmed ? confirmedHash : undefined,
     });
     dispatch({ type: "VALUES_TRANSFERRED" });
   };

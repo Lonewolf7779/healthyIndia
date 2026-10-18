@@ -7,7 +7,11 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.core.security import is_valid_uuid, verify_extraction_token
+from app.core.security import (
+    is_valid_uuid,
+    verify_confirmation_token,
+    verify_extraction_token,
+)
 from app.nutrition.models import ServingBasis, ServingUnit
 from app.nutrition.standards import FlagSeverity, FoodForm, RegulatoryStatus
 
@@ -169,7 +173,10 @@ class NutritionAnalysisRequest(BaseModel):
     )
     confirmed_values_hash: str | None = Field(
         default=None,
-        description="Cryptographic SHA-256 digest of confirmed nutrient values and dimensions.",
+        description=(
+            "Server-keyed confirmation token ('c1.<id>.<digest>.<ts>.<sig>') issued by "
+            "/api/v1/ocr/confirm upon explicit user review and verification."
+        ),
     )
 
     @model_validator(mode="after")
@@ -223,18 +230,22 @@ class NutritionAnalysisRequest(BaseModel):
             if not is_valid:
                 raise ValueError(f"Extraction token authentication failed: {err_msg}")
 
-            expected_hash = compute_nutrition_values_hash(
+            expected_digest = compute_nutrition_values_hash(
                 serving_size=self.serving_size,
                 serving_unit=self.serving_unit.value,
                 basis=self.basis.value,
                 food_form=self.food_form.value,
                 nutrients=nutrient_vals,
             )
-            if self.confirmed_values_hash != expected_hash:
-                raise ValueError(
-                    "Confirmed values hash does not match submitted values; "
-                    "values were modified after confirmation without re-verifying."
-                )
+
+            # Cryptographically verify server-keyed confirmation token
+            is_valid_conf, conf_err = verify_confirmation_token(
+                token=self.confirmed_values_hash,
+                extraction_id=self.extraction_id,
+                expected_digest=expected_digest,
+            )
+            if not is_valid_conf:
+                raise ValueError(f"Confirmation integrity check failed: {conf_err}")
         elif self.data_source == "manual":
             if self.extraction_token is not None or self.extraction_id is not None:
                 raise ValueError(

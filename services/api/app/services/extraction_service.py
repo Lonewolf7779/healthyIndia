@@ -22,6 +22,7 @@ from app.schemas.extraction import (
     ImageQualityMetricsSchema,
     OcrExtractionResponse,
 )
+from app.services.session_store import session_store
 
 
 class ExtractionService:
@@ -139,7 +140,14 @@ class ExtractionService:
             secret_key=self.settings.SECRET_KEY,
         )
 
-        # 6. Serialize to response schema
+        # 6. Register server-side extraction session state
+        session_store.save_session(
+            extraction_id=extraction_id,
+            raw_text=result.raw_text,
+            candidates=result.nutrient_candidates,
+        )
+
+        # 7. Serialize to response schema
         return OcrExtractionResponse(
             raw_text=result.raw_text,
             pass_a_text=ocr_output.pass_a_text,
