@@ -22,6 +22,9 @@ from app.extraction.benchmark import (
     compare_nutrient_field,
     compute_character_error_rate,
     compute_ingredient_completeness,
+    compute_ingredient_jaccard_similarity,
+    compute_ingredient_precision,
+    compute_ingredient_recall,
     compute_word_error_rate,
     evaluate_physical_dataset,
     evaluate_sample,
@@ -456,5 +459,208 @@ def test_unmeasured_reporting_when_physical_photos_absent(tmp_path: Path) -> Non
     assert summary.status == "UNMEASURED"
     assert summary.samples_evaluated == 0
     assert summary.images_bundled_on_disk == 0
+    assert summary.samples_pending_evidence == 1
     assert summary.field_exact_matches == 0
     assert "UNMEASURED" in summary.disclaimer
+
+
+# ==============================================================================
+# 9. STANDARD MATHEMATICAL CER AND WER (UNCAPPED)
+# ==============================================================================
+def test_cer_and_wer_standard_uncapped_mathematical_properties() -> None:
+    """
+    Verifies uncapped CER and WER according to standard Levenshtein formulations.
+    When insertions exceed reference length, error rates must exceed 1.0 (uncapped).
+    """
+    # 1. Identical strings
+    assert compute_character_error_rate("Sugar", "Sugar") == 0.0
+    assert compute_word_error_rate("Sugar", "Sugar") == 0.0
+
+    # 2. Substitution: 2 substitutions ('a'->'i', 't'->'k') in 4 chars = 0.5
+    assert compute_character_error_rate("Salt", "Silk") == 0.5
+    assert compute_word_error_rate("Refined Palm Oil", "Refined Corn Oil") == 1 / 3
+
+    # 3. Pure deletion: 1 word deleted from 3 words = 1/3
+    assert compute_word_error_rate("Refined Palm Oil", "Refined Oil") == 1 / 3
+    # 2 chars deleted from 4 chars ('Milk' -> 'Mi')
+    assert compute_character_error_rate("Milk", "Mi") == 0.5
+
+    # 4. Pure insertion: 1 word inserted into 2 words = 1/2
+    assert compute_word_error_rate("Palm Oil", "Refined Palm Oil") == 0.5
+    assert compute_character_error_rate("Oil", "Boil") == 1 / 3
+
+    # 5. Empty reference and empty hypothesis: 0.0 error
+    assert compute_character_error_rate("", "") == 0.0
+    assert compute_word_error_rate("", "") == 0.0
+    assert compute_character_error_rate("   ", "") == 0.0
+    assert compute_word_error_rate("", "   ") == 0.0
+
+    # 6. Empty reference and non-empty hypothesis: all insertions (> 1.0)
+    cer_empty_ref = compute_character_error_rate("", "ExtraText")
+    assert cer_empty_ref == 9.0  # len("ExtraText")
+    wer_empty_ref = compute_word_error_rate("", "Extra words added")
+    assert wer_empty_ref == 3.0  # 3 words inserted
+
+    # 7. Non-empty reference and empty hypothesis: all deletions (1.0)
+    assert compute_character_error_rate("Wheat", "") == 1.0
+    assert compute_word_error_rate("Refined Wheat Flour", "") == 1.0
+
+    # 8. Uncapped error rate > 1.0 due to multiple insertions
+    # Reference has 1 word; hypothesis inserts 5 additional words -> WER = 5.0
+    wer_insertions = compute_word_error_rate("Oil", "Refined Bleached Deodorized Palm Oil Extra")
+    assert wer_insertions > 1.0
+    assert wer_insertions == 5.0
+
+    # Reference has 3 characters ("Oil"); hypothesis has 15 characters ("RefinedPalmOilX")
+    cer_insertions = compute_character_error_rate("Oil", "RefinedPalmOilX")
+    assert cer_insertions > 1.0
+
+
+# ==============================================================================
+# 10. INGREDIENT METRICS: RECALL, PRECISION, AND JACCARD SIMILARITY
+# ==============================================================================
+def test_ingredient_metrics_recall_precision_jaccard() -> None:
+    """
+    Rigorously validates set recall (|A ∩ B| / |A|), set precision (|A ∩ B| / |B|),
+    and true Jaccard similarity (|A ∩ B| / |A ∪ B|) on ingredient text.
+    """
+    ref = "Refined Wheat Flour, Sugar, Palm Oil, Iodised Salt."
+
+    # 1. Identical strings (ignoring case and punctuation)
+    hyp_identical = "refined wheat flour, sugar, palm oil, iodised salt"
+    assert compute_ingredient_recall(ref, hyp_identical) == 1.0
+    assert compute_ingredient_precision(ref, hyp_identical) == 1.0
+    assert compute_ingredient_jaccard_similarity(ref, hyp_identical) == 1.0
+    assert compute_ingredient_completeness(ref, hyp_identical) == 1.0
+
+    # 2. Missing ingredients (deletion in hypothesis)
+    # Ref has 8 unique tokens: refined, wheat, flour, sugar, palm, oil, iodised, salt
+    # Hyp omits 'iodised', 'salt' (6 matching tokens out of 8)
+    hyp_missing = "Refined Wheat Flour, Sugar, Palm Oil"
+    rec = compute_ingredient_recall(ref, hyp_missing)
+    prec = compute_ingredient_precision(ref, hyp_missing)
+    jacc = compute_ingredient_jaccard_similarity(ref, hyp_missing)
+    assert rec == 6 / 8  # 0.75
+    assert prec == 1.0  # All predicted tokens were correct
+    assert jacc == 6 / 8  # 6 / (8 + 6 - 6) = 6/8 = 0.75
+
+    # 3. Extra/hallucinated ingredients (insertion in hypothesis)
+    # Hyp adds 'preservative', 'flavor' (8 matching tokens out of 10 predicted)
+    hyp_extra = "Refined Wheat Flour, Sugar, Palm Oil, Iodised Salt, Preservative, Flavor"
+    rec_extra = compute_ingredient_recall(ref, hyp_extra)
+    prec_extra = compute_ingredient_precision(ref, hyp_extra)
+    jacc_extra = compute_ingredient_jaccard_similarity(ref, hyp_extra)
+    assert rec_extra == 1.0  # All ground truth tokens were recalled
+    assert prec_extra == 8 / 10  # 0.80
+    assert jacc_extra == 8 / 10  # 8 / (8 + 10 - 8) = 8/10 = 0.80
+
+    # 4. Repeated tokens: deduplicated as sets
+    hyp_repeated = "Sugar Sugar Sugar, Salt Salt, Palm Oil, Wheat Flour Refined"
+    # Same set of tokens
+    assert compute_ingredient_recall(ref, hyp_repeated) == 7 / 8  # missing 'iodised'
+    assert compute_ingredient_precision(ref, hyp_repeated) == 1.0
+
+    # 5. Punctuation and brackets stripped
+    ref_brackets = "Wheat Flour (Refined [Maida]), Edible Vegetable Oil (Palm)."
+    hyp_no_brackets = "Wheat Flour Refined Maida Edible Vegetable Oil Palm"
+    assert compute_ingredient_jaccard_similarity(ref_brackets, hyp_no_brackets) == 1.0
+
+    # 6. Empty inputs
+    assert compute_ingredient_recall("", "") == 1.0
+    assert compute_ingredient_precision("", "") == 1.0
+    assert compute_ingredient_jaccard_similarity("", "") == 1.0
+
+    assert compute_ingredient_recall("", "Sugar Salt") == 0.0
+    assert compute_ingredient_precision("", "Sugar Salt") == 0.0
+    assert compute_ingredient_jaccard_similarity("", "Sugar Salt") == 0.0
+
+    assert compute_ingredient_recall("Sugar Salt", "") == 0.0
+    assert compute_ingredient_precision("Sugar Salt", "") == 0.0
+    assert compute_ingredient_jaccard_similarity("Sugar Salt", "") == 0.0
+
+
+# ==============================================================================
+# 11. CONFIGURABLE FIELD TOLERANCES
+# ==============================================================================
+def test_configurable_field_tolerances() -> None:
+    """Verifies custom tolerance dictionary overrides default provisional tolerances."""
+    # Default provisional tolerance for protein is 0.2g
+    cand = ExtractedNutrientCandidate(
+        field_name="protein_g",
+        raw_text="Protein: 8.65g",
+        value=8.65,
+        unit="g",
+        column="per_100g",
+    )
+    # With default tolerances (0.2g), difference 0.15g matches
+    res_default = compare_nutrient_field(
+        field_name="protein_g",
+        gt_value=8.50,
+        gt_unit="g",
+        candidate=cand,
+        declaration_basis="per_100g",
+    )
+    assert res_default.is_tolerance_match is True
+
+    # With strict custom tolerance of 0.05g, difference 0.15g fails
+    custom_strict = {"protein_g": (0.05, 0.01)}
+    res_strict = compare_nutrient_field(
+        field_name="protein_g",
+        gt_value=8.50,
+        gt_unit="g",
+        candidate=cand,
+        declaration_basis="per_100g",
+        tolerances=custom_strict,
+    )
+    assert res_strict.is_tolerance_match is False
+    assert res_strict.is_exact_match is False
+
+
+# ==============================================================================
+# 12. PENDING EVIDENCE AND PARTIAL EVALUATION REPORTING
+# ==============================================================================
+def test_pending_evidence_and_partial_evaluations(tmp_path: Path) -> None:
+    """
+    Verifies that samples without physical image files are counted in
+    samples_pending_evidence rather than evaluated or ignored.
+    """
+    dataset_file = tmp_path / "samples.json"
+    dataset_json = {
+        "version": "1.0",
+        "samples": [
+            {
+                "sample_id": "RFL-001",
+                "image_filename": "img_001.jpg",
+                "ground_truth_nutrition": {"nutrients": {"protein_g": 5.0}},
+            },
+            {
+                "sample_id": "RFL-002",
+                "image_filename": "img_002.jpg",
+                "ground_truth_nutrition": {"nutrients": {"protein_g": 8.0}},
+            },
+        ],
+    }
+    import json
+
+    dataset_file.write_text(json.dumps(dataset_json), encoding="utf-8")
+    images_dir = tmp_path / "images"
+    images_dir.mkdir()
+
+    # Case A: 0 images present
+    summary_zero = evaluate_physical_dataset(dataset_path=dataset_file, images_dir=images_dir)
+    assert summary_zero.total_samples_in_dataset == 2
+    assert summary_zero.images_bundled_on_disk == 0
+    assert summary_zero.samples_pending_evidence == 2
+    assert summary_zero.samples_evaluated == 0
+
+    # Case B: 1 image present out of 2 samples
+    (images_dir / "img_001.jpg").write_bytes(b"dummy_test_bytes_sample1")
+    adapter = MockTestAdapter(raw_text="Protein: 5.0g")
+    summary_partial = evaluate_physical_dataset(
+        dataset_path=dataset_file, images_dir=images_dir, adapter=adapter
+    )
+    assert summary_partial.total_samples_in_dataset == 2
+    assert summary_partial.images_bundled_on_disk == 1
+    assert summary_partial.samples_evaluated == 1
+    assert summary_partial.samples_pending_evidence == 1
+    assert summary_partial.samples_passed == 1

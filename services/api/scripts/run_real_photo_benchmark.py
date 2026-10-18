@@ -42,6 +42,7 @@ def print_terminal_report(summary: RealPhotoBenchmarkSummary) -> None:
     print("=" * 80)
     print(f"Total Dataset Records:          {summary.total_samples_in_dataset}")
     print(f"Physical Images on Disk:        {summary.images_bundled_on_disk}")
+    print(f"Samples Pending Evidence:       {summary.samples_pending_evidence}")
     print(f"Samples Evaluated:              {summary.samples_evaluated}")
     print(f"Samples Passed:                 {summary.samples_passed}")
     print(f"Samples Failed:                 {summary.samples_failed}")
@@ -79,6 +80,9 @@ def print_terminal_report(summary: RealPhotoBenchmarkSummary) -> None:
     print(f"Mean Character Error Rate (CER): {summary.mean_cer}")
     print(f"Mean Word Error Rate (WER):      {summary.mean_wer}")
     print(f"Mean Ingredient Completeness:   {summary.mean_ingredient_completeness}")
+    print(f"Mean Ingredient Recall:         {summary.mean_ingredient_recall}")
+    print(f"Mean Ingredient Precision:      {summary.mean_ingredient_precision}")
+    print(f"Mean Ingredient Jaccard:        {summary.mean_ingredient_jaccard}")
 
     print("\n" + "-" * 80)
     print("FIELD-LEVEL ACCURACY BREAKDOWN")

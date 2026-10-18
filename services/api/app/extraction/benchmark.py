@@ -10,6 +10,7 @@ Does NOT fabricate accuracy claims or treat plausible predictions as correct wit
 from __future__ import annotations
 
 import json
+import re
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
@@ -31,7 +32,19 @@ from app.extraction.parser import parse_ocr_text
 # (absolute_tolerance, relative_tolerance_ratio)
 # Exact match requires abs(pred - gt) <= 0.001.
 # Tolerance match allows field-specific physical and rounding margins.
-FIELD_TOLERANCES: Final[dict[str, tuple[float, float]]] = {
+#
+# REGULATORY SOURCING & PROVISIONAL POLICY AUDIT:
+# - `trans_fat_g`: Traceable to FSSAI (Labeling and Display) Regulations, 2020.
+#   Products claiming "trans-fat free" must contain < 0.2g per 100g. A strict
+#   tolerance of 0.05g is set to avoid classification flips across this boundary.
+# - `energy_kcal`: Sourced partially from FSSAI Schedule II rounding rules permitting
+#   energy declaration to nearest 1 kcal. 1.0 kcal or 1% relative is provisional.
+# - All other nutrient tolerances (`protein_g`, `carbohydrates_g`, `total_sugar_g`,
+#   `added_sugar_g`, `dietary_fiber_g`, `total_fat_g`, `saturated_fat_g`, `cholesterol_mg`,
+#   `sodium_mg`): Designated as PROVISIONAL BENCHMARK POLICIES. They are engineering
+#   tolerances designed to absorb acceptable consumer-label rounding variations without
+#   masking genuine OCR misreads. They remain fully configurable.
+PROVISIONAL_FIELD_TOLERANCES: Final[dict[str, tuple[float, float]]] = {
     # Energy: 1.0 kcal absolute or 1% relative, whichever is larger
     "energy_kcal": (1.0, 0.01),
     # Standard macronutrients: 0.2g absolute or 2% relative
@@ -42,13 +55,16 @@ FIELD_TOLERANCES: Final[dict[str, tuple[float, float]]] = {
     "dietary_fiber_g": (0.2, 0.02),
     "total_fat_g": (0.2, 0.02),
     "saturated_fat_g": (0.2, 0.02),
-    # Trans fat: strict 0.05g absolute (critical for FSSAI 0.2g claim boundary)
+    # Trans fat: strict 0.05g absolute (FSSAI 0.2g regulatory claim boundary)
     "trans_fat_g": (0.05, 0.05),
     # Cholesterol: 1.0 mg absolute or 2% relative
     "cholesterol_mg": (1.0, 0.02),
     # Sodium: 5.0 mg absolute or 2% relative (reflects integer scale e.g. 780mg vs 785mg)
     "sodium_mg": (5.0, 0.02),
 }
+
+# Alias for backwards compatibility
+FIELD_TOLERANCES: Final[dict[str, tuple[float, float]]] = PROVISIONAL_FIELD_TOLERANCES
 
 ALL_EVALUATED_NUTRIENTS: Final[list[str]] = [
     "energy_kcal",
@@ -66,7 +82,7 @@ ALL_EVALUATED_NUTRIENTS: Final[list[str]] = [
 
 
 # ==============================================================================
-# 2. STRING DISTANCE ALGORITHMS (CER / WER / COMPLETENESS)
+# 2. STRING DISTANCE ALGORITHMS (CER / WER / INGREDIENT METRICS)
 # ==============================================================================
 def compute_levenshtein_distance(s1: str, s2: str) -> int:
     """Computes standard edit distance between two strings."""
@@ -87,33 +103,69 @@ def compute_levenshtein_distance(s1: str, s2: str) -> int:
     return previous_row[-1]
 
 
-def compute_character_error_rate(reference: str, hypothesis: str) -> float:
+def compute_character_error_rate(reference: str, hypothesis: str, normalize: bool = True) -> float:
     """
-    Computes Character Error Rate (CER) normalized by reference length.
-    Returns 0.0 for identical strings, capped at 1.0 (100% error).
+    Computes standard Character Error Rate (CER):
+        CER = Levenshtein(reference, hypothesis) / len(reference)
+
+    By standard definition, this metric is UNCAPPED and may exceed 1.0 when hypothesis
+    contains insertions exceeding the length of the reference.
+
+    Normalization (when normalize=True):
+    - Trims leading and trailing whitespace.
+    - Converts text to lowercase.
+    - Collapses consecutive whitespace sequences into a single space.
+
+    Edge cases:
+    - If reference and hypothesis are both empty: returns 0.0 (perfect match).
+    - If reference is empty and hypothesis is non-empty: returns float(len(hypothesis))
+      (all hypothesis characters are pure insertions relative to empty reference).
     """
-    ref = reference.strip().lower()
-    hyp = hypothesis.strip().lower()
+    if normalize:
+        ref = re.sub(r"\s+", " ", reference.strip().lower())
+        hyp = re.sub(r"\s+", " ", hypothesis.strip().lower())
+    else:
+        ref = reference
+        hyp = hypothesis
+
     if not ref:
-        return 0.0 if not hyp else 1.0
+        return 0.0 if not hyp else float(len(hyp))
+
     dist = compute_levenshtein_distance(ref, hyp)
-    return min(1.0, dist / len(ref))
+    return dist / len(ref)
 
 
-def compute_word_error_rate(reference: str, hypothesis: str) -> float:
+def compute_word_error_rate(reference: str, hypothesis: str, normalize: bool = True) -> float:
     """
-    Computes Word Error Rate (WER) using word token edit distance.
-    Returns 0.0 for identical word sequences, capped at 1.0.
+    Computes standard Word Error Rate (WER):
+        WER = (Substitutions + Deletions + Insertions) / N_reference
+
+    By standard definition, this metric is UNCAPPED and may exceed 1.0 when hypothesis
+    contains extra words exceeding the reference word count.
+
+    Normalization (when normalize=True):
+    - Trims and lowercases both strings.
+    - Tokenizes by whitespace into word tokens.
+
+    Edge cases:
+    - If reference and hypothesis have 0 words: returns 0.0.
+    - If reference has 0 words and hypothesis has non-empty words: returns float(len(hyp_words))
+      (all words are pure insertions).
     """
-    ref_words = reference.strip().lower().split()
-    hyp_words = hypothesis.strip().lower().split()
+    if normalize:
+        ref_words = reference.strip().lower().split()
+        hyp_words = hypothesis.strip().lower().split()
+    else:
+        ref_words = reference.split()
+        hyp_words = hypothesis.split()
+
     if not ref_words:
-        return 0.0 if not hyp_words else 1.0
+        return 0.0 if not hyp_words else float(len(hyp_words))
 
     len_ref = len(ref_words)
     len_hyp = len(hyp_words)
 
-    # Matrix for word-level Levenshtein
+    # Dynamic programming matrix for token-level Levenshtein distance
     dp = [[0] * (len_hyp + 1) for _ in range(len_ref + 1)]
     for i in range(len_ref + 1):
         dp[i][0] = i
@@ -130,20 +182,77 @@ def compute_word_error_rate(reference: str, hypothesis: str) -> float:
                     dp[i][j - 1] + 1,  # insertion
                     dp[i - 1][j - 1] + 1,  # substitution
                 )
-    return min(1.0, dp[len_ref][len_hyp] / len_ref)
+    return dp[len_ref][len_hyp] / len_ref
 
 
-def compute_ingredient_completeness(reference: str, hypothesis: str) -> float:
+def _tokenize_ingredient_text(text: str) -> set[str]:
     """
-    Calculates Jaccard token completeness between ground truth and extracted ingredient text.
-    Returns value between 0.0 and 1.0 (or 1.0 if both empty).
+    Normalizes and extracts unique alphanumeric ingredient tokens.
+    Strips brackets, punctuation, percentages, and capitalization.
     """
-    ref_tokens = set(reference.lower().replace(",", " ").replace(".", " ").split())
-    hyp_tokens = set(hypothesis.lower().replace(",", " ").replace(".", " ").split())
+    cleaned = text.lower()
+    tokens = re.findall(r"\b[a-z0-9\-]+\b", cleaned)
+    return set(tokens)
+
+
+def compute_ingredient_recall(reference: str, hypothesis: str) -> float:
+    """
+    Measures ingredient token recovery rate (Recall):
+        Recall = |Reference_Tokens ∩ Hypothesis_Tokens| / |Reference_Tokens|
+
+    Measures what proportion of genuine ground-truth ingredient words were detected.
+    Returns 1.0 if reference is empty (and hypothesis empty), 0.0 if reference has
+    tokens but none were recovered.
+    """
+    ref_tokens = _tokenize_ingredient_text(reference)
+    hyp_tokens = _tokenize_ingredient_text(hypothesis)
     if not ref_tokens:
         return 1.0 if not hyp_tokens else 0.0
     overlap = ref_tokens.intersection(hyp_tokens)
     return len(overlap) / len(ref_tokens)
+
+
+def compute_ingredient_precision(reference: str, hypothesis: str) -> float:
+    """
+    Measures ingredient token precision:
+        Precision = |Reference_Tokens ∩ Hypothesis_Tokens| / |Hypothesis_Tokens|
+
+    Measures what proportion of predicted ingredient tokens actually belong to the ground truth.
+    Returns 1.0 if hypothesis is empty (and reference empty), 0.0 if hypothesis has
+    tokens but none match ground truth.
+    """
+    ref_tokens = _tokenize_ingredient_text(reference)
+    hyp_tokens = _tokenize_ingredient_text(hypothesis)
+    if not hyp_tokens:
+        return 1.0 if not ref_tokens else 0.0
+    overlap = ref_tokens.intersection(hyp_tokens)
+    return len(overlap) / len(hyp_tokens)
+
+
+def compute_ingredient_jaccard_similarity(reference: str, hypothesis: str) -> float:
+    """
+    Measures true Jaccard similarity between ingredient token sets:
+        Jaccard = |Reference_Tokens ∩ Hypothesis_Tokens| / |Reference_Tokens ∪ Hypothesis_Tokens|
+
+    Penalizes both missed ingredients (false negatives) and spurious tokens (false positives).
+    """
+    ref_tokens = _tokenize_ingredient_text(reference)
+    hyp_tokens = _tokenize_ingredient_text(hypothesis)
+    if not ref_tokens and not hyp_tokens:
+        return 1.0
+    union = ref_tokens.union(hyp_tokens)
+    if not union:
+        return 1.0
+    overlap = ref_tokens.intersection(hyp_tokens)
+    return len(overlap) / len(union)
+
+
+def compute_ingredient_completeness(reference: str, hypothesis: str) -> float:
+    """
+    Preserved for backwards compatibility. Alias for compute_ingredient_recall().
+    Note: Reflects token recovery (Recall), not Jaccard intersection-over-union.
+    """
+    return compute_ingredient_recall(reference, hypothesis)
 
 
 # ==============================================================================
@@ -187,8 +296,11 @@ class SampleBenchmarkResult:
     cer: float | None
     wer: float | None
     ingredient_completeness: float | None
-    nutrient_comparisons: dict[str, NutrientComparisonResult]
-    sample_passed: bool
+    ingredient_recall: float | None = None
+    ingredient_precision: float | None = None
+    ingredient_jaccard: float | None = None
+    nutrient_comparisons: dict[str, NutrientComparisonResult] = field(default_factory=dict)
+    sample_passed: bool = False
 
 
 @dataclass
@@ -217,6 +329,7 @@ class RealPhotoBenchmarkSummary:
 
     total_samples_in_dataset: int
     images_bundled_on_disk: int
+    samples_pending_evidence: int
     samples_evaluated: int
     samples_passed: int
     samples_failed: int
@@ -233,11 +346,14 @@ class RealPhotoBenchmarkSummary:
     mean_cer: float | None
     mean_wer: float | None
     mean_ingredient_completeness: float | None
-    metrics_by_nutrient: dict[str, FieldBenchmarkMetric]
-    metrics_by_condition: dict[str, dict[str, Any]]
-    execution_timestamp: str
-    status: str  # "PASS", "FAIL", "UNMEASURED", "BLOCKED"
-    disclaimer: str
+    mean_ingredient_recall: float | None = None
+    mean_ingredient_precision: float | None = None
+    mean_ingredient_jaccard: float | None = None
+    metrics_by_nutrient: dict[str, FieldBenchmarkMetric] = field(default_factory=dict)
+    metrics_by_condition: dict[str, dict[str, Any]] = field(default_factory=dict)
+    execution_timestamp: str = ""
+    status: str = "UNMEASURED"  # "PASS", "FAIL", "UNMEASURED", "BLOCKED"
+    disclaimer: str = ""
     sample_results: list[SampleBenchmarkResult] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -282,10 +398,12 @@ def compare_nutrient_field(
     gt_unit: str | None,
     candidate: ExtractedNutrientCandidate | None,
     declaration_basis: str,
+    tolerances: dict[str, tuple[float, float]] | None = None,
 ) -> NutrientComparisonResult:
     """
     Rigorously compares a predicted nutrient candidate against ground truth.
     Respects unreadable/omitted GT values, unit normalization, and field tolerances.
+    Tolerances are configurable; defaults to PROVISIONAL_FIELD_TOLERANCES.
     """
     is_declared = gt_value is not None
     is_pred = candidate is not None and candidate.value is not None
@@ -370,8 +488,9 @@ def compare_nutrient_field(
     # Exact match: abs_err <= 0.001
     is_exact = abs_err <= 0.001
 
-    # Tolerance match: field-specific
-    abs_tol, rel_tol = FIELD_TOLERANCES.get(field_name, (0.2, 0.02))
+    # Tolerance match: configurable field-specific policy
+    active_tolerances = tolerances if tolerances is not None else PROVISIONAL_FIELD_TOLERANCES
+    abs_tol, rel_tol = active_tolerances.get(field_name, (0.2, 0.02))
     allowed_tolerance = max(abs_tol, gt_value * rel_tol if gt_value > 0 else abs_tol)
     is_tol = abs_err <= (allowed_tolerance + 1e-9)
 
@@ -402,6 +521,7 @@ def evaluate_sample(
     images_dir: Path | None = None,
     adapter: BaseOcrAdapter | None = None,
     preloaded_image_bytes: bytes | None = None,
+    tolerances: dict[str, tuple[float, float]] | None = None,
 ) -> SampleBenchmarkResult:
     """
     Evaluates a single food label sample against the local OCR pipeline.
@@ -442,6 +562,9 @@ def evaluate_sample(
             cer=None,
             wer=None,
             ingredient_completeness=None,
+            ingredient_recall=None,
+            ingredient_precision=None,
+            ingredient_jaccard=None,
             nutrient_comparisons={},
             sample_passed=False,
         )
@@ -472,6 +595,9 @@ def evaluate_sample(
             cer=None,
             wer=None,
             ingredient_completeness=None,
+            ingredient_recall=None,
+            ingredient_precision=None,
+            ingredient_jaccard=None,
             nutrient_comparisons={},
             sample_passed=False,
         )
@@ -491,16 +617,22 @@ def evaluate_sample(
             cer=None,
             wer=None,
             ingredient_completeness=None,
+            ingredient_recall=None,
+            ingredient_precision=None,
+            ingredient_jaccard=None,
             nutrient_comparisons={},
             sample_passed=False,
         )
 
-    # Evaluate ingredient text
+    # Evaluate ingredient text metrics
     gt_ing = sample_data.get("ground_truth_ingredients_text")
     pred_ing = parsed.ingredients_text or ""
     cer = compute_character_error_rate(gt_ing, pred_ing) if gt_ing else None
     wer = compute_word_error_rate(gt_ing, pred_ing) if gt_ing else None
-    ing_comp = compute_ingredient_completeness(gt_ing, pred_ing) if gt_ing else None
+    ing_recall = compute_ingredient_recall(gt_ing, pred_ing) if gt_ing else None
+    ing_prec = compute_ingredient_precision(gt_ing, pred_ing) if gt_ing else None
+    ing_jacc = compute_ingredient_jaccard_similarity(gt_ing, pred_ing) if gt_ing else None
+    ing_comp = ing_recall  # alias for backwards compatibility
 
     # Evaluate nutrients
     gt_nutr = sample_data.get("ground_truth_nutrition", {})
@@ -536,6 +668,7 @@ def evaluate_sample(
             gt_unit=expected_unit,
             candidate=cand,
             declaration_basis=gt_basis,
+            tolerances=tolerances,
         )
         comparisons[field_name] = res
 
@@ -564,6 +697,9 @@ def evaluate_sample(
         cer=cer,
         wer=wer,
         ingredient_completeness=ing_comp,
+        ingredient_recall=ing_recall,
+        ingredient_precision=ing_prec,
+        ingredient_jaccard=ing_jacc,
         nutrient_comparisons=comparisons,
         sample_passed=sample_passed,
     )
@@ -605,6 +741,7 @@ def evaluate_physical_dataset(
     dataset_path: Path,
     images_dir: Path,
     adapter: BaseOcrAdapter | None = None,
+    field_tolerances: dict[str, tuple[float, float]] | None = None,
 ) -> RealPhotoBenchmarkSummary:
     """
     Executes benchmark over the complete real packaged food dataset.
@@ -616,6 +753,7 @@ def evaluate_physical_dataset(
         return RealPhotoBenchmarkSummary(
             total_samples_in_dataset=0,
             images_bundled_on_disk=0,
+            samples_pending_evidence=0,
             samples_evaluated=0,
             samples_passed=0,
             samples_failed=0,
@@ -632,6 +770,9 @@ def evaluate_physical_dataset(
             mean_cer=None,
             mean_wer=None,
             mean_ingredient_completeness=None,
+            mean_ingredient_recall=None,
+            mean_ingredient_precision=None,
+            mean_ingredient_jaccard=None,
             metrics_by_nutrient={},
             metrics_by_condition={},
             execution_timestamp=timestamp,
@@ -663,6 +804,7 @@ def evaluate_physical_dataset(
         return RealPhotoBenchmarkSummary(
             total_samples_in_dataset=len(samples),
             images_bundled_on_disk=0,
+            samples_pending_evidence=len(samples),
             samples_evaluated=0,
             samples_passed=0,
             samples_failed=0,
@@ -679,6 +821,9 @@ def evaluate_physical_dataset(
             mean_cer=None,
             mean_wer=None,
             mean_ingredient_completeness=None,
+            mean_ingredient_recall=None,
+            mean_ingredient_precision=None,
+            mean_ingredient_jaccard=None,
             metrics_by_nutrient={},
             metrics_by_condition={},
             execution_timestamp=timestamp,
@@ -698,7 +843,12 @@ def evaluate_physical_dataset(
         img_name = s.get("image_filename")
         if not img_name or not (images_dir / img_name).is_file():
             continue
-        res = evaluate_sample(s, images_dir=images_dir, adapter=adapter)
+        res = evaluate_sample(
+            s,
+            images_dir=images_dir,
+            adapter=adapter,
+            tolerances=field_tolerances,
+        )
         sample_results.append(res)
 
     evaluated_count = len(sample_results)
@@ -706,6 +856,7 @@ def evaluate_physical_dataset(
         return RealPhotoBenchmarkSummary(
             total_samples_in_dataset=len(samples),
             images_bundled_on_disk=available_image_count,
+            samples_pending_evidence=len(samples),
             samples_evaluated=0,
             samples_passed=0,
             samples_failed=0,
@@ -722,6 +873,9 @@ def evaluate_physical_dataset(
             mean_cer=None,
             mean_wer=None,
             mean_ingredient_completeness=None,
+            mean_ingredient_recall=None,
+            mean_ingredient_precision=None,
+            mean_ingredient_jaccard=None,
             metrics_by_nutrient={},
             metrics_by_condition={},
             execution_timestamp=timestamp,
@@ -741,10 +895,18 @@ def evaluate_physical_dataset(
     comps = [
         r.ingredient_completeness for r in sample_results if r.ingredient_completeness is not None
     ]
+    recalls = [r.ingredient_recall for r in sample_results if r.ingredient_recall is not None]
+    precisions = [
+        r.ingredient_precision for r in sample_results if r.ingredient_precision is not None
+    ]
+    jaccards = [r.ingredient_jaccard for r in sample_results if r.ingredient_jaccard is not None]
 
     mean_cer = round(sum(cers) / len(cers), 3) if cers else None
     mean_wer = round(sum(wers) / len(wers), 3) if wers else None
     mean_comp = round(sum(comps) / len(comps), 3) if comps else None
+    mean_recall = round(sum(recalls) / len(recalls), 3) if recalls else None
+    mean_precision = round(sum(precisions) / len(precisions), 3) if precisions else None
+    mean_jaccard = round(sum(jaccards) / len(jaccards), 3) if jaccards else None
 
     # Aggregate field-level metrics across all evaluated samples
     total_declared_fields = 0
@@ -871,6 +1033,7 @@ def evaluate_physical_dataset(
     return RealPhotoBenchmarkSummary(
         total_samples_in_dataset=len(samples),
         images_bundled_on_disk=available_image_count,
+        samples_pending_evidence=max(0, len(samples) - evaluated_count),
         samples_evaluated=evaluated_count,
         samples_passed=samples_passed,
         samples_failed=samples_failed,
@@ -887,6 +1050,9 @@ def evaluate_physical_dataset(
         mean_cer=mean_cer,
         mean_wer=mean_wer,
         mean_ingredient_completeness=mean_comp,
+        mean_ingredient_recall=mean_recall,
+        mean_ingredient_precision=mean_precision,
+        mean_ingredient_jaccard=mean_jaccard,
         metrics_by_nutrient=metrics_by_nutrient,
         metrics_by_condition=metrics_by_condition,
         execution_timestamp=timestamp,
