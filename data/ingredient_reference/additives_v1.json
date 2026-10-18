@@ -1,0 +1,321 @@
+{
+  "version": "1.0.0",
+  "dataset_name": "healthyIndia Curated Food Additive Reference",
+  "last_updated": "2026-10-18",
+  "license": "Open Reference Dataset for Consumer Transparency",
+  "disclaimer": "Regulatory permissions under FSSAI are strictly category-specific according to the Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011. The presence of an INS number does NOT indicate blanket permission across all food categories. Status is 'unverified' where category-specific authorization has not been audited.",
+  "additives": [
+    {
+      "id": "ins-621",
+      "canonical_name": "Monosodium L-glutamate",
+      "ins_number": "INS 621",
+      "e_number": "E 621",
+      "functional_classes": ["Flavour enhancer"],
+      "aliases": [
+        "msg",
+        "monosodium glutamate",
+        "monosodium l-glutamate",
+        "glutamate monosodium",
+        "flavor enhancer 621",
+        "flavour enhancer 621",
+        "flavor enhancer (621)",
+        "flavour enhancer (621)",
+        "flavour enhancer ins 621",
+        "flavor enhancer ins 621",
+        "flavour enhancer ins621",
+        "flavor enhancer ins621",
+        "ins 621",
+        "ins621",
+        "e621",
+        "e 621",
+        "621"
+      ],
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011 - Appendix A (GMP in specified foods)",
+          "url": "https://www.fssai.gov.in/upload/uploadfiles/files/Food_Additives_Regulations.pdf",
+          "source_type": "Statutory Regulation",
+          "retrieval_date": "2026-10-18"
+        },
+        {
+          "title": "WHO / FAO JECFA Toxicological Evaluation of Certain Food Additives - Monosodium L-glutamate",
+          "url": "https://apps.who.int/food-additives-contaminants-jecfa-database/Home/Chemical/2464",
+          "source_type": "International Scientific Evaluation",
+          "retrieval_date": "2026-10-18"
+        }
+      ],
+      "jurisdiction": "India (FSSAI) & Codex Alimentarius",
+      "regulatory_status": "Permitted under Good Manufacturing Practice (GMP) in specified categories under FSSAI regulations; prohibited in foods intended for infants below 12 months. Mandatory advisory required: 'NOT RECOMMENDED FOR INFANTS BELOW 12 MONTHS'.",
+      "status_verification": "verified",
+      "scope_limitations": "Permission is restricted to specific food categories; not permitted in milk, infant formula, or unflavored staples."
+    },
+    {
+      "id": "ins-951",
+      "canonical_name": "Aspartame",
+      "ins_number": "INS 951",
+      "e_number": "E 951",
+      "functional_classes": ["Non-nutritive sweetener"],
+      "aliases": [
+        "aspartame",
+        "artificial sweetener aspartame",
+        "sweetener (951)",
+        "sweetener 951",
+        "sweetener ins 951",
+        "sweetener ins951",
+        "ins 951",
+        "ins951",
+        "e951",
+        "e 951",
+        "951"
+      ],
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011 - Table 2 (Artificial Sweeteners)",
+          "url": "https://www.fssai.gov.in",
+          "source_type": "Statutory Regulation",
+          "retrieval_date": "2026-10-18"
+        },
+        {
+          "title": "WHO IARC & JECFA Joint Assessment of Aspartame (2023)",
+          "url": "https://www.who.int/news/item/14-07-2023-aspartame-hazard-and-risk-assessment-results-released",
+          "source_type": "International Scientific Assessment",
+          "retrieval_date": "2026-10-18"
+        }
+      ],
+      "jurisdiction": "India (FSSAI) & Codex Alimentarius",
+      "regulatory_status": "Permitted only in specified food categories subject to quantitative maximum limits (e.g. carbonated water max 700 ppm, chewing gum max 10,000 ppm). Mandatory label warnings required: 'CONTAINS ARTIFICIAL SWEETENER' and 'NOT RECOMMENDED FOR PHENYLKETONURICS'.",
+      "status_verification": "verified",
+      "scope_limitations": "Prohibited in general foods outside explicitly authorized product categories."
+    },
+    {
+      "id": "ins-150d",
+      "canonical_name": "Caramel IV - sulphite ammonia caramel",
+      "ins_number": "INS 150d",
+      "e_number": "E 150d",
+      "functional_classes": ["Food colour"],
+      "aliases": [
+        "caramel iv",
+        "caramel iv - sulphite ammonia caramel",
+        "caramel 4",
+        "sulphite ammonia caramel",
+        "color (150d)",
+        "colour (150d)",
+        "color 150d",
+        "colour 150d",
+        "color ins 150d",
+        "colour ins 150d",
+        "color ins150d",
+        "colour ins150d",
+        "ins 150d",
+        "ins150d",
+        "e150d",
+        "e 150d",
+        "150d"
+      ],
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011 - Food Colours",
+          "url": "https://www.fssai.gov.in",
+          "source_type": "Statutory Regulation",
+          "retrieval_date": "2026-10-18"
+        }
+      ],
+      "jurisdiction": "India (FSSAI) & Codex Alimentarius",
+      "regulatory_status": "Permitted in specified foods (including carbonated beverages, confectionery) subject to statutory limits and purity specifications (including 4-MEI threshold).",
+      "status_verification": "verified",
+      "scope_limitations": "Prohibited in fresh meat, fruit, tea, coffee, and unflavoured dairy."
+    },
+    {
+      "id": "ins-322",
+      "canonical_name": "Lecithins",
+      "ins_number": "INS 322",
+      "e_number": "E 322",
+      "functional_classes": ["Emulsifier", "Stabilizer", "Antioxidant"],
+      "aliases": [
+        "lecithin",
+        "lecithins",
+        "soya lecithin",
+        "soy lecithin",
+        "sunflower lecithin",
+        "ins 322",
+        "ins 322(i)",
+        "ins 322i",
+        "ins322",
+        "ins322(i)",
+        "e322",
+        "e 322",
+        "emulsifier (322)",
+        "emulsifier 322",
+        "emulsifier (ins 322)",
+        "emulsifier (ins 322(i))",
+        "emulsifier (ins 322i)",
+        "emulsifier ins 322",
+        "emulsifier ins 322(i)",
+        "322",
+        "322(i)",
+        "322i"
+      ],
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
+          "url": "https://www.fssai.gov.in",
+          "source_type": "Statutory Regulation",
+          "retrieval_date": "2026-10-18"
+        }
+      ],
+      "jurisdiction": "India (FSSAI) & Codex Alimentarius",
+      "regulatory_status": "Permitted under Good Manufacturing Practice (GMP) in various food formulations; must declare botanical source if derived from major allergens (e.g. Soya).",
+      "status_verification": "verified",
+      "scope_limitations": "General food usage subject to GMP standards."
+    },
+    {
+      "id": "ins-211",
+      "canonical_name": "Sodium benzoate",
+      "ins_number": "INS 211",
+      "e_number": "E 211",
+      "functional_classes": ["Preservative"],
+      "aliases": [
+        "sodium benzoate",
+        "benzoate of soda",
+        "preservative (211)",
+        "preservative 211",
+        "preservative (ins 211)",
+        "preservative ins 211",
+        "preservative ins211",
+        "ins 211",
+        "ins211",
+        "e211",
+        "e 211",
+        "211"
+      ],
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011 - Class II Preservatives Schedule",
+          "url": "https://www.fssai.gov.in",
+          "source_type": "Statutory Regulation",
+          "retrieval_date": "2026-10-18"
+        }
+      ],
+      "jurisdiction": "India (FSSAI) & Codex Alimentarius",
+      "regulatory_status": "Permitted Class II chemical preservative with strict statutory numerical limits by food category (e.g., fruit juices/squashes max 600 ppm, carbonated fruit beverages max 120 ppm).",
+      "status_verification": "verified",
+      "scope_limitations": "Strict category-specific maximum residue limits apply; prohibited in foods where chemical preservation is disallowed."
+    },
+    {
+      "id": "ins-330",
+      "canonical_name": "Citric acid",
+      "ins_number": "INS 330",
+      "e_number": "E 330",
+      "functional_classes": ["Acidity regulator", "Antioxidant synergist", "Sequestering agent"],
+      "aliases": [
+        "citric acid",
+        "acidity regulator (330)",
+        "acidity regulator 330",
+        "acidity regulator (ins 330)",
+        "acidity regulator ins 330",
+        "acidity regulator ins330",
+        "acid (330)",
+        "ins 330",
+        "ins330",
+        "e330",
+        "e 330",
+        "330"
+      ],
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
+          "url": "https://www.fssai.gov.in",
+          "source_type": "Statutory Regulation",
+          "retrieval_date": "2026-10-18"
+        }
+      ],
+      "jurisdiction": "India (FSSAI) & Codex Alimentarius",
+      "regulatory_status": "Permitted under Good Manufacturing Practice (GMP) in most processed food categories unless prohibited by a specific commodity standard.",
+      "status_verification": "verified",
+      "scope_limitations": "GMP usage across broad food categories."
+    },
+    {
+      "id": "ins-102",
+      "canonical_name": "Tartrazine",
+      "ins_number": "INS 102",
+      "e_number": "E 102",
+      "functional_classes": ["Synthetic food colour"],
+      "aliases": [
+        "tartrazine",
+        "fd&c yellow 5",
+        "yellow 5",
+        "colour (102)",
+        "color (102)",
+        "colour 102",
+        "color 102",
+        "colour (ins 102)",
+        "color (ins 102)",
+        "colour ins 102",
+        "color ins 102",
+        "colour ins102",
+        "color ins102",
+        "ins 102",
+        "ins102",
+        "e102",
+        "e 102",
+        "102"
+      ],
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011 - Synthetic Food Colours Schedule",
+          "url": "https://www.fssai.gov.in",
+          "source_type": "Statutory Regulation",
+          "retrieval_date": "2026-10-18"
+        }
+      ],
+      "jurisdiction": "India (FSSAI) & Codex Alimentarius",
+      "regulatory_status": "Permitted synthetic food colour strictly limited to authorized categories (e.g. biscuits, confectionery, fruit syrups) with mandatory upper limits (max 100 ppm; max 200 ppm in canned fruit). Prohibited in dairy, meat, tea, spices. Requires mandatory label disclosure: 'CONTAINS PERMITTED SYNTHETIC FOOD COLOUR(S)'.",
+      "status_verification": "verified",
+      "scope_limitations": "Strict category list; prohibited in unprocessed staples and dairy products."
+    },
+    {
+      "id": "ins-500ii",
+      "canonical_name": "Sodium hydrogen carbonate",
+      "ins_number": "INS 500(ii)",
+      "e_number": "E 500(ii)",
+      "functional_classes": ["Raising agent", "Acidity regulator", "Stabilizer"],
+      "aliases": [
+        "sodium hydrogen carbonate",
+        "sodium bicarbonate",
+        "baking soda",
+        "raising agent (500(ii))",
+        "raising agent 500(ii)",
+        "raising agent (500ii)",
+        "raising agent 500ii",
+        "raising agent (ins 500(ii))",
+        "raising agent (ins 500ii)",
+        "raising agent ins 500(ii)",
+        "raising agent ins 500ii",
+        "raising agent ins500(ii)",
+        "raising agent ins500ii",
+        "ins 500(ii)",
+        "ins 500ii",
+        "ins500(ii)",
+        "ins500ii",
+        "e500(ii)",
+        "e 500(ii)",
+        "e500ii",
+        "e 500ii",
+        "500(ii)",
+        "500ii"
+      ],
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
+          "url": "https://www.fssai.gov.in",
+          "source_type": "Statutory Regulation",
+          "retrieval_date": "2026-10-18"
+        }
+      ],
+      "jurisdiction": "India (FSSAI) & Codex Alimentarius",
+      "regulatory_status": "Permitted under Good Manufacturing Practice (GMP) in bakery products, snack foods, and cereal flours.",
+      "status_verification": "verified",
+      "scope_limitations": "Authorized for GMP usage in specified product categories."
+    }
+  ]
+}

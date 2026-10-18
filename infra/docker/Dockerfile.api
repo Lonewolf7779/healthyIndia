@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1
+# healthyIndia - API Service Dockerfile
+# Minimal, non-root, pinned Python runtime
+
+FROM python:3.13-slim AS base
+
+# Prevent Python from writing .pyc files and enable unbuffered output
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
+
+WORKDIR /app
+
+# Install uv for fast, reliable dependency management
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# Create non-root user with explicit UID/GID
+RUN groupadd -g 10001 appuser && \
+    useradd -u 10001 -g appuser -s /sbin/nologin -M appuser
+
+# Copy dependency specifications first to leverage cache
+COPY services/api/pyproject.toml services/api/uv.lock ./
+
+# Install dependencies into project virtual environment
+RUN uv sync --frozen --no-dev --no-install-project
+
+# Copy application source code
+COPY services/api/app ./app
+
+# Set non-root ownership
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+EXPOSE 8000
+
+# Healthcheck probing the /api/v1/health endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')" || exit 1
+
+# Start Uvicorn bound to 0.0.0.0 inside container
+CMD ["/app/.venv/bin/python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,31 @@
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Git and cache
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.venv
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.coverage
+htmlcov
+
+# Node and frontend
+apps/
+node_modules
+.next
+out
+
+# Local uploads and databases
+*.sqlite
+*.sqlite3
+uploads/

@@ -1,0 +1,22 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: healthyindia-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=local
+      - DEBUG=true
+      - HOST=0.0.0.0
+      - PORT=8000
+      - SECRET_KEY=insecure-dev-secret-key-replace-in-production-min-32-chars
+      - ALLOWED_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
+      - ALLOWED_HOSTS=["localhost","127.0.0.1","api"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
