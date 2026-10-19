@@ -174,13 +174,14 @@ pnpm run build
   * Strict memory-only processing with zero permanent storage of uploaded images.
   * Fail-closed cryptographic session confirmation tokens binding reviewed values.
   * Physical-photo OCR accuracy remains explicitly marked as **`UNMEASURED`**.
-* **Phase 4A through 4D: Security Hardening & Ingredient Provenance (COMPLETED):**
+* **Phase 4A through 4E: Security Hardening, Dependency Remediation & Release Gates (COMPLETED):**
   * Extensible ingredient knowledge base (`data/ingredient_reference/ingredients_v1.json`, v2.2.0, 21 records across 8 categories).
   * 5-track independent evidence verification framework (URL recorded, URL accessible, content checked, scientific claim supported, regulatory claim verified).
-  * In-memory sliding-window rate limiting protecting all API endpoints against resource exhaustion DoS (HTTP 429 with `Retry-After`).
-  * Request payload size limiting on both declared and chunked streaming bodies (HTTP 413).
+  * Dependency remediation: critical prototype pollution in `tinypool` eliminated via `vitest@4.1.12`; PostCSS patched to `8.5.31`; backend verified clean via `pip-audit`.
+  * In-memory sliding-window rate limiting with anti-spoofing trusted proxy logic, thread safety, and memory bounding (HTTP 429 with `Retry-After`).
+  * Request payload size limiting defending against negative, oversized, and misleading small Content-Length headers and chunked transfer DoS (HTTP 413).
   * Strict input validation rejecting non-finite numbers (`NaN`, `Infinity`, `-Infinity`).
-  * Comprehensive security test suite (258 backend tests + 46 frontend tests passing).
+  * Comprehensive test suite (264 backend tests + 46 frontend tests passing, 0 lint or typecheck errors).
 
 ---
 

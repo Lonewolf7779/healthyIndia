@@ -13,6 +13,7 @@ centralized Redis token bucket as documented in docs/SECURITY.md.
 
 from __future__ import annotations
 
+import threading
 import time
 from collections import defaultdict
 from dataclasses import dataclass
@@ -36,7 +37,7 @@ class RateLimitRule:
 class InMemoryRateLimiter:
     """
     Sliding-window rate limiter using in-memory timestamp deques.
-    Cleans up expired timestamps on access to bound memory usage.
+    Thread-safe and bounds memory consumption through automatic eviction.
     """
 
     DEFAULT_LIMITS: ClassVar[dict[str, RateLimitRule]] = {
@@ -55,6 +56,7 @@ class InMemoryRateLimiter:
         self.default_rule = RateLimitRule(requests_per_minute=default_rpm)
         self.rules = rules or self.DEFAULT_LIMITS
         self.max_tracked_clients = max_tracked_clients
+        self._lock = threading.Lock()
         # Mapping: client_key -> route_pattern -> list of timestamps
         self._history: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
         self._last_cleanup: float = time.monotonic()
@@ -67,7 +69,7 @@ class InMemoryRateLimiter:
         return "default", self.default_rule
 
     def _cleanup_stale_records(self, now: float) -> None:
-        """Removes entries older than 2 minutes if capacity is stressed."""
+        """Removes entries older than 2 minutes and enforces max tracked client bounds."""
         if now - self._last_cleanup < 60.0 and len(self._history) < self.max_tracked_clients:
             return
         cutoff = now - 120.0
@@ -83,41 +85,50 @@ class InMemoryRateLimiter:
                 stale_clients.append(client_ip)
         for client_ip in stale_clients:
             self._history.pop(client_ip, None)
+
+        # If memory bounds are still exceeded after stale purging, evict oldest clients
+        if len(self._history) >= self.max_tracked_clients:
+            excess = len(self._history) - self.max_tracked_clients + 100
+            for client_ip in list(self._history.keys())[:excess]:
+                self._history.pop(client_ip, None)
+
         self._last_cleanup = now
 
     def check_rate_limit(self, client_ip: str, path: str) -> tuple[bool, int, float]:
         """
-        Checks whether client_ip exceeds rate limit for the given path.
+        Thread-safe check whether client_ip exceeds rate limit for the given path.
 
         Returns:
             tuple[bool, int, float]: (is_allowed, remaining_quota, retry_after_seconds)
         """
-        now = time.monotonic()
-        self._cleanup_stale_records(now)
+        with self._lock:
+            now = time.monotonic()
+            self._cleanup_stale_records(now)
 
-        pattern_key, rule = self._resolve_rule(path)
-        window_start = now - rule.window_seconds
+            pattern_key, rule = self._resolve_rule(path)
+            window_start = now - rule.window_seconds
 
-        timestamps = self._history[client_ip][pattern_key]
-        # Retain only timestamps within the active sliding window
-        valid_timestamps = [t for t in timestamps if t > window_start]
-        self._history[client_ip][pattern_key] = valid_timestamps
+            timestamps = self._history[client_ip][pattern_key]
+            # Retain only timestamps within the active sliding window
+            valid_timestamps = [t for t in timestamps if t > window_start]
+            self._history[client_ip][pattern_key] = valid_timestamps
 
-        if len(valid_timestamps) >= rule.requests_per_minute:
-            # Over limit: retry after the oldest request in the window falls outside
-            oldest_ts = valid_timestamps[0]
-            retry_after = max(1.0, round(rule.window_seconds - (now - oldest_ts), 1))
-            return False, 0, retry_after
+            if len(valid_timestamps) >= rule.requests_per_minute:
+                # Over limit: retry after the oldest request in the window falls outside
+                oldest_ts = valid_timestamps[0]
+                retry_after = max(1.0, round(rule.window_seconds - (now - oldest_ts), 1))
+                return False, 0, retry_after
 
-        # Record this request
-        valid_timestamps.append(now)
-        remaining = rule.requests_per_minute - len(valid_timestamps)
-        return True, remaining, 0.0
+            # Record this request
+            valid_timestamps.append(now)
+            remaining = rule.requests_per_minute - len(valid_timestamps)
+            return True, remaining, 0.0
 
     def reset(self) -> None:
         """Resets all tracked history (used in test fixtures)."""
-        self._history.clear()
-        self._last_cleanup = time.monotonic()
+        with self._lock:
+            self._history.clear()
+            self._last_cleanup = time.monotonic()
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -147,13 +158,28 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         )
 
     def _extract_client_ip(self, request: Request) -> str:
-        """Extracts client IP address safely, respecting trusted reverse proxy headers."""
-        # Note: In production behind a verified reverse proxy, CF-Connecting-IP or
-        # X-Forwarded-For may be used when properly validated by the proxy.
-        # By default, use direct client host to prevent header spoofing from untrusted clients.
-        if request.client and request.client.host:
-            return request.client.host
-        return "127.0.0.1"
+        """
+        Extracts client IP address safely, respecting configured trusted reverse proxies.
+
+        Security rule:
+        Never trust client-submitted X-Forwarded-For or CF-Connecting-IP headers unless
+        the immediate upstream peer (request.client.host) is explicitly present in
+        the configured TRUSTED_PROXIES list.
+        """
+        direct_ip = request.client.host if request.client and request.client.host else "127.0.0.1"
+
+        if direct_ip in self.settings.TRUSTED_PROXIES:
+            cf_ip = request.headers.get("cf-connecting-ip")
+            if cf_ip and cf_ip.strip():
+                return cf_ip.strip()
+
+            forwarded_for = request.headers.get("x-forwarded-for")
+            if forwarded_for and forwarded_for.strip():
+                hops = [h.strip() for h in forwarded_for.split(",") if h.strip()]
+                if hops:
+                    return hops[0]
+
+        return direct_ip
 
     async def dispatch(self, request: Request, call_next) -> Response:  # noqa: ANN001
         if not self.settings.RATE_LIMIT_ENABLED:

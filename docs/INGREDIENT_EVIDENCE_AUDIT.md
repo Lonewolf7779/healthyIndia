@@ -45,6 +45,10 @@ flowchart TD
 * **Track 4 (Scientific Claim Independently Supported)**: Quantitative toxicological claims (Acceptable Daily Intake values, NOAELs, Tolerable Upper Limits) and qualitative physiological evaluations reflect primary scientific assessments without unsubstantiated absolute claims (such as "completely harmless" or "zero risk").
 * **Track 5 (Regulatory Claim Verified for Context)**: Statutory authorization status under Indian law (FSSAI) is confirmed for the stated food category, distinguishing between GMP approval, positive list limits with numerical maximum caps (ppm/mg/kg), and mandatory front/back-panel label declarations.
 
+> [!IMPORTANT]
+> **Automated Validator Scope vs. Human Domain Expert Audit**:
+> The CI script `validate_ingredient_kb.py` validates schema structure, URI format, domain allowlisting, and the lexical absence of absolute safety claims. It confirms that human audit metadata and statutory citations are fully present and collision-free. Automated CI checks do not execute live network requests or replace professional toxicological or legal statutory review.
+
 ---
 
 ## 3. Indian Food Regulatory Architecture (FSSAI Complexity)

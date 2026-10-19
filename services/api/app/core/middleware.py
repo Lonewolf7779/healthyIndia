@@ -4,7 +4,7 @@ Implements security headers, request size limits, and streaming body bounds.
 """
 
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
+from starlette.requests import ClientDisconnect, Request
 from starlette.responses import JSONResponse, Response
 
 from app.core.config import Environment, Settings
@@ -74,9 +74,19 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
         limit = self.upload_max_bytes if is_upload else self.max_bytes
 
         content_length = request.headers.get("content-length")
-        if content_length:
+        if content_length is not None:
             try:
                 length = int(content_length)
+                if length < 0:
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "error": {
+                                "code": "BAD_REQUEST",
+                                "message": "Content-Length header cannot be negative.",
+                            }
+                        },
+                    )
                 if length > limit:
                     return JSONResponse(
                         status_code=413,
@@ -97,24 +107,37 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
                         }
                     },
                 )
-        elif request.method in ("POST", "PUT", "PATCH"):
-            # When Content-Length header is omitted (e.g. chunked streaming transfer),
-            # consume the stream incrementally up to limit + 1 bytes.
+
+        if request.method in ("POST", "PUT", "PATCH"):
+            # Consume stream defensively up to limit + 1 bytes.
+            # Protects against chunked transfer DoS as well as
+            # misleading small Content-Length headers.
             chunks: list[bytes] = []
             total = 0
-            async for chunk in request.stream():
-                total += len(chunk)
-                if total > limit:
-                    return JSONResponse(
-                        status_code=413,
-                        content={
-                            "error": {
-                                "code": "PAYLOAD_TOO_LARGE",
-                                "message": f"Request body exceeds limit of {limit} bytes.",
-                            }
-                        },
-                    )
-                chunks.append(chunk)
+            try:
+                async for chunk in request.stream():
+                    total += len(chunk)
+                    if total > limit:
+                        return JSONResponse(
+                            status_code=413,
+                            content={
+                                "error": {
+                                    "code": "PAYLOAD_TOO_LARGE",
+                                    "message": f"Request body exceeds limit of {limit} bytes.",
+                                }
+                            },
+                        )
+                    chunks.append(chunk)
+            except ClientDisconnect:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "error": {
+                            "code": "CLIENT_DISCONNECTED",
+                            "message": "Client disconnected before request completed.",
+                        }
+                    },
+                )
 
             # Reconstruct body for downstream route handlers
             body_bytes = b"".join(chunks)

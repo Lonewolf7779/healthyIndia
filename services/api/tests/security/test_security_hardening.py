@@ -11,6 +11,7 @@ Tests:
 """
 
 import io
+import time
 
 import pytest
 from fastapi.testclient import TestClient
@@ -328,3 +329,193 @@ def test_security_headers_include_modern_controls(client: TestClient) -> None:
     assert headers.get("Content-Security-Policy") == "default-src 'none'; frame-ancestors 'none';"
     assert headers.get("X-XSS-Protection") == "0"
     assert "camera=()" in headers.get("Permissions-Policy", "")
+
+
+# ==============================================================================
+# 7. PHASE 4E: DEFENSE-IN-DEPTH VERIFICATION & EDGE CASES
+# ==============================================================================
+
+
+def test_negative_content_length_rejected() -> None:
+    """Negative Content-Length header must be rejected with HTTP 400."""
+    settings = Settings(ENVIRONMENT=Environment.TEST, RATE_LIMIT_ENABLED=False)
+    test_app = create_app(settings=settings)
+    with TestClient(test_app) as client:
+        response = client.post(
+            "/api/v1/ingredients/analyze",
+            content=b'{"ingredients_text": "salt"}',
+            headers={"Content-Length": "-1", "Content-Type": "application/json"},
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "BAD_REQUEST"
+
+
+def test_misleading_content_length_stream_exceeding_limit_returns_413() -> None:
+    """Streams exceeding limit despite misleading small Content-Length must abort with 413."""
+    settings = Settings(
+        ENVIRONMENT=Environment.TEST,
+        MAX_REQUEST_BODY_BYTES=200,
+        RATE_LIMIT_ENABLED=False,
+    )
+    test_app = create_app(settings=settings)
+    with TestClient(test_app) as client:
+
+        def lied_stream():
+            for _ in range(10):
+                yield b"Y" * 50
+
+        response = client.post(
+            "/api/v1/ingredients/analyze",
+            content=lied_stream(),
+            headers={"Content-Length": "50", "Content-Type": "application/json"},
+        )
+        assert response.status_code == 413
+        assert response.json()["error"]["code"] == "PAYLOAD_TOO_LARGE"
+
+
+def test_rate_limiter_ignores_spoofed_x_forwarded_for_from_untrusted_client() -> None:
+    """X-Forwarded-For must be ignored when connecting host is not in TRUSTED_PROXIES."""
+    settings = Settings(
+        ENVIRONMENT=Environment.TEST,
+        RATE_LIMIT_ENABLED=True,
+        RATE_LIMIT_ANALYSIS_RPM=2,
+        TRUSTED_PROXIES=[],  # No trusted proxies configured
+    )
+    test_app = create_app(settings=settings)
+    with TestClient(test_app) as client:
+        payload = {"ingredients_text": "Sugar, Salt"}
+
+        # Request 1 with spoofed IP A
+        res1 = client.post(
+            "/api/v1/ingredients/analyze",
+            json=payload,
+            headers={"X-Forwarded-For": "1.1.1.1"},
+        )
+        assert res1.status_code == 200
+
+        # Request 2 with spoofed IP B
+        res2 = client.post(
+            "/api/v1/ingredients/analyze",
+            json=payload,
+            headers={"X-Forwarded-For": "2.2.2.2"},
+        )
+        assert res2.status_code == 200
+
+        # Request 3 with spoofed IP C - Should be REJECTED because direct client IP is untrusted
+        res3 = client.post(
+            "/api/v1/ingredients/analyze",
+            json=payload,
+            headers={"X-Forwarded-For": "3.3.3.3"},
+        )
+        assert res3.status_code == 429
+        assert res3.json()["error"]["code"] == "RATE_LIMIT_EXCEEDED"
+
+
+def test_rate_limiter_respects_x_forwarded_for_from_trusted_proxy() -> None:
+    """X-Forwarded-For is respected only when connecting host is explicitly in TRUSTED_PROXIES."""
+    settings = Settings(
+        ENVIRONMENT=Environment.TEST,
+        RATE_LIMIT_ENABLED=True,
+        RATE_LIMIT_ANALYSIS_RPM=1,
+        TRUSTED_PROXIES=["testclient", "127.0.0.1"],
+    )
+    test_app = create_app(settings=settings)
+    with TestClient(test_app) as client:
+        payload = {"ingredients_text": "Sugar, Salt"}
+
+        # Request 1 from Client A via trusted proxy
+        res1 = client.post(
+            "/api/v1/ingredients/analyze",
+            json=payload,
+            headers={"X-Forwarded-For": "203.0.113.195"},
+        )
+        assert res1.status_code == 200
+
+        # Request 2 from Client B via trusted proxy (separate IP bucket -> allowed!)
+        res2 = client.post(
+            "/api/v1/ingredients/analyze",
+            json=payload,
+            headers={"X-Forwarded-For": "198.51.100.42"},
+        )
+        assert res2.status_code == 200
+
+        # Request 3 from Client A again -> exceeds its 1 RPM limit -> HTTP 429
+        res3 = client.post(
+            "/api/v1/ingredients/analyze",
+            json=payload,
+            headers={"X-Forwarded-For": "203.0.113.195"},
+        )
+        assert res3.status_code == 429
+
+
+def test_rate_limiter_concurrency_and_memory_bounding() -> None:
+    """InMemoryRateLimiter is thread-safe and bounds memory consumption under load."""
+    import concurrent.futures
+
+    limiter = InMemoryRateLimiter(default_rpm=5, max_tracked_clients=50)
+
+    def worker(client_id: int) -> None:
+        client_ip = f"10.0.{client_id // 256}.{client_id % 256}"
+        for _ in range(3):
+            limiter.check_rate_limit(client_ip, "/api/v1/test")
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        futures = [executor.submit(worker, i) for i in range(100)]
+        for f in concurrent.futures.as_completed(futures):
+            f.result()
+
+    # Verify that memory is strictly bounded and does not grow unchecked
+    assert len(limiter._history) <= 60
+
+
+def test_confirmation_token_boundary_checks() -> None:
+    """Extraction and confirmation tokens enforce canonical UUIDs, HMAC signatures, and expiry."""
+    from app.core.security import (
+        generate_confirmation_token,
+        generate_extraction_token,
+        verify_confirmation_token,
+        verify_extraction_token,
+    )
+
+    valid_id = "550e8400-e29b-41d4-a716-446655440000"
+    valid_digest = "a" * 64
+
+    # 1. Invalid extraction UUID rejected
+    with pytest.raises(ValueError, match="canonical UUID"):
+        generate_extraction_token("not-a-uuid")
+
+    # 2. Tampered signature rejected
+    token = generate_extraction_token(valid_id, secret_key="test-key" * 8)
+    parts = token.split(".")
+    tampered_sig = parts[3][:-4] + "0000"
+    tampered_token = f"{parts[0]}.{parts[1]}.{parts[2]}.{tampered_sig}"
+    valid, reason = verify_extraction_token(tampered_token, valid_id, secret_key="test-key" * 8)
+    assert valid is False
+    assert "HMAC verification failed" in reason
+
+    # 3. Extraction ID mismatch rejected
+    valid, reason = verify_extraction_token(
+        token, "660e8400-e29b-41d4-a716-446655440000", secret_key="test-key" * 8
+    )
+    assert valid is False
+    assert "does not match" in reason
+
+    # 4. Expired token rejected
+    old_time = int(time.time()) - 7200
+    expired_token = generate_extraction_token(
+        valid_id, secret_key="test-key" * 8, timestamp=old_time
+    )
+    valid, reason = verify_extraction_token(
+        expired_token, valid_id, secret_key="test-key" * 8, max_age_seconds=3600
+    )
+    assert valid is False
+    assert "expired" in reason.lower()
+
+    # 5. Confirmation token values_digest binding
+    conf_token = generate_confirmation_token(valid_id, valid_digest, secret_key="test-key" * 8)
+    altered_digest = "b" * 64
+    valid, reason = verify_confirmation_token(
+        conf_token, valid_id, altered_digest, secret_key="test-key" * 8
+    )
+    assert valid is False
+    assert "digest does not match" in reason.lower()

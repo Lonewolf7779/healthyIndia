@@ -8,6 +8,9 @@ from typing import Final
 
 from PIL import Image, UnidentifiedImageError
 
+# Global defense against decompression bombs (16 Megapixels limit)
+Image.MAX_IMAGE_PIXELS = 16_000_000
+
 SUPPORTED_IMAGE_FORMATS: Final[set[str]] = {"JPEG", "PNG", "WEBP"}
 MIN_IMAGE_BYTES: Final[int] = 64
 

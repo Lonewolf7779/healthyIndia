@@ -67,6 +67,9 @@ class Settings(BaseSettings):
     RATE_LIMIT_ANALYSIS_RPM: int = 60  # 60 requests / min for nutrition/ingredient analysis
     RATE_LIMIT_DEFAULT_RPM: int = 120  # 120 requests / min for general endpoints
 
+    # Reverse proxy trust (Phase 4E)
+    TRUSTED_PROXIES: Sequence[str] = Field(default=[])
+
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
     def parse_allowed_origins(cls, v: Any) -> list[str]:
@@ -94,6 +97,20 @@ class Settings(BaseSettings):
         if isinstance(v, (list, tuple)):
             return list(v)
         raise ValueError("ALLOWED_HOSTS must be a list of strings or comma-separated string")
+
+    @field_validator("TRUSTED_PROXIES", mode="before")
+    @classmethod
+    def parse_trusted_proxies(cls, v: Any) -> list[str]:
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    return json.loads(v)
+                except json.JSONDecodeError:
+                    pass
+            return [proxy.strip() for proxy in v.split(",") if proxy.strip()]
+        if isinstance(v, (list, tuple)):
+            return list(v)
+        raise ValueError("TRUSTED_PROXIES must be a list of strings or comma-separated string")
 
     @model_validator(mode="after")
     def validate_environment_constraints(self) -> "Settings":
