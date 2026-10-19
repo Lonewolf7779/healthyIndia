@@ -1,7 +1,7 @@
 # healthyIndia Security Architecture & Baseline
 
-**Document Version**: 2.1.0  
-**Phase**: 4E — Dependency Remediation, Security Verification, and Release-Gate Review  
+**Document Version**: 2.2.0  
+**Phase**: 4F — Release-Gate Verification and Evidence-Based Readiness  
 **Date**: October 19, 2026  
 **System Production Status**: **NOT READY FOR PRODUCTION** (Physical OCR benchmark remains **UNMEASURED**)  
 
@@ -160,7 +160,28 @@ flowchart LR
 | **GHSA-6g55-p6wh-862q** | `postcss` | `<=8.5.11` | High | **RESOLVED** | Overridden to `postcss@8.5.31` in `pnpm-workspace.yaml`. |
 | **GHSA-fxqj-rqcc-2cmp** | `postcss` | `<=8.5.22` | Moderate | **RESOLVED** | Overridden to `postcss@8.5.31` in `pnpm-workspace.yaml`. |
 | **GHSA-r28c-9q8g-f849** | `postcss` | `<=8.5.17` | High | **RESOLVED** | Overridden to `postcss@8.5.31` in `pnpm-workspace.yaml`. |
-| **GHSA-vfj7-8cjw-p6xm** | `braces` | `<=3.0.3` | High | **Accepted with Justification** | Transitive dev dependency via `eslint-config-next` (`micromatch -> braces`). Upstream npm registry has no published patched version (`patched_versions: None`). Used strictly during local linting; never executed in production client bundle or server runtime. |
+| **GHSA-vfj7-8cjw-p6xm** | `braces` | `<=3.0.3` | High | **Accepted Exception** | Documented temporary exception SEC-EXC-2026-001. No upstream patch available on npm. Dev-only linting tool. |
+
+#### Formal Security Exception: SEC-EXC-2026-001 (`braces`)
+
+- **Advisory ID**: GHSA-vfj7-8cjw-p6xm (CWE-674: Stack-exhaustion denial of service through deeply nested patterns)
+- **Package Identity**: `braces` (npm)
+- **Affected Version**: `3.0.3` (installed: `3.0.3`, latest published: `3.0.3`)
+- **Full Dependency Path**:
+  `apps/web > eslint-config-next@15.5.28 > @next/eslint-plugin-next@15.5.28 > fast-glob@3.3.1 > micromatch@4.0.8 > braces@3.0.3`
+- **Demonstrated Exposure Assessment**:
+  1. `pnpm list --prod` confirms `braces` is **absent** from the production runtime dependency graph (only `next`, `react`, and `react-dom` are included in production).
+  2. Production build inspection of `apps/web/.next` confirms **zero** occurrences of `braces` in packaged client or server JavaScript output.
+  3. The vulnerable code path (`braces.expand()`) is invoked exclusively by `fast-glob` during static linting (`pnpm run lint`) to locate repository source files.
+  4. Attacker-controlled HTTP inputs, label images, or public web traffic cannot reach `braces`.
+- **Compensating Controls**:
+  - Execution is strictly restricted to local development environments and ephemeral GitHub Actions CI runner virtual machines.
+  - `pnpm install --frozen-lockfile` prevents arbitrary supply chain injection.
+  - Secret scanning via Gitleaks runs on all commits.
+- **Accountable Owner**: healthyIndia Engineering Security & Quality Lead.
+- **Review & Expiry Date**: November 30, 2026 (or next major Next.js / ESLint dependency release).
+- **Conditions for Removing Exception**:
+  - Publication of a patched `braces` release on npm, or upstream upgrade by `eslint-config-next` / `fast-glob`.
 
 ### Backend Python Audit Results (`pip-audit`)
 - Tool: `pip-audit` via official PyPI vulnerability database.

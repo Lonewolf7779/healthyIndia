@@ -519,3 +519,165 @@ def test_confirmation_token_boundary_checks() -> None:
     )
     assert valid is False
     assert "digest does not match" in reason.lower()
+
+
+# ==============================================================================
+# 8. PHASE 4F: RELEASE-GATE EDGE CASE TESTS
+# ==============================================================================
+
+
+def test_rate_limiter_ignores_spoofed_cf_connecting_ip_from_untrusted_client() -> None:
+    """CF-Connecting-IP must be ignored when connecting host is not in TRUSTED_PROXIES."""
+    settings = Settings(
+        ENVIRONMENT=Environment.TEST,
+        RATE_LIMIT_ENABLED=True,
+        RATE_LIMIT_ANALYSIS_RPM=2,
+        TRUSTED_PROXIES=[],
+    )
+    test_app = create_app(settings=settings)
+    with TestClient(test_app) as client:
+        payload = {"ingredients_text": "Sugar, Salt"}
+
+        # Request 1
+        res1 = client.post(
+            "/api/v1/ingredients/analyze",
+            json=payload,
+            headers={"CF-Connecting-IP": "103.21.244.1"},
+        )
+        assert res1.status_code == 200
+
+        # Request 2
+        res2 = client.post(
+            "/api/v1/ingredients/analyze",
+            json=payload,
+            headers={"CF-Connecting-IP": "103.21.244.2"},
+        )
+        assert res2.status_code == 200
+
+        # Request 3 -> Exceeded because CF-Connecting-IP was ignored
+        res3 = client.post(
+            "/api/v1/ingredients/analyze",
+            json=payload,
+            headers={"CF-Connecting-IP": "103.21.244.3"},
+        )
+        assert res3.status_code == 429
+        assert res3.json()["error"]["code"] == "RATE_LIMIT_EXCEEDED"
+
+
+def test_rate_limiter_extracts_leftmost_ip_from_multiple_hops() -> None:
+    """X-Forwarded-For with multiple proxies must parse the leftmost client IP."""
+    settings = Settings(
+        ENVIRONMENT=Environment.TEST,
+        RATE_LIMIT_ENABLED=True,
+        RATE_LIMIT_ANALYSIS_RPM=1,
+        TRUSTED_PROXIES=["testclient", "127.0.0.1"],
+    )
+    test_app = create_app(settings=settings)
+    with TestClient(test_app) as client:
+        payload = {"ingredients_text": "Sugar, Salt"}
+
+        res1 = client.post(
+            "/api/v1/ingredients/analyze",
+            json=payload,
+            headers={"X-Forwarded-For": "203.0.113.50, 10.0.0.1, 192.168.1.1"},
+        )
+        assert res1.status_code == 200
+
+        # Re-request with same leftmost IP (even if proxy list varies) -> 429
+        res2 = client.post(
+            "/api/v1/ingredients/analyze",
+            json=payload,
+            headers={"X-Forwarded-For": "203.0.113.50, 10.0.0.2"},
+        )
+        assert res2.status_code == 429
+
+
+def test_request_size_rejects_invalid_non_numeric_content_length() -> None:
+    """Non-numeric Content-Length header returns HTTP 400."""
+    settings = Settings(ENVIRONMENT=Environment.TEST, RATE_LIMIT_ENABLED=False)
+    test_app = create_app(settings=settings)
+    with TestClient(test_app) as client:
+        response = client.post(
+            "/api/v1/ingredients/analyze",
+            content=b'{"ingredients_text": "salt"}',
+            headers={"Content-Length": "not-a-number", "Content-Type": "application/json"},
+        )
+        assert response.status_code == 400
+        assert response.json()["error"]["code"] == "BAD_REQUEST"
+
+
+def test_oversized_multipart_upload_returns_413() -> None:
+    """Upload endpoint rejects files exceeding MAX_IMAGE_UPLOAD_BYTES."""
+    settings = Settings(
+        ENVIRONMENT=Environment.TEST,
+        MAX_IMAGE_UPLOAD_BYTES=1000,
+        RATE_LIMIT_ENABLED=False,
+    )
+    test_app = create_app(settings=settings)
+    with TestClient(test_app) as client:
+        files = {
+            "file": (
+                "test.png",
+                b"\x89PNG\r\n\x1a\n" + b"\x00" * 2000,
+                "image/png",
+            )
+        }
+        response = client.post("/api/v1/extraction/ocr", files=files)
+        assert response.status_code == 413
+        assert response.json()["error"]["code"] == "PAYLOAD_TOO_LARGE"
+
+
+def test_hsts_header_environment_differentiation() -> None:
+    """Strict-Transport-Security must be emitted in production and absent in test."""
+    # 1. Absent in test environment
+    test_settings = Settings(ENVIRONMENT=Environment.TEST, RATE_LIMIT_ENABLED=False)
+    test_app = create_app(settings=test_settings)
+    with TestClient(test_app) as client:
+        res = client.get("/api/v1/health")
+        assert "Strict-Transport-Security" not in res.headers
+
+    # 2. Present in production environment
+    prod_settings = Settings(
+        ENVIRONMENT=Environment.PRODUCTION,
+        DEBUG=False,
+        SECRET_KEY="x" * 32,
+        ALLOWED_ORIGINS=["https://healthyindia.com"],
+        RATE_LIMIT_ENABLED=False,
+    )
+    prod_app = create_app(settings=prod_settings)
+    with TestClient(prod_app) as client:
+        res = client.get("/api/v1/health")
+        assert "Strict-Transport-Security" in res.headers
+        assert "includeSubDomains" in res.headers["Strict-Transport-Security"]
+
+
+def test_confirmation_token_additional_edge_cases() -> None:
+    """Tests future timestamps, secret key mismatches, and malformed token formats."""
+    from app.core.security import (
+        generate_extraction_token,
+        verify_extraction_token,
+    )
+
+    valid_id = "550e8400-e29b-41d4-a716-446655440000"
+    secret = "a" * 32
+
+    # 1. Future timestamp (> 60s in future)
+    future_time = int(time.time()) + 300
+    future_token = generate_extraction_token(valid_id, secret_key=secret, timestamp=future_time)
+    valid, reason = verify_extraction_token(future_token, valid_id, secret_key=secret)
+    assert valid is False
+    assert "in the future" in reason.lower()
+
+    # 2. Secret key mismatch
+    token = generate_extraction_token(valid_id, secret_key=secret)
+    valid, reason = verify_extraction_token(token, valid_id, secret_key="b" * 32)
+    assert valid is False
+    assert "HMAC verification failed" in reason
+
+    # 3. Malformed token formats
+    assert verify_extraction_token("not-a-token", valid_id, secret_key=secret)[0] is False
+    assert verify_extraction_token("v1.123.456", valid_id, secret_key=secret)[0] is False
+    assert verify_extraction_token("v2.123.456.sig", valid_id, secret_key=secret)[0] is False
+    assert (
+        verify_extraction_token(f"v1.{valid_id}.abc.sig", valid_id, secret_key=secret)[0] is False
+    )
