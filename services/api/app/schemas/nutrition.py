@@ -3,6 +3,7 @@ Pydantic schemas for nutrition analysis requests and responses.
 """
 
 import hashlib
+import math
 from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
@@ -203,6 +204,14 @@ class NutritionAnalysisRequest(BaseModel):
             "total_sugar_g": self.total_sugar_g,
             "trans_fat_g": self.trans_fat_g,
         }
+
+        # Enforce finite numbers (reject NaN, Infinity, -Infinity)
+        if math.isnan(self.serving_size) or math.isinf(self.serving_size):
+            raise ValueError("serving_size must be a finite numerical value.")
+
+        for k, v in nutrient_vals.items():
+            if v is not None and (math.isnan(v) or math.isinf(v)):
+                raise ValueError(f"Nutrient '{k}' must be a finite numerical value.")
 
         if self.data_source == "ocr":
             if not self.extraction_id or not self.extraction_id.strip():

@@ -16,6 +16,22 @@ All API responses include defensive HTTP security headers:
 * `Referrer-Policy: strict-origin-when-cross-origin`
 * `Content-Security-Policy: default-src 'none'; frame-ancestors 'none';`
 * `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()`
+* `X-XSS-Protection: 0`
+
+---
+
+## API Abuse Protection & Rate Limits
+Endpoints are protected by sliding-window rate limits keyed by client IP:
+| Route Pattern | Limit | Purpose |
+| :--- | :--- | :--- |
+| `/api/v1/extraction/ocr` | 10 req / min | Heavy local OCR computation |
+| `/api/v1/extraction/confirm` | 30 req / min | Session confirmation token issuance |
+| `/api/v1/nutrition/analyze` | 60 req / min | Deterministic nutritional calculations |
+| `/api/v1/ingredients/analyze` | 60 req / min | Deterministic ingredient & additive matching |
+| General endpoints | 120 req / min | Default ceiling for health/metadata |
+
+Exceeding the threshold returns `429 Too Many Requests` with a `Retry-After: <seconds>` header.
+Preflight `OPTIONS` requests and `/api/v1/health` probes are exempt.
 
 ---
 
@@ -289,6 +305,20 @@ Triggered when request payload exceeds `MAX_REQUEST_BODY_BYTES` (default: 1 MB):
   }
 }
 ```
+
+### 429 Too Many Requests
+Returned when client IP exceeds the configured sliding-window rate limit:
+```json
+{
+  "error": {
+    "code": "RATE_LIMIT_EXCEEDED",
+    "message": "Too many requests. Please slow down and try again later."
+  }
+}
+```
+*Headers:*
+`Retry-After: 30`
+`X-RateLimit-Remaining: 0`
 
 ### 500 Internal Server Error
 Internal server errors log diagnostic tracebacks on the server while returning a generic message to the client:

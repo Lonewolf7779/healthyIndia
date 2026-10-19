@@ -111,20 +111,28 @@ healthyIndia/
 - Never deploy directly from unreviewed experimental branches.
 
 ## Current Implementation Status
-- **Implemented Controls (Phase 1, Phase 2A, Phase 2B, Phase 3A):**
+- **Implemented Controls (Phases 1 through 4D):**
   - Monorepo directory structure established with clear separation of web, api, data, and infra.
   - Strict Pydantic environment configuration with fail-safe startup validation against weak secrets or wildcard origins in staging/production.
-  - Automated security headers applied to all API and web responses.
-  - Restrictive CORS configuration limited to explicit trusted origins.
-  - Request body size limit enforcement (413 Payload Too Large) with distinct 1 MB JSON / 10 MB image upload limits.
-  - Safe error responses for 404, 413, 422, and 500 without stack traces or path disclosures.
+  - Automated security headers applied to all API and web responses, including modern `X-XSS-Protection: 0` and strict CSP.
+  - Restrictive CORS configuration limited to explicit trusted origins (`allow_credentials=False`).
+  - Request body size limit enforcement (413 Payload Too Large) with distinct 1 MB JSON / 10 MB image upload limits and byte-counted streaming/chunked transfer guards.
+  - In-memory sliding-window rate limiter enforcing per-route request ceilings (OCR: 10 RPM, Confirmation: 30 RPM, Analysis: 60 RPM, General: 120 RPM) with HTTP 429 and `Retry-After` headers.
+  - Strict input validation rejecting non-finite floats (`NaN`, `Infinity`, `-Infinity`) on all nutritional and extraction fields.
+  - Safe error responses for 400, 404, 413, 422, 429, and 500 without stack traces or path disclosures.
   - Pinned lockfiles for Python (`uv.lock`) and Node.js (`pnpm-lock.yaml`).
-  - Automated quality checks (Ruff, pytest, TypeScript, Vitest, and Gitleaks) in GitHub Actions.
+  - Automated quality checks (Ruff, pytest, TypeScript, Vitest, Gitleaks, and knowledge base integrity audit) in GitHub Actions.
   - Development Dockerfile configured with non-root user execution.
   - Deterministic nutrition analysis engine (`/api/v1/nutrition/analyze`) calculating per-serving and per-100g/ml metrics against FSSAI and ICMR-NIN standards.
-  - Curated, cited additive reference dataset (`data/ingredient_reference/additives_v1.json`) with FSSAI statutory regulations and Codex citations.
-  - Deterministic ingredient parser (`/api/v1/ingredients/analyze`) extracting INS/E numbers and exact verified aliases while strictly preserving unmatched items without probabilistic guessing.
+  - Curated, 5-track audited ingredient knowledge base (`data/ingredient_reference/ingredients_v1.json`, version 2.2.0, 21 reference records) spanning food additives, ordinary foods, sweeteners, allergens, and fortification compounds.
+  - Deterministic ingredient parser (`/api/v1/ingredients/analyze`) extracting INS/E numbers, Indian language aliases, and verified exact aliases while strictly preserving unmatched items without probabilistic guessing.
   - Local, offline OCR adapter (`/api/v1/extraction/ocr`) using Tesseract and Pillow with decompression bomb defenses (max 4096px, 16 MP) and ephemeral in-memory processing.
-  - Integrated, accessible frontend analyzer form evaluating product labels end-to-end with OCR photo scan, review, and edit workflows.
+  - Fail-closed cryptographic confirmation tokens binding user-reviewed OCR values to authenticated extraction sessions.
+  - Mobile-first camera scanner interface with live guide framing and review workflows.
+- **Physical Label OCR Benchmark Status:**
+  - Synthetic dataset benchmark implemented.
+  - Real-world physical packaging photograph benchmark remains **UNMEASURED**.
+  - Production release status: **NOT READY FOR PRODUCTION**.
 - **Future Phase Controls (Planned):**
+  - Distributed Redis rate-limiter and session store for clustered multi-instance deployments.
   - User accounts, history persistence, and database migrations (Post-MVP).

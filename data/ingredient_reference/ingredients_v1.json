@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "dataset_name": "healthyIndia Comprehensive Ingredient Knowledge Base (Phase 4C Audited)",
   "last_updated": "2026-10-19",
   "license": "Open Reference Dataset for Consumer Transparency (FSSAI Statutory Rules & Public Domain Citations)",
@@ -1514,6 +1514,380 @@
       },
       "last_reviewed": "2026-10-19",
       "dataset_version": "2.1.0",
+      "record_status": "active"
+    },
+    {
+      "id": "ing-palm-oil",
+      "canonical_name": "Palm Oil",
+      "entity_type": "ordinary_ingredient",
+      "categories": [
+        "ordinary_ingredient"
+      ],
+      "cas_number": "8002-75-3",
+      "functional_classes": [
+        "Vegetable Fat",
+        "Cooking Oil"
+      ],
+      "chemical_identity": "CAS 8002-75-3 (Elaeis guineensis fruit oil; rich in palmitic and oleic fatty acids)",
+      "acceptable_daily_intake": "No numerical ADI allocated for whole vegetable fat; WHO/ICMR recommends limiting total saturated fatty acids to <10% total energy intake.",
+      "health_effects_evidence": "Major dietary edible oil in Indian packaged foods. Composed of approximately 50% saturated fatty acids (predominantly palmitic acid) and 40% monounsaturated oleic acid. High dietary intake of saturated fats is associated with increased serum LDL cholesterol and cardiovascular disease risks (WHO 2023 dietary guidelines).",
+      "population_sensitivities": "Individuals with hypercholesterolemia or established cardiovascular disease are advised by ICMR-NIN to moderate intake of high-palmitic saturated fats.",
+      "aliases": [
+        "palm oil",
+        "refined palm oil",
+        "edible palm oil",
+        "palmolein",
+        "refined palmolein",
+        "fractionated palm oil",
+        "palm olein"
+      ],
+      "indian_language_aliases": {
+        "hi": [
+          "पाम तेल",
+          "पामोलीन"
+        ]
+      },
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011 - Regulation 2.2.1(19) (Palm Oil)",
+          "organization": "Food Safety and Standards Authority of India (FSSAI)",
+          "url": "https://www.fssai.gov.in/upload/uploadfiles/files/Food_Additives_Regulations.pdf",
+          "source_type": "Statutory Regulation",
+          "publication_date": "2011-08-01",
+          "retrieval_date": "2026-10-19",
+          "section_or_regulation": "Regulation 2.2.1(19)",
+          "supported_claims": "Standard of identity for palm oil: specifies Refractive Index at 50 deg C (1.4500-1.4600), Saponification value (195-205), Iodine value (50-55), Acid value max 0.5 (refined), and freedom from admixture with other oils.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
+        }
+      ],
+      "jurisdiction": "India (FSSAI)",
+      "regulatory_status": "Permitted standardized edible vegetable oil under Regulation 2.2.1(19)",
+      "status_verification": "verified",
+      "scope_limitations": "Must comply with FSSAI fatty acid profile, purity criteria, and mandatory packaged food label declarations.",
+      "provenance": {
+        "schema_valid": true,
+        "source_linked": true,
+        "source_checked": true,
+        "scientifically_reviewed": true,
+        "regulatory_verified": true,
+        "verification_level": "fully_verified",
+        "jurisdiction": "India (FSSAI)",
+        "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
+        "notes": "Standardized vegetable oil. Composition, iodine value (50-55), and standard of identity verified under FSSAI 2011 Regulation 2.2.1(19). CAS 8002-75-3 documented.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "Standardized vegetable oil. Composition, iodine value (50-55), and standard of identity verified under FSSAI 2011 Regulation 2.2.1(19). CAS 8002-75-3 documented."
+      },
+      "last_reviewed": "2026-10-19",
+      "dataset_version": "2.2.0",
+      "record_status": "active"
+    },
+    {
+      "id": "ing-whole-wheat-flour",
+      "canonical_name": "Whole Wheat Flour (Atta)",
+      "entity_type": "ordinary_ingredient",
+      "categories": [
+        "ordinary_ingredient",
+        "allergen"
+      ],
+      "cas_number": null,
+      "functional_classes": [
+        "Cereal Staple",
+        "Whole Flour"
+      ],
+      "chemical_identity": "Milled whole grain Triticum aestivum retaining endosperm, bran, and germ; contains storage gluten proteins",
+      "acceptable_daily_intake": "Cereal staple food with no numerical ADI limit; recognized staple ingredient.",
+      "health_effects_evidence": "Whole grain cereal flour containing complex carbohydrates, dietary fiber, vitamins, and minerals. Retaining the bran and germ fraction contributes to lower glycemic response compared to refined flours. Contains gluten (gliadins and glutenins) that induces autoimmune mucosal damage in celiac disease.",
+      "population_sensitivities": "Mandatory allergen trigger: contra-indicated for individuals with celiac disease, wheat allergy, or non-celiac gluten sensitivity.",
+      "aliases": [
+        "atta",
+        "whole wheat flour",
+        "wheat atta",
+        "chakki atta",
+        "wholemeal wheat flour",
+        "whole grain wheat flour"
+      ],
+      "indian_language_aliases": {
+        "hi": [
+          "आटा",
+          "गेहूं का आटा"
+        ]
+      },
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011 - Regulation 2.4.1(1) (Atta)",
+          "organization": "Food Safety and Standards Authority of India (FSSAI)",
+          "url": "https://www.fssai.gov.in/upload/uploadfiles/files/Food_Additives_Regulations.pdf",
+          "source_type": "Statutory Regulation",
+          "publication_date": "2011-08-01",
+          "retrieval_date": "2026-10-19",
+          "section_or_regulation": "Regulation 2.4.1(1)",
+          "supported_claims": "Standard of identity for Atta: total ash on dry basis not more than 2.0%, acid insoluble ash not more than 0.15%, gluten not less than 6.0%, moisture not more than 14.0%.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
+        }
+      ],
+      "jurisdiction": "India (FSSAI)",
+      "regulatory_status": "Standardized agricultural cereal commodity under Regulation 2.4.1(1); mandatory allergen under FSSAI Labelling Regulations 2020 Clause 5(3)",
+      "status_verification": "verified",
+      "scope_limitations": "Must meet statutory compositional thresholds and carry gluten allergen declaration on packaged food labels.",
+      "provenance": {
+        "schema_valid": true,
+        "source_linked": true,
+        "source_checked": true,
+        "scientifically_reviewed": true,
+        "regulatory_verified": true,
+        "verification_level": "fully_verified",
+        "jurisdiction": "India (FSSAI)",
+        "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
+        "notes": "Standardized cereal commodity and mandatory allergen. Standard of identity (gluten >=6.0%, total ash <=2.0%) verified under FSSAI 2011 Regulation 2.4.1(1). Mandatory allergen labelling confirmed under FSSAI 2020 Clause 5(3).",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "Standardized cereal commodity and mandatory allergen. Standard of identity (gluten >=6.0%, total ash <=2.0%) verified under FSSAI 2011 Regulation 2.4.1(1). Mandatory allergen labelling confirmed under FSSAI 2020 Clause 5(3)."
+      },
+      "last_reviewed": "2026-10-19",
+      "dataset_version": "2.2.0",
+      "record_status": "active"
+    },
+    {
+      "id": "ing-refined-wheat-flour",
+      "canonical_name": "Refined Wheat Flour (Maida)",
+      "entity_type": "ordinary_ingredient",
+      "categories": [
+        "ordinary_ingredient",
+        "allergen"
+      ],
+      "cas_number": "130498-22-5",
+      "functional_classes": [
+        "Cereal Staple",
+        "Refined Flour"
+      ],
+      "chemical_identity": "CAS 130498-22-5 (Milled Triticum aestivum endosperm; bran and germ removed)",
+      "acceptable_daily_intake": "Cereal flour with no numerical ADI limit; dietary staple.",
+      "health_effects_evidence": "Refined cereal product derived from wheat endosperm after mechanical separation of bran and germ. Characterized by high starch content and low dietary fiber, resulting in rapid digestion and higher glycemic index (~70) compared to whole grain. Contains gluten proteins.",
+      "population_sensitivities": "Mandatory allergen trigger: contra-indicated for individuals with celiac disease, wheat allergy, or gluten intolerance.",
+      "aliases": [
+        "maida",
+        "refined wheat flour",
+        "refined flour",
+        "white flour",
+        "all-purpose flour"
+      ],
+      "indian_language_aliases": {
+        "hi": [
+          "मैदा"
+        ]
+      },
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011 - Regulation 2.4.2(1) (Maida)",
+          "organization": "Food Safety and Standards Authority of India (FSSAI)",
+          "url": "https://www.fssai.gov.in/upload/uploadfiles/files/Food_Additives_Regulations.pdf",
+          "source_type": "Statutory Regulation",
+          "publication_date": "2011-08-01",
+          "retrieval_date": "2026-10-19",
+          "section_or_regulation": "Regulation 2.4.2(1)",
+          "supported_claims": "Standard of identity for Maida: total ash on dry basis not more than 1.0%, acid insoluble ash not more than 0.1%, gluten not less than 7.5%, moisture not more than 14.0%.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
+        }
+      ],
+      "jurisdiction": "India (FSSAI)",
+      "regulatory_status": "Standardized agricultural cereal commodity under Regulation 2.4.2(1); mandatory allergen under FSSAI Labelling Regulations 2020 Clause 5(3)",
+      "status_verification": "verified",
+      "scope_limitations": "Must meet statutory compositional criteria (gluten >= 7.5%, ash <= 1.0%) and declare wheat/gluten allergen.",
+      "provenance": {
+        "schema_valid": true,
+        "source_linked": true,
+        "source_checked": true,
+        "scientifically_reviewed": true,
+        "regulatory_verified": true,
+        "verification_level": "fully_verified",
+        "jurisdiction": "India (FSSAI)",
+        "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
+        "notes": "Standardized refined cereal commodity and allergen. Standard of identity (gluten >=7.5%, total ash <=1.0%) verified under FSSAI 2011 Regulation 2.4.2(1). Mandatory allergen labelling confirmed under FSSAI 2020 Clause 5(3). CAS 130498-22-5 documented.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "Standardized refined cereal commodity and allergen. Standard of identity (gluten >=7.5%, total ash <=1.0%) verified under FSSAI 2011 Regulation 2.4.2(1). Mandatory allergen labelling confirmed under FSSAI 2020 Clause 5(3). CAS 130498-22-5 documented."
+      },
+      "last_reviewed": "2026-10-19",
+      "dataset_version": "2.2.0",
+      "record_status": "active"
+    },
+    {
+      "id": "ing-sugar",
+      "canonical_name": "Sugar (Sucrose)",
+      "entity_type": "ordinary_ingredient",
+      "categories": [
+        "ordinary_ingredient",
+        "sweetener"
+      ],
+      "cas_number": "57-50-1",
+      "functional_classes": [
+        "Nutritive Sweetener",
+        "Bulking Agent"
+      ],
+      "chemical_identity": "CAS 57-50-1 (beta-D-fructofuranosyl alpha-D-glucopyranoside; C12H22O11)",
+      "acceptable_daily_intake": "Nutritive carbohydrate. WHO strongly recommends reducing free sugars to <10% total energy intake (~50g for 2000 kcal diet), with conditional target <5% (~25g/day). ICMR-NIN 2020 recommends added sugar <= 25g/day.",
+      "health_effects_evidence": "Simple disaccharide yielding 4 kcal/g. High and frequent consumption of added/free sugars promotes excess caloric intake, weight gain, increased risk of type 2 diabetes, dental caries, and elevated cardiovascular disease risk (WHO 2015 Guideline).",
+      "population_sensitivities": "Individuals with diabetes mellitus, impaired glucose tolerance, or metabolic syndrome require strict dietary moderation of sucrose.",
+      "aliases": [
+        "sugar",
+        "white sugar",
+        "cane sugar",
+        "refined sugar",
+        "table sugar",
+        "sucrose",
+        "crystal sugar"
+      ],
+      "indian_language_aliases": {
+        "hi": [
+          "चीनी",
+          "शक्कर"
+        ]
+      },
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011 - Regulation 2.8.1 (Refined Sugar / White Sugar)",
+          "organization": "Food Safety and Standards Authority of India (FSSAI)",
+          "url": "https://www.fssai.gov.in/upload/uploadfiles/files/Food_Additives_Regulations.pdf",
+          "source_type": "Statutory Regulation",
+          "publication_date": "2011-08-01",
+          "retrieval_date": "2026-10-19",
+          "section_or_regulation": "Regulation 2.8.1",
+          "supported_claims": "Standard of identity for Refined/White Sugar: sucrose content not less than 99.5% on dry basis, moisture not more than 0.5%, conductivity ash not more than 0.04%.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
+        }
+      ],
+      "jurisdiction": "India (FSSAI)",
+      "regulatory_status": "Standardized agricultural food commodity / sweetener under Regulation 2.8.1; mandatory declaration of added sugar under FSSAI Labelling Regulations 2020",
+      "status_verification": "verified",
+      "scope_limitations": "Must comply with FSSAI compositional purity (sucrose >= 99.5%) and be declared as Total Sugars and Added Sugars on nutrition facts panels.",
+      "provenance": {
+        "schema_valid": true,
+        "source_linked": true,
+        "source_checked": true,
+        "scientifically_reviewed": true,
+        "regulatory_verified": true,
+        "verification_level": "fully_verified",
+        "jurisdiction": "India (FSSAI)",
+        "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
+        "notes": "Standardized food sweetener. Standard of identity (sucrose >=99.5%) verified under FSSAI 2011 Regulation 2.8.1. Mandatory declaration of added sugar confirmed under FSSAI 2020 Clause 5(2). CAS 57-50-1 documented.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "Standardized food sweetener. Standard of identity (sucrose >=99.5%) verified under FSSAI 2011 Regulation 2.8.1. Mandatory declaration of added sugar confirmed under FSSAI 2020 Clause 5(2). CAS 57-50-1 documented."
+      },
+      "last_reviewed": "2026-10-19",
+      "dataset_version": "2.2.0",
+      "record_status": "active"
+    },
+    {
+      "id": "ing-iodized-salt",
+      "canonical_name": "Iodized Salt",
+      "entity_type": "ordinary_ingredient",
+      "categories": [
+        "ordinary_ingredient",
+        "fortification_compound"
+      ],
+      "cas_number": "7647-14-5",
+      "functional_classes": [
+        "Seasoning",
+        "Essential Mineral Source"
+      ],
+      "chemical_identity": "CAS 7647-14-5 (Sodium Chloride, NaCl) fortified with potassium iodate (KIO3, CAS 7758-05-6)",
+      "acceptable_daily_intake": "Nutritive mineral salt. WHO guideline (2020) recommends <2000 mg sodium (~5 g salt) per day for adults to prevent hypertension and stroke. Iodine minimum requirement is 150 mcg/day for adults.",
+      "health_effects_evidence": "Essential culinary seasoning and mandatory public health fortification vehicle in India for eliminating Iodine Deficiency Disorders (IDD) and endemic goitre. Excessive dietary sodium intake (>2000 mg/day) is a major established causal risk factor for arterial hypertension and cardiovascular morbidity (WHO/ICMR-NIN).",
+      "population_sensitivities": "Hypertensive individuals, elderly individuals, and those with chronic kidney disease are advised to restrict sodium intake.",
+      "aliases": [
+        "iodized salt",
+        "iodised salt",
+        "edible common salt",
+        "table salt",
+        "namak",
+        "common salt"
+      ],
+      "indian_language_aliases": {
+        "hi": [
+          "नमक",
+          "आयोडीन युक्त नमक"
+        ]
+      },
+      "sources": [
+        {
+          "title": "FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011 - Regulation 2.9.30 (Iodised Salt)",
+          "organization": "Food Safety and Standards Authority of India (FSSAI)",
+          "url": "https://www.fssai.gov.in/upload/uploadfiles/files/Food_Additives_Regulations.pdf",
+          "source_type": "Statutory Regulation",
+          "publication_date": "2011-08-01",
+          "retrieval_date": "2026-10-19",
+          "section_or_regulation": "Regulation 2.9.30",
+          "supported_claims": "Standard of identity for Iodised Salt: NaCl not less than 96.0% on dry basis, iodine content not less than 15 ppm at retail level and 30 ppm at manufacturer level. Prohibits sale of non-iodized salt for direct human consumption.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
+        }
+      ],
+      "jurisdiction": "India (FSSAI)",
+      "regulatory_status": "Mandatory standardized fortified food commodity under Regulation 2.9.30",
+      "status_verification": "verified",
+      "scope_limitations": "Must contain minimum 15 ppm iodine at retail level and meet FSSAI NaCl purity (>= 96.0%). Non-iodized salt prohibited for direct human consumption.",
+      "provenance": {
+        "schema_valid": true,
+        "source_linked": true,
+        "source_checked": true,
+        "scientifically_reviewed": true,
+        "regulatory_verified": true,
+        "verification_level": "fully_verified",
+        "jurisdiction": "India (FSSAI)",
+        "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
+        "notes": "Mandatory fortified seasoning commodity. Standard of identity (NaCl >=96.0%, iodine >=15 ppm retail) verified under FSSAI 2011 Regulation 2.9.30. CAS 7647-14-5 documented.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "Mandatory fortified seasoning commodity. Standard of identity (NaCl >=96.0%, iodine >=15 ppm retail) verified under FSSAI 2011 Regulation 2.9.30. CAS 7647-14-5 documented."
+      },
+      "last_reviewed": "2026-10-19",
+      "dataset_version": "2.2.0",
       "record_status": "active"
     }
   ]

@@ -1,9 +1,9 @@
 {
   "dataset_path": "C:\\Users\\SantoshPrajapati-Tec\\.gemini\\antigravity\\scratch\\healthyIndia\\data\\ingredient_reference\\ingredients_v1.json",
-  "version": "2.1.0",
-  "sha256": "00681c33712f6bdd486e7499e1cc0a47cd3461cbd540633c50d99a5c7339bf27",
+  "version": "2.2.0",
+  "sha256": "c8083e4c9fd51eb9402ccac494982ece50860b8e34c36db6ee6697605534ffaa",
   "is_valid": true,
-  "total_records": 16,
+  "total_records": 21,
   "duplicate_ids_count": 0,
   "conflicting_identifiers_count": 0,
   "alias_collisions_count": 0,
@@ -11,7 +11,7 @@
   "bare_numerical_aliases_count": 0,
   "category_breakdown": {
     "food_additive": 8,
-    "ordinary_ingredient": 1,
+    "ordinary_ingredient": 6,
     "fortification_compound": 2,
     "allergen": 1,
     "sweetener": 1,
@@ -20,12 +20,12 @@
     "nutritional_component": 1
   },
   "evidence_tracks": {
-    "track1_source_url_recorded": 16,
-    "track2_source_url_accessible": 16,
-    "track3_source_content_checked": 16,
-    "track4_scientific_claim_supported": 16,
-    "track5_regulatory_claim_verified": 16,
-    "fully_verified_records": 16
+    "track1_source_url_recorded": 21,
+    "track2_source_url_accessible": 21,
+    "track3_source_content_checked": 21,
+    "track4_scientific_claim_supported": 21,
+    "track5_regulatory_claim_verified": 21,
+    "fully_verified_records": 21
   },
   "errors": [],
   "warnings": []

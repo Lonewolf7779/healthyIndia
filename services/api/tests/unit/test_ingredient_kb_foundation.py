@@ -181,7 +181,7 @@ def test_ambiguous_functional_classes_not_guessed() -> None:
     a code or chemical name must NEVER be guessed as a specific additive.
     It must be isolated in ambiguous_items.
     """
-    text = "Wheat Flour, Emulsifier, Preservative, Palm Oil"
+    text = "Millet Flour, Emulsifier, Preservative, Mustard Oil"
     res = analyze_ingredients(text)
 
     assert len(res.matched_items) == 0
@@ -364,9 +364,9 @@ def test_bare_numbers_out_of_context_not_matched() -> None:
 
 
 def test_five_track_provenance_audit() -> None:
-    """Verifies that all 16 reference records satisfy the 5 independent verification tracks."""
+    """Verifies that all 21 reference records satisfy the 5 independent verification tracks."""
     kb = load_knowledge_base()
-    assert len(kb.records_by_id) == 16
+    assert len(kb.records_by_id) == 21
 
     for iid, record in kb.records_by_id.items():
         prov = record.provenance

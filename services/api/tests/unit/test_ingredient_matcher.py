@@ -49,14 +49,14 @@ def test_case_insensitivity_and_punctuation() -> None:
 
 
 def test_unknown_ingredients_preserved_without_guessing() -> None:
-    text = "Wheat Flour, Iodized Salt, Natural Spices (Cumin, Pepper), Cardamom"
+    text = "Millet Flour, Black Salt, Natural Spices (Cumin, Pepper), Cardamom"
     result = analyze_ingredients(text)
 
-    # None of these whole staple ingredients are in the food additives dataset
+    # None of these whole staple ingredients are in the reference dataset
     assert len(result.matched_items) == 0
     assert len(result.unmatched_items) == 4
-    assert "Wheat Flour" in result.unmatched_items
-    assert "Iodized Salt" in result.unmatched_items
+    assert "Millet Flour" in result.unmatched_items
+    assert "Black Salt" in result.unmatched_items
     assert "Natural Spices (Cumin, Pepper)" in result.unmatched_items
     assert "Cardamom" in result.unmatched_items
 

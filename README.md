@@ -159,34 +159,31 @@ pnpm run build
   * Monorepo structure established.
   * Next.js web application scaffolded with strict TypeScript and accessible landing page.
   * FastAPI backend service scaffolded with versioned router and typed health endpoint.
-  * Baseline HTTP security headers (`nosniff`, `DENY`, CSP, `Permissions-Policy`).
+  * Baseline HTTP security headers (`nosniff`, `DENY`, CSP, `Permissions-Policy`, `X-XSS-Protection`).
   * Restrictive CORS with explicit origins (wildcard origins prohibited in production).
   * Safe error handlers preventing stack trace or path exposure.
   * Non-root containerization and GitHub Actions CI workflow configured.
-* **Phase 2A: Additive & Ingredient Engine (COMPLETED):**
-  * Curated, versioned reference dataset (`additives_v1.json`) with FSSAI/Codex statutory citations.
+* **Phase 2A & 2B: Additive & Nutrition Calculation Engines (COMPLETED):**
   * Pure Python deterministic parser matching INS numbers, E numbers, and exact verified aliases.
-  * Parentheses-aware tokenizer preserving unknown ingredients without probabilistic guessing.
-  * Endpoint `POST /api/v1/ingredients/analyze` with full provenance, scope limitations, and statutory warnings.
-* **Phase 2B: End-to-End Analysis Workflow & UI (COMPLETED):**
   * Deterministic nutrition engine comparing labels against ICMR-NIN (2020) and FSSAI guidelines.
   * Missing values tracked explicitly without silent conversion to zero.
   * Unified frontend analyzer supporting product name, serving details, 11 nutrient fields, and ingredient list.
-  * Dual-engine orchestration with isolated error boundaries and accessible results presentation.
-* **Phase 3A: Local Food-Label OCR Workflow (COMPLETED):**
-  * Offline, local OCR execution using Tesseract and Pillow (no paid cloud AI APIs).
+* **Phase 3A & 3B: Local OCR Pipeline & Verification Benchmark (COMPLETED):**
+  * Offline, local OCR execution using Tesseract and Pillow (zero paid generative-AI APIs).
   * Defensive image validation against decompression bombs (max 10 MB, max 4096px, max 16 MP).
   * Strict memory-only processing with zero permanent storage of uploaded images.
-  * Heuristic parser extracting candidate nutrition lines, candidate nutrients, and ingredient statements.
-  * Uncertainty and quality warnings with explicit mandatory user review requirement.
-  * Accessible frontend label scanner supporting camera capture, image preview, draft editing, and transfer into the analysis form.
-* **Phase 4: Database Persistence & User Accounts (Post-MVP):**
-  * Optional user history and product persistence.
+  * Fail-closed cryptographic session confirmation tokens binding reviewed values.
+  * Physical-photo OCR accuracy remains explicitly marked as **`UNMEASURED`**.
+* **Phase 4A through 4D: Security Hardening & Ingredient Provenance (COMPLETED):**
+  * Extensible ingredient knowledge base (`data/ingredient_reference/ingredients_v1.json`, v2.2.0, 21 records across 8 categories).
+  * 5-track independent evidence verification framework (URL recorded, URL accessible, content checked, scientific claim supported, regulatory claim verified).
+  * In-memory sliding-window rate limiting protecting all API endpoints against resource exhaustion DoS (HTTP 429 with `Retry-After`).
+  * Request payload size limiting on both declared and chunked streaming bodies (HTTP 413).
+  * Strict input validation rejecting non-finite numbers (`NaN`, `Infinity`, `-Infinity`).
+  * Comprehensive security test suite (258 backend tests + 46 frontend tests passing).
 
 ---
 
-## Security Limitations
-No software system is completely unhackable. Security requires continuous testing, defense-in-depth, and monitoring. Current implementation notes:
-1. **Production Secrets:** A high-entropy `SECRET_KEY` must be provisioned via secret manager in staging and production. The application will fail safely at startup if insecure or default keys are used.
-2. **Reverse Proxy & TLS:** TLS termination and HSTS must be configured at the ingress/proxy layer before public exposure.
-3. **No Image Uploads in Phase 1:** Label image upload processing will be introduced with strict byte/pixel limits and format allowlists in Phase 2.
+## Security Architecture & Deployment Status
+* **System Release Status:** **`NOT READY FOR PRODUCTION`** (Physical packaging photograph benchmark remains **`UNMEASURED`**).
+* **Comprehensive Security Guide:** See [docs/SECURITY.md](docs/SECURITY.md) for threat modeling, defense-in-depth controls, rate limiting rules, dependency scan findings, and safe vulnerability reporting instructions.

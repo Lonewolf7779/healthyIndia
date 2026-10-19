@@ -12,6 +12,7 @@ from app.api.v1.router import api_v1_router
 from app.core.config import Environment, Settings, get_settings
 from app.core.logging import setup_logging
 from app.core.middleware import RequestSizeLimitMiddleware, SecurityHeadersMiddleware
+from app.core.rate_limit import RateLimitMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -47,14 +48,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
 
-    # 1. Request size limit middleware (outermost or early)
+    # 1. Request size limit middleware (innermost - bounds memory/payloads)
     app.add_middleware(
         RequestSizeLimitMiddleware,
         max_bytes=settings.MAX_REQUEST_BODY_BYTES,
         upload_max_bytes=settings.MAX_IMAGE_UPLOAD_BYTES,
     )
 
-    # 2. Baseline security headers
+    # 2. Rate limiting middleware
+    app.add_middleware(
+        RateLimitMiddleware,
+        settings=settings,
+    )
+
+    # 3. Baseline security headers
     app.add_middleware(
         SecurityHeadersMiddleware,
         settings=settings,

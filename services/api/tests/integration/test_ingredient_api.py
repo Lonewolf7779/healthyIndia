@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 def test_analyze_ingredients_api_success(client: TestClient) -> None:
     payload = {
         "ingredients_text": (
-            "Refined Wheat Flour (Maida), Palm Oil, Iodized Salt, "
+            "Ragi Flour, Mustard Oil, Black Salt, "
             "Flavour Enhancer (INS 621), Raising Agent (500(ii)), Preservative (INS 211)"
         )
     }
@@ -14,7 +14,7 @@ def test_analyze_ingredients_api_success(client: TestClient) -> None:
 
     assert data["total_matched"] == 3
     assert len(data["matched_items"]) == 3
-    assert len(data["unmatched_items"]) == 3  # Flour, Oil, Salt
+    assert len(data["unmatched_items"]) == 3  # Ragi Flour, Mustard Oil, Black Salt
 
     matched_ids = [item["additive"]["id"] for item in data["matched_items"]]
     assert "ins-621" in matched_ids

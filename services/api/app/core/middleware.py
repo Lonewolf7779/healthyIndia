@@ -1,3 +1,8 @@
+"""
+Defensive HTTP middlewares for healthyIndia API.
+Implements security headers, request size limits, and streaming body bounds.
+"""
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -36,6 +41,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Permissions-Policy"] = (
             "camera=(), microphone=(), geolocation=(), payment=()"
         )
+        response.headers["X-XSS-Protection"] = "0"
 
         # HSTS is only active in production when HTTPS is terminated
         if self.settings.ENVIRONMENT == Environment.PRODUCTION:
@@ -50,6 +56,8 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
     """
     Enforces maximum request body size to guard against oversized payload DoS.
     Differentiates standard JSON payloads from multipart upload endpoints.
+    Protects against both Content-Length declared oversized payloads and
+    unbounded streaming/chunked transfer bodies.
     """
 
     def __init__(  # noqa: ANN001
@@ -60,13 +68,15 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
         self.upload_max_bytes = upload_max_bytes or max_bytes
 
     async def dispatch(self, request: Request, call_next) -> Response:  # noqa: ANN001
+        # Only multipart OCR extraction gets the larger upload limit;
+        # confirmation and analytical JSON endpoints strictly use max_bytes.
+        is_upload = request.url.path == "/api/v1/extraction/ocr"
+        limit = self.upload_max_bytes if is_upload else self.max_bytes
+
         content_length = request.headers.get("content-length")
         if content_length:
             try:
                 length = int(content_length)
-                is_upload = request.url.path.startswith("/api/v1/extraction")
-                limit = self.upload_max_bytes if is_upload else self.max_bytes
-
                 if length > limit:
                     return JSONResponse(
                         status_code=413,
@@ -87,5 +97,32 @@ class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
                         }
                     },
                 )
+        elif request.method in ("POST", "PUT", "PATCH"):
+            # When Content-Length header is omitted (e.g. chunked streaming transfer),
+            # consume the stream incrementally up to limit + 1 bytes.
+            chunks: list[bytes] = []
+            total = 0
+            async for chunk in request.stream():
+                total += len(chunk)
+                if total > limit:
+                    return JSONResponse(
+                        status_code=413,
+                        content={
+                            "error": {
+                                "code": "PAYLOAD_TOO_LARGE",
+                                "message": f"Request body exceeds limit of {limit} bytes.",
+                            }
+                        },
+                    )
+                chunks.append(chunk)
+
+            # Reconstruct body for downstream route handlers
+            body_bytes = b"".join(chunks)
+            request._body = body_bytes
+
+            async def cached_receive():  # noqa: ANN202
+                return {"type": "http.request", "body": body_bytes, "more_body": False}
+
+            request._receive = cached_receive
 
         return await call_next(request)

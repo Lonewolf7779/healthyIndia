@@ -1,11 +1,11 @@
-# healthyIndia: Phase 4C — Ingredient Evidence and Provenance Audit
+# healthyIndia: Phase 4C & 4D — Ingredient Evidence and Provenance Audit
 
 **Audit Date**: October 19, 2026  
 **Auditor Role**: Senior Food Science Data Auditor, Regulatory Research Engineer & Quality Engineer  
-**Dataset Under Audit**: `data/ingredient_reference/ingredients_v1.json` (Version 2.1.0)  
-**Catalogue Scope**: 16 Curated Reference Records (Catalogue expansion strictly frozen during Phase 4C)  
+**Dataset Under Audit**: `data/ingredient_reference/ingredients_v1.json` (Version 2.2.0)  
+**Catalogue Scope**: 21 Curated Reference Records (16 Phase 4C baseline + 5 Phase 4D controlled expansions)  
 **Verification Framework**: 5-Track Independent Verification Architecture  
-**Cryptographic Dataset Digest (SHA-256)**: `00681c33712f6bdd486e7499e1cc0a47cd3461cbd540633c50d99a5c7339bf27`  
+**Cryptographic Dataset Digest (SHA-256)**: `c8083e4c9fd51eb9402ccac494982ece50860b8e34c36db6ee6697605534ffaa`  
 **System Production Status**: NOT READY FOR PRODUCTION (Physical OCR Benchmark remains UNMEASURED)
 
 ---
@@ -392,8 +392,50 @@ During the forensic audit of the 16 reference records, the following discrepanci
 
 ---
 
-## 7. Known Scope Limitations & Catalogue Freeze Statement
-
-* **Catalogue Freeze**: The current dataset contains exactly **16 verified records**. It is designed as an unshakeable foundation, not an exhaustive encyclopedia of all commercial food chemicals.
+## 7. Scope Limitations & Verified Baseline
 * **Absence from Reference Does Not Mean Dangerous**: When healthyIndia analyzes a packaged product and reports ingredients in `unmatched_items`, this indicates that the ingredient is not yet in the curated knowledge base. The system strictly refuses to probabilistically guess unknown substances.
 * **Physical-Photo OCR Benchmark Status**: The local OCR physical-photo accuracy remains marked as **`UNMEASURED`**. System deployment status remains **`NOT READY FOR PRODUCTION`**. Public health release requires completing a physical packaging photographic study with ground-truth verification.
+
+---
+
+## 8. Phase 4D Controlled Catalogue Expansion (Records 17–21)
+
+In Phase 4D, a controlled expansion introduced 5 high-frequency packaged food staples widely present in Indian packaged food declarations:
+
+### Record 17: `ing-palm-oil` — Palm Oil
+* **Canonical Identity**: Palm Oil (Elaeis guineensis fruit oil).
+* **Identifiers**: CAS 8002-75-3.
+* **Category & Functional Class**: `ordinary_ingredient` | Functional Classes: Vegetable Fat, Cooking Oil.
+* **Statutory Citation**: FSSAI Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011, Regulation 2.2.1(19).
+* **Scientific & Health Evidence**: Composed of ~50% saturated fatty acids (palmitic acid) and 40% monounsaturated oleic acid. High intake is associated with elevated LDL cholesterol (WHO 2023).
+* **5-Track Status**: All 5 tracks PASS (Fully Verified).
+
+### Record 18: `ing-whole-wheat-flour` — Whole Wheat Flour (Atta)
+* **Canonical Identity**: Whole Wheat Flour / Atta (Milled Triticum aestivum retaining bran, germ, and endosperm).
+* **Identifiers**: CAS None (agricultural cereal commodity).
+* **Category & Functional Class**: `ordinary_ingredient`, `allergen` | Functional Classes: Cereal Staple, Whole Flour.
+* **Statutory Citation**: FSSAI Regulations 2011, Regulation 2.4.1(1) (Atta standard of identity: gluten >=6.0%, ash <=2.0%) & FSSAI Labelling Regulations 2020 Clause 5(3) (Mandatory cereal allergen).
+* **5-Track Status**: All 5 tracks PASS (Fully Verified).
+
+### Record 19: `ing-refined-wheat-flour` — Refined Wheat Flour (Maida)
+* **Canonical Identity**: Refined Wheat Flour / Maida (Milled Triticum aestivum endosperm).
+* **Identifiers**: CAS 130498-22-5.
+* **Category & Functional Class**: `ordinary_ingredient`, `allergen` | Functional Classes: Cereal Staple, Refined Flour.
+* **Statutory Citation**: FSSAI Regulations 2011, Regulation 2.4.2(1) (Maida standard of identity: gluten >=7.5%, ash <=1.0%) & FSSAI Labelling Regulations 2020 Clause 5(3).
+* **5-Track Status**: All 5 tracks PASS (Fully Verified).
+
+### Record 20: `ing-sugar` — Sugar (Sucrose)
+* **Canonical Identity**: Sugar / Sucrose (beta-D-fructofuranosyl alpha-D-glucopyranoside).
+* **Identifiers**: CAS 57-50-1.
+* **Category & Functional Class**: `ordinary_ingredient`, `sweetener` | Functional Classes: Nutritive Sweetener, Bulking Agent.
+* **Statutory Citation**: FSSAI Regulations 2011, Regulation 2.8.1 (Refined Sugar purity >= 99.5%) & FSSAI Labelling Regulations 2020 Clause 5(2) (Mandatory added sugars disclosure).
+* **Scientific Guidance**: WHO Guideline (2015) strongly recommends free sugars <10% total energy intake (conditional <5%, ~25g/day). ICMR-NIN 2020 added sugar limit <=25g/day.
+* **5-Track Status**: All 5 tracks PASS (Fully Verified).
+
+### Record 21: `ing-iodized-salt` — Iodized Salt
+* **Canonical Identity**: Iodized Salt (NaCl fortified with potassium iodate, KIO3).
+* **Identifiers**: CAS 7647-14-5.
+* **Category & Functional Class**: `ordinary_ingredient`, `fortification_compound` | Functional Classes: Seasoning, Essential Mineral Source.
+* **Statutory Citation**: FSSAI Regulations 2011, Regulation 2.9.30 (Mandatory iodization standard: NaCl >=96.0%, iodine >=15 ppm retail).
+* **Scientific Guidance**: WHO guideline (2020) recommends <2000 mg sodium (~5 g salt) per day for adults to prevent hypertension.
+* **5-Track Status**: All 5 tracks PASS (Fully Verified).

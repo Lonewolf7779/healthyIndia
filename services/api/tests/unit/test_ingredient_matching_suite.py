@@ -136,17 +136,14 @@ def test_unknown_ingredients_remain_visible() -> None:
     """
     Whole staples and unrecognized ingredients must never be discarded or silently hidden.
     """
-    text = (
-        "Refined Wheat Flour (Maida), Edible Vegetable Oil (Palmolein), "
-        "Sugar, Iodised Salt, Cardamom Powder, Ginger Extract"
-    )
+    text = "Ragi Flour, Mustard Oil, Jaggery, Rock Salt, Cardamom Powder, Ginger Extract"
     res = analyze_ingredients(text)
 
     assert len(res.matched_items) == 0
     assert len(res.unmatched_items) == 6
-    assert "Refined Wheat Flour (Maida)" in res.unmatched_items
-    assert "Sugar" in res.unmatched_items
-    assert "Iodised Salt" in res.unmatched_items
+    assert "Ragi Flour" in res.unmatched_items
+    assert "Jaggery" in res.unmatched_items
+    assert "Rock Salt" in res.unmatched_items
     assert res.total_unmatched == 6
 
 

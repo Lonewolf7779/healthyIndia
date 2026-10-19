@@ -3,7 +3,9 @@ Pydantic schemas for OCR extraction requests and responses.
 Includes quality gates, confirmation metadata, dual-column separation, and plausibility.
 """
 
-from pydantic import BaseModel, Field
+import math
+
+from pydantic import BaseModel, Field, model_validator
 
 from app.nutrition.models import ServingBasis, ServingUnit
 from app.nutrition.standards import FoodForm
@@ -166,6 +168,29 @@ class OcrConfirmationRequest(BaseModel):
     trans_fat_g: float | None = Field(default=None, ge=0.0, le=500.0)
     cholesterol_mg: float | None = Field(default=None, ge=0.0, le=5000.0)
     sodium_mg: float | None = Field(default=None, ge=0.0, le=50000.0)
+
+    @model_validator(mode="after")
+    def validate_finite_and_bounds(self) -> "OcrConfirmationRequest":
+        if math.isnan(self.serving_size) or math.isinf(self.serving_size):
+            raise ValueError("serving_size must be a finite numerical value.")
+
+        nutrients = [
+            ("energy_kcal", self.energy_kcal),
+            ("protein_g", self.protein_g),
+            ("carbohydrates_g", self.carbohydrates_g),
+            ("total_sugar_g", self.total_sugar_g),
+            ("added_sugar_g", self.added_sugar_g),
+            ("dietary_fiber_g", self.dietary_fiber_g),
+            ("total_fat_g", self.total_fat_g),
+            ("saturated_fat_g", self.saturated_fat_g),
+            ("trans_fat_g", self.trans_fat_g),
+            ("cholesterol_mg", self.cholesterol_mg),
+            ("sodium_mg", self.sodium_mg),
+        ]
+        for name, val in nutrients:
+            if val is not None and (math.isnan(val) or math.isinf(val)):
+                raise ValueError(f"Nutrient '{name}' must be a finite numerical value.")
+        return self
 
 
 class OcrConfirmationResponse(BaseModel):

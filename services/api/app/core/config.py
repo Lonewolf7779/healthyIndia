@@ -60,6 +60,13 @@ class Settings(BaseSettings):
     OCR_TIMEOUT_SECONDS: float = 15.0
     TESSERACT_CMD: str | None = None
 
+    # API abuse and rate limiting (Phase 4D)
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_OCR_RPM: int = 10  # 10 requests / min for heavy local OCR
+    RATE_LIMIT_CONFIRM_RPM: int = 30  # 30 requests / min for OCR confirmation
+    RATE_LIMIT_ANALYSIS_RPM: int = 60  # 60 requests / min for nutrition/ingredient analysis
+    RATE_LIMIT_DEFAULT_RPM: int = 120  # 120 requests / min for general endpoints
+
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
     def parse_allowed_origins(cls, v: Any) -> list[str]:
