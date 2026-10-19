@@ -235,8 +235,11 @@ export interface SourceReference {
 export interface AdditiveEntry {
   id: string;
   canonical_name: string;
+  entity_type?: string;
+  categories?: string[];
   ins_number: string | null;
   e_number: string | null;
+  cas_number?: string | null;
   functional_classes: string[];
   jurisdiction: string;
   regulatory_status: string;
@@ -255,6 +258,9 @@ export interface MatchedIngredient {
   match_type: string;
   confidence: number;
   additive: AdditiveEntry;
+  occurrences?: number;
+  raw_mentions?: string[];
+  is_compound?: boolean;
 }
 
 export interface IngredientAnalysisRequest {
@@ -268,6 +274,8 @@ export interface IngredientAnalysisResponse {
   total_matched: number;
   total_unmatched: number;
   disclaimer: string;
+  ambiguous_items?: string[];
+  category_summary?: Record<string, number>;
 }
 
 export interface ImageQualityMetrics {

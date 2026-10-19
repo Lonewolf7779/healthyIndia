@@ -393,6 +393,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
   const [state, dispatch] = useReducer(scannerReducer, initialScannerState);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const previewUrlRef = useRef<string | null>(null);
   const activeRequestIdRef = useRef<number>(0);
 
@@ -421,6 +422,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
       cleanupCurrentPreview();
       dispatch({ type: "FILE_CLEARED" });
       if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
       return;
     }
 
@@ -429,6 +431,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
       cleanupCurrentPreview();
       dispatch({ type: "FILE_REJECTED", error: validation.error! });
       if (fileInputRef.current) fileInputRef.current.value = "";
+      if (cameraInputRef.current) cameraInputRef.current.value = "";
       return;
     }
 
@@ -455,7 +458,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
         const message =
           err instanceof Error
             ? err.message
-            : "OCR text extraction failed. Please try a clearer photograph or enter values manually.";
+            : "OCR text extraction failed. Please try a clearer photograph or enter values manually below.";
         dispatch({ type: "EXTRACTION_FAILURE", error: message });
       }
     }
@@ -565,6 +568,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
     cleanupCurrentPreview();
     dispatch({ type: "RESET" });
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
   const q = state.ocrResult?.image_quality;
@@ -586,23 +590,26 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
           alignItems: "baseline",
           flexWrap: "wrap",
           gap: "0.5rem",
+          marginBottom: "0.5rem",
         }}
       >
         <h3
           id="scanner-heading"
-          style={{ fontSize: "1.15rem", margin: 0, color: "var(--color-primary)" }}
+          style={{ fontSize: "clamp(1.05rem, 4vw, 1.25rem)", margin: 0, color: "var(--color-primary)" }}
         >
-          Scan Food Label (High-Reliability Local OCR)
+          Scan Food Label (Draft OCR Assistant)
         </h3>
         <span
           style={{
             fontSize: "0.75rem",
-            backgroundColor: "#e2e8f0",
-            padding: "0.2rem 0.5rem",
+            backgroundColor: "#fef3c7",
+            color: "#92400e",
+            padding: "0.25rem 0.55rem",
             borderRadius: "4px",
+            fontWeight: 600,
           }}
         >
-          Phase 3A Deterministic OCR
+          Physical Accuracy UNMEASURED
         </span>
       </div>
 
@@ -610,33 +617,34 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
         style={{
           fontSize: "0.85rem",
           color: "var(--color-text-muted)",
-          marginTop: "0.25rem",
           marginBottom: "1rem",
+          lineHeight: 1.5,
         }}
       >
-        Upload or capture a photograph of the nutritional panel and ingredient list.
-        All values are processed locally in memory with OpenCV quality gates, multi-pass
-        discrepancy detection, and physical plausibility validation.
+        Take a photo or upload an image of the nutrition table and ingredients. Local OCR extracts an initial draft; because physical OCR accuracy remains unmeasured, you must review and confirm all numbers against the packaging before analyzing.
       </p>
 
-      {/* Upload Controls */}
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.75rem" }}>
+      {/* Mobile-Friendly Upload & Camera Controls */}
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.625rem" }}>
+        {/* Option 1: Direct Mobile Camera Capture */}
         <label
-          htmlFor="labelFileInput"
+          htmlFor="cameraFileInput"
           className="btn-retry"
           style={{
             cursor: "pointer",
             display: "inline-flex",
             alignItems: "center",
-            gap: "0.35rem",
+            gap: "0.4rem",
             backgroundColor: "#f1f5f9",
+            flexGrow: 1,
+            justifyContent: "center",
           }}
         >
-          📷 Select or Capture Image
+          📷 Take Photo
         </label>
         <input
-          id="labelFileInput"
-          ref={fileInputRef}
+          id="cameraFileInput"
+          ref={cameraInputRef}
           type="file"
           accept="image/jpeg,image/png,image/webp"
           capture="environment"
@@ -647,13 +655,69 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
           style={{ display: "none" }}
         />
 
-        {state.selectedFile && (
-          <span style={{ fontSize: "0.85rem", color: "#334155" }}>
-            <strong>{state.selectedFile.name}</strong> ({(state.selectedFile.size / 1024).toFixed(0)} KB)
-          </span>
-        )}
+        {/* Option 2: Image File / Gallery Upload (Guaranteed Fallback) */}
+        <label
+          htmlFor="labelFileInput"
+          className="btn-retry"
+          style={{
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            backgroundColor: "#f1f5f9",
+            flexGrow: 1,
+            justifyContent: "center",
+          }}
+        >
+          📁 Upload Image
+        </label>
+        <input
+          id="labelFileInput"
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onClick={(e) => {
+            (e.currentTarget as HTMLInputElement).value = "";
+          }}
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+        />
+      </div>
 
-        {state.selectedFile && (
+      {/* Camera Fallback Guidance */}
+      <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.5rem" }}>
+        💡 <em>Camera access denied or unavailable? Use &ldquo;Upload Image&rdquo; to pick a photo from your gallery, or scroll down to enter values manually.</em>
+      </div>
+
+      {/* Selected File Details & Extraction Actions */}
+      {state.selectedFile && (
+        <div
+          style={{
+            marginTop: "0.875rem",
+            padding: "0.75rem",
+            backgroundColor: "#f8fafc",
+            borderRadius: "6px",
+            border: "1px solid var(--color-border)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.625rem",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+            <span style={{ fontSize: "0.85rem", color: "#334155", overflowWrap: "anywhere" }}>
+              <strong>{state.selectedFile.name}</strong> ({(state.selectedFile.size / 1024).toFixed(0)} KB)
+            </span>
+            <button
+              type="button"
+              onClick={handleResetScanner}
+              disabled={state.uploading}
+              className="btn-retry"
+              style={{ padding: "0.4rem 0.75rem", fontSize: "0.8rem", minHeight: "36px" }}
+            >
+              Clear Image
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={handleExtract}
@@ -663,24 +727,14 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
               backgroundColor: "var(--color-primary)",
               color: "#ffffff",
               fontWeight: 600,
+              width: "100%",
+              minHeight: "44px",
             }}
           >
-            {state.uploading ? "Analyzing & Extracting..." : "Run Local OCR & Quality Gates"}
+            {state.uploading ? "Analyzing Photograph with Local OCR..." : "⚡ Extract Draft Values with Local OCR"}
           </button>
-        )}
-
-        {state.selectedFile && (
-          <button
-            type="button"
-            onClick={handleResetScanner}
-            disabled={state.uploading}
-            className="btn-retry"
-            style={{ fontSize: "0.8rem" }}
-          >
-            Clear Image
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Error Banner */}
       {state.error && (
@@ -696,28 +750,32 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
           }}
         >
           <strong>Extraction Error:</strong> {state.error}
+          <div style={{ marginTop: "0.25rem", fontSize: "0.8rem" }}>
+            You can still enter nutrition and ingredient values manually in the form below.
+          </div>
         </div>
       )}
 
       {/* Image Preview */}
       {state.previewUrl && (
-        <div style={{ marginTop: "1rem", maxWidth: "320px" }}>
+        <div style={{ marginTop: "1rem", width: "100%", maxWidth: "340px" }}>
           <span
             style={{
               fontSize: "0.75rem",
               color: "var(--color-text-muted)",
               display: "block",
               marginBottom: "0.25rem",
+              fontWeight: 500,
             }}
           >
-            Image Preview:
+            Package Photo Preview:
           </span>
           <img
             src={state.previewUrl}
             alt="Preview of uploaded food package label"
             style={{
               width: "100%",
-              maxHeight: "220px",
+              maxHeight: "240px",
               objectFit: "contain",
               border: "1px solid var(--color-border)",
               borderRadius: "6px",
@@ -732,7 +790,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
         <div
           style={{
             marginTop: "1.25rem",
-            padding: "1rem",
+            padding: "1rem 0.875rem",
             backgroundColor: "#f8fafc",
             border: "1px solid #cbd5e1",
             borderRadius: "8px",
@@ -749,14 +807,14 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
               marginBottom: "0.5rem",
             }}
           >
-            <h4 style={{ margin: 0, fontSize: "1.05rem" }}>
-              Strict Review &amp; Confirmation Checklist
+            <h4 style={{ margin: 0, fontSize: "clamp(0.95rem, 3.5vw, 1.1rem)" }}>
+              Review &amp; Confirm Extracted Values
             </h4>
-            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap" }}>
               {q && (
                 <span
                   style={{
-                    fontSize: "0.75rem",
+                    fontSize: "0.725rem",
                     fontWeight: 600,
                     padding: "0.2rem 0.5rem",
                     borderRadius: "4px",
@@ -766,12 +824,12 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                       q.grade === "good" ? "#166534" : q.grade === "fair" ? "#92400e" : "#991b1b",
                   }}
                 >
-                  CV Quality: {q.gate_outcome || q.grade.toUpperCase()} ({q.metrics.sharpness_score >= 100 ? "Sharp" : "Soft Focus"})
+                  CV Quality: {q.gate_outcome || q.grade.toUpperCase()}
                 </span>
               )}
               {state.ocrResult.overall_confidence !== null && (
-                <span className="status-pill status-loading" style={{ fontSize: "0.75rem" }}>
-                  OCR Confidence: {state.ocrResult.overall_confidence}%
+                <span className="status-pill status-loading" style={{ fontSize: "0.725rem" }}>
+                  Confidence: {state.ocrResult.overall_confidence}%
                 </span>
               )}
             </div>
@@ -790,7 +848,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                 borderLeft: "3px solid #64748b",
               }}
             >
-              <strong>Quality Gate Metrics:</strong> Sharpness {q.metrics.sharpness_score} · Glare {(q.metrics.glare_ratio * 100).toFixed(1)}% · Skew {q.metrics.estimated_skew_degrees}° · {q.metrics.width}x{q.metrics.height}px.
+              <strong>Quality Metrics:</strong> Sharpness {q.metrics.sharpness_score} · Glare {(q.metrics.glare_ratio * 100).toFixed(1)}% · {q.metrics.width}x{q.metrics.height}px.
               <span style={{ display: "block", marginTop: "0.2rem", fontStyle: "italic" }}>
                 {q.disclaimer}
               </span>
@@ -819,6 +877,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
             <div
               style={{
                 display: "flex",
+                flexWrap: "wrap",
                 gap: "0.5rem",
                 alignItems: "center",
                 marginBottom: "0.75rem",
@@ -827,17 +886,18 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                 borderRadius: "6px",
               }}
             >
-              <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>Detected Columns:</span>
+              <span style={{ fontSize: "0.8rem", fontWeight: 600, width: "100%" }}>
+                Detected Dual Columns (Select Basis):
+              </span>
               <button
                 type="button"
                 onClick={() => dispatch({ type: "COLUMN_BASIS_SELECTED", basis: "per_serving" })}
+                className="btn-retry"
                 style={{
-                  padding: "0.25rem 0.6rem",
-                  fontSize: "0.75rem",
+                  flex: "1 1 calc(50% - 0.25rem)",
+                  padding: "0.4rem 0.6rem",
+                  fontSize: "0.8rem",
                   fontWeight: 600,
-                  borderRadius: "4px",
-                  border: "none",
-                  cursor: "pointer",
                   backgroundColor: state.selectedColumn === "per_serving" ? "var(--color-primary)" : "#ffffff",
                   color: state.selectedColumn === "per_serving" ? "#ffffff" : "#334155",
                 }}
@@ -847,13 +907,12 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
               <button
                 type="button"
                 onClick={() => dispatch({ type: "COLUMN_BASIS_SELECTED", basis: "per_100" })}
+                className="btn-retry"
                 style={{
-                  padding: "0.25rem 0.6rem",
-                  fontSize: "0.75rem",
+                  flex: "1 1 calc(50% - 0.25rem)",
+                  padding: "0.4rem 0.6rem",
+                  fontSize: "0.8rem",
                   fontWeight: 600,
-                  borderRadius: "4px",
-                  border: "none",
-                  cursor: "pointer",
                   backgroundColor: state.selectedColumn === "per_100" ? "var(--color-primary)" : "#ffffff",
                   color: state.selectedColumn === "per_100" ? "#ffffff" : "#334155",
                 }}
@@ -884,20 +943,20 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
               justifyContent: "space-between",
               alignItems: "center",
               flexWrap: "wrap",
-              gap: "0.5rem",
-              padding: "0.5rem 0.75rem",
+              gap: "0.625rem",
+              padding: "0.625rem 0.75rem",
               backgroundColor: isAllConfirmed ? "#f0fdf4" : "#fffbeb",
               border: `1px solid ${isAllConfirmed ? "#86efac" : "#fde68a"}`,
               borderRadius: "6px",
               marginBottom: "1rem",
             }}
           >
-            <span style={{ fontSize: "0.825rem", color: isAllConfirmed ? "#166534" : "#92400e" }}>
+            <span style={{ fontSize: "0.825rem", color: isAllConfirmed ? "#166534" : "#92400e", flex: "1 1 100%" }}>
               {isAllConfirmed ? (
-                <strong>✓ All active fields confirmed by user! Ready for analysis.</strong>
+                <strong>✓ All active fields confirmed against packaging! Ready for analysis.</strong>
               ) : (
                 <span>
-                  <strong>Confirmation Required:</strong> {unconfirmedCount} unverified field(s). Review each field below or confirm all once verified.
+                  <strong>Review Required:</strong> {unconfirmedCount} unverified field(s). Review and confirm each below, or confirm all if verified.
                 </span>
               )}
             </span>
@@ -906,8 +965,10 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
               onClick={() => dispatch({ type: "ALL_FIELDS_CONFIRMED" })}
               className="btn-retry"
               style={{
-                fontSize: "0.75rem",
-                padding: "0.3rem 0.6rem",
+                width: "100%",
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                padding: "0.5rem 0.75rem",
                 backgroundColor: "#ffffff",
                 border: "1px solid #cbd5e1",
               }}
@@ -922,18 +983,20 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))",
                 gap: "0.75rem",
-                padding: "0.5rem",
+                padding: "0.75rem",
                 backgroundColor: "#ffffff",
                 borderRadius: "6px",
                 border: "1px solid #e2e8f0",
               }}
             >
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Serving Size:</label>
-                  <label style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.25rem", cursor: "pointer" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
+                  <label htmlFor="scannerServingSize" style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+                    Serving Size:
+                  </label>
+                  <label className="touch-checkbox-label" style={{ fontSize: "0.75rem", minHeight: "36px", padding: "0" }}>
                     <input
                       type="checkbox"
                       checked={state.confirmedFields.servingSize}
@@ -949,6 +1012,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                   </label>
                 </div>
                 <input
+                  id="scannerServingSize"
                   type="number"
                   step="any"
                   value={state.reviewFields.servingSize}
@@ -962,20 +1026,21 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                   placeholder="e.g. 30"
                   style={{
                     width: "100%",
-                    padding: "0.35rem 0.5rem",
+                    padding: "0.4rem 0.5rem",
                     borderRadius: "4px",
                     border: state.confirmedFields.servingSize
                       ? "1px solid #22c55e"
-                      : "1px solid #e2e8f0",
+                      : "1px solid #cbd5e1",
                   }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600 }}>
+                <label htmlFor="scannerServingUnit" style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.25rem" }}>
                   Serving Unit:
                 </label>
                 <select
+                  id="scannerServingUnit"
                   value={state.reviewFields.servingUnit}
                   onChange={(e) =>
                     dispatch({
@@ -986,9 +1051,9 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                   }
                   style={{
                     width: "100%",
-                    padding: "0.35rem 0.5rem",
+                    padding: "0.4rem 0.5rem",
                     borderRadius: "4px",
-                    border: "1px solid #e2e8f0",
+                    border: "1px solid var(--color-border)",
                   }}
                 >
                   <option value="g">Grams (g)</option>
@@ -1005,7 +1070,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))",
                 gap: "0.6rem",
               }}
             >
@@ -1030,7 +1095,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                   <div
                     key={field}
                     style={{
-                      padding: "0.45rem",
+                      padding: "0.55rem",
                       backgroundColor: "#ffffff",
                       borderRadius: "6px",
                       border:
@@ -1046,18 +1111,21 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        marginBottom: "0.2rem",
+                        marginBottom: "0.25rem",
                       }}
                     >
-                      <span style={{ fontSize: "0.75rem", fontWeight: 600 }}>{label}</span>
+                      <label htmlFor={`field-${field}`} style={{ fontSize: "0.775rem", fontWeight: 600 }}>
+                        {label}
+                      </label>
                       <label
+                        className="touch-checkbox-label"
                         style={{
-                          fontSize: "0.7rem",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.2rem",
-                          cursor: "pointer",
+                          fontSize: "0.75rem",
+                          minHeight: "36px",
+                          minWidth: "36px",
+                          padding: "0",
                         }}
+                        title="Confirm value against packaging"
                       >
                         <input
                           type="checkbox"
@@ -1075,6 +1143,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                     </div>
 
                     <input
+                      id={`field-${field}`}
                       type="number"
                       step="any"
                       value={state.reviewFields[field]}
@@ -1087,10 +1156,9 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                       }
                       style={{
                         width: "100%",
-                        padding: "0.25rem 0.4rem",
+                        padding: "0.35rem 0.5rem",
                         borderRadius: "4px",
                         border: "1px solid #cbd5e1",
-                        fontSize: "0.85rem",
                       }}
                     />
 
@@ -1099,12 +1167,10 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                       <span
                         style={{
                           display: "block",
-                          fontSize: "0.65rem",
+                          fontSize: "0.7rem",
                           color: "#64748b",
-                          marginTop: "0.2rem",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
+                          marginTop: "0.25rem",
+                          overflowWrap: "anywhere",
                         }}
                         title={`OCR matched: "${cand.raw_text}"`}
                       >
@@ -1117,9 +1183,10 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                       <span
                         style={{
                           display: "block",
-                          fontSize: "0.65rem",
+                          fontSize: "0.7rem",
                           color: "#b91c1c",
-                          marginTop: "0.15rem",
+                          marginTop: "0.2rem",
+                          lineHeight: 1.3,
                         }}
                       >
                         ⚠️ {plausWarn}
@@ -1133,7 +1200,7 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
             {/* Ingredients Declaration Text */}
             <div
               style={{
-                padding: "0.5rem",
+                padding: "0.75rem",
                 backgroundColor: "#ffffff",
                 borderRadius: "6px",
                 border: "1px solid #e2e8f0",
@@ -1144,19 +1211,18 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  marginBottom: "0.25rem",
+                  marginBottom: "0.35rem",
                 }}
               >
-                <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>
+                <label htmlFor="scannerIngredientsText" style={{ fontSize: "0.85rem", fontWeight: 600 }}>
                   Ingredients Statement:
                 </label>
                 <label
+                  className="touch-checkbox-label"
                   style={{
                     fontSize: "0.75rem",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.25rem",
-                    cursor: "pointer",
+                    minHeight: "36px",
+                    padding: "0",
                   }}
                 >
                   <input
@@ -1174,7 +1240,8 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                 </label>
               </div>
               <textarea
-                rows={2}
+                id="scannerIngredientsText"
+                rows={3}
                 value={state.reviewFields.ingredientsText}
                 onChange={(e) =>
                   dispatch({
@@ -1186,23 +1253,21 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                 placeholder="Ingredients text detected from packaging..."
                 style={{
                   width: "100%",
-                  padding: "0.4rem",
+                  padding: "0.5rem",
                   borderRadius: "4px",
                   border: "1px solid #cbd5e1",
-                  fontSize: "0.8rem",
                   fontFamily: "inherit",
                 }}
               />
             </div>
 
-            {/* Transfer Action */}
+            {/* Transfer Action - Thumb Friendly */}
             <div
               style={{
-                marginTop: "0.5rem",
+                marginTop: "0.75rem",
                 display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                flexWrap: "wrap",
+                flexDirection: "column",
+                gap: "0.5rem",
               }}
             >
               <button
@@ -1210,38 +1275,44 @@ export const LabelScanner: React.FC<LabelScannerProps> = ({ onTransferValues }) 
                 onClick={handleTransfer}
                 className="btn-retry"
                 style={{
-                  padding: "0.55rem 1.1rem",
+                  width: "100%",
+                  minHeight: "48px",
                   backgroundColor: isAllConfirmed ? "var(--color-primary)" : "#0f766e",
                   color: "#ffffff",
                   fontWeight: 600,
-                  fontSize: "0.875rem",
+                  fontSize: "0.95rem",
                 }}
               >
                 ✓ Transfer Verified Values to Analysis Form
               </button>
 
               {state.transferred && (
-                <span
+                <div
+                  role="status"
                   style={{
-                    fontSize: "0.85rem",
+                    padding: "0.5rem",
+                    backgroundColor: "var(--color-success-bg)",
                     color: "var(--color-success-text)",
-                    fontWeight: 500,
+                    borderRadius: "4px",
+                    fontSize: "0.85rem",
+                    textAlign: "center",
+                    fontWeight: 600,
                   }}
                 >
-                  Values transferred into analysis form below!
-                </span>
+                  ✓ Values successfully transferred to analysis form below!
+                </div>
               )}
 
               {!isAllConfirmed && (
-                <span style={{ fontSize: "0.75rem", color: "#d97706" }}>
-                  ({unconfirmedCount} unconfirmed fields will be transferred as user-verified on submit)
+                <span style={{ fontSize: "0.75rem", color: "#d97706", textAlign: "center" }}>
+                  ({unconfirmedCount} unconfirmed fields will transfer with review notice)
                 </span>
               )}
             </div>
 
             {/* Collapsible Raw Text Reference */}
             <details style={{ marginTop: "0.75rem", fontSize: "0.75rem", color: "#64748b" }}>
-              <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+              <summary style={{ cursor: "pointer", fontWeight: 600, padding: "0.35rem 0" }}>
                 View Raw OCR Text &amp; Multi-Pass Details
               </summary>
               <div style={{ marginTop: "0.5rem" }}>

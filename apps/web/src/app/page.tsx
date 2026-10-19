@@ -46,22 +46,26 @@ export default function HomePage() {
           <ul className="feature-status-list">
             <li className="feature-status-item">
               <span>Monorepo &amp; Security Baseline</span>
-              <span className="status-tag tag-ready">Phase 1 (Active)</span>
+              <span className="status-tag tag-ready">Phase 1 (Complete)</span>
             </li>
             <li className="feature-status-item">
-              <span>Replaceable OCR Adapter</span>
-              <span className="status-tag tag-upcoming">Phase 2</span>
+              <span>Local OCR Extraction Pipeline</span>
+              <span className="status-tag tag-ready">Phase 2 (Draft OCR — Accuracy UNMEASURED)</span>
             </li>
             <li className="feature-status-item">
               <span>Deterministic Nutrition Engine</span>
-              <span className="status-tag tag-upcoming">Phase 3</span>
+              <span className="status-tag tag-ready">Phase 3 (Complete)</span>
             </li>
             <li className="feature-status-item">
-              <span>Ingredient Knowledge Base</span>
-              <span className="status-tag tag-upcoming">Phase 4</span>
+              <span>Ingredient Knowledge Base Foundation</span>
+              <span className="status-tag tag-ready">Phase 4A (Complete)</span>
             </li>
             <li className="feature-status-item">
-              <span>User Accounts &amp; Persistence</span>
+              <span>Mobile-First Scanner &amp; Analysis UX</span>
+              <span className="status-tag tag-ready">Phase 4B (Active)</span>
+            </li>
+            <li className="feature-status-item">
+              <span>Physical Packaging Benchmark &amp; Persistence</span>
               <span className="status-tag tag-future">Post-MVP</span>
             </li>
           </ul>

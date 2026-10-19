@@ -493,13 +493,15 @@ export const NutritionDemoForm: React.FC = () => {
 
       <section className="card" aria-labelledby="analyzer-heading" style={{ marginTop: "1.5rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.5rem" }}>
-        <h2 id="analyzer-heading" style={{ margin: 0 }}>Packaged Food Label Analyzer</h2>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        <h2 id="analyzer-heading" style={{ margin: 0, fontSize: "clamp(1.1rem, 4vw, 1.25rem)" }}>
+          Packaged Food Label Analyzer
+        </h2>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           <button
             type="button"
             onClick={handleLoadSample}
             className="btn-retry"
-            style={{ fontSize: "0.8rem", padding: "0.25rem 0.5rem" }}
+            style={{ fontSize: "0.85rem", padding: "0.4rem 0.75rem", minHeight: "44px" }}
           >
             Load Sample
           </button>
@@ -507,14 +509,14 @@ export const NutritionDemoForm: React.FC = () => {
             type="button"
             onClick={handleClear}
             className="btn-retry"
-            style={{ fontSize: "0.8rem", padding: "0.25rem 0.5rem" }}
+            style={{ fontSize: "0.85rem", padding: "0.4rem 0.75rem", minHeight: "44px" }}
           >
             Clear
           </button>
         </div>
       </div>
 
-      <p style={{ marginTop: "0.5rem", marginBottom: "1.25rem", color: "var(--color-text-muted)" }}>
+      <p style={{ marginTop: "0.5rem", marginBottom: "1.25rem", color: "var(--color-text-muted)", fontSize: "0.875rem" }}>
         Enter nutrition panel values and ingredients declaration from the physical package. Missing values are preserved as unknown and are never assumed to be zero.
       </p>
 
@@ -524,7 +526,7 @@ export const NutritionDemoForm: React.FC = () => {
           role="status"
           style={{
             marginBottom: "1.25rem",
-            padding: "0.6rem 0.85rem",
+            padding: "0.75rem",
             backgroundColor: ocrProvenance.isConfirmed ? "#f0fdf4" : "#fffbeb",
             color: ocrProvenance.isConfirmed ? "#166534" : "#92400e",
             border: `1px solid ${ocrProvenance.isConfirmed ? "#86efac" : "#fde68a"}`,
@@ -536,16 +538,25 @@ export const NutritionDemoForm: React.FC = () => {
             <strong>✓ Values were imported from label OCR and confirmed by the user.</strong>
           ) : (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
-              <span>
+              <span style={{ flex: "1 1 100%" }}>
                 <strong>Notice:</strong> Values were imported from packaging OCR ({ocrProvenance.unconfirmedCount} unconfirmed or edited). Please check values against your physical package before calculating.
               </span>
               <button
                 type="button"
                 onClick={handleConfirmOcrValues}
                 className="btn-retry"
-                style={{ fontSize: "0.8rem", padding: "0.25rem 0.5rem", whiteSpace: "nowrap" }}
+                style={{
+                  fontSize: "0.85rem",
+                  padding: "0.5rem 0.85rem",
+                  minHeight: "44px",
+                  width: "100%",
+                  fontWeight: 600,
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #d97706",
+                  color: "#92400e",
+                }}
               >
-                Confirm Values
+                Confirm Values Against Package
               </button>
             </div>
           )}
@@ -570,10 +581,10 @@ export const NutritionDemoForm: React.FC = () => {
 
         {/* Serving Size & Form Settings */}
         <div style={{ padding: "0.875rem", backgroundColor: "#f8fafc", borderRadius: "6px", border: "1px solid var(--color-border)", display: "grid", gap: "0.75rem" }}>
-          <strong>Serving & Label Specification</strong>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "0.75rem" }}>
+          <strong style={{ fontSize: "0.9rem" }}>Serving &amp; Label Specification</strong>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))", gap: "0.75rem" }}>
             <div>
-              <label htmlFor="servingSize" style={{ display: "block", fontSize: "0.85rem", fontWeight: 600 }}>
+              <label htmlFor="servingSize" style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.25rem" }}>
                 Serving Size:
               </label>
               <input
@@ -584,12 +595,12 @@ export const NutritionDemoForm: React.FC = () => {
                 placeholder="e.g. 30"
                 value={servingSize}
                 onChange={(e) => handleFieldChange(setServingSize, e.target.value)}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
+                style={{ width: "100%", padding: "0.4rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               />
             </div>
 
             <div>
-              <label htmlFor="servingUnit" style={{ display: "block", fontSize: "0.85rem" }}>
+              <label htmlFor="servingUnit" style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>
                 Serving Unit:
               </label>
               <select
@@ -600,7 +611,7 @@ export const NutritionDemoForm: React.FC = () => {
                     e.target.value as "g" | "ml" | "kg" | "l" | "piece" | "portion"
                   )
                 }
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
+                style={{ width: "100%", padding: "0.4rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               >
                 <option value="g">Grams (g)</option>
                 <option value="kg">Kilograms (kg)</option>
@@ -612,7 +623,7 @@ export const NutritionDemoForm: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="basis" style={{ display: "block", fontSize: "0.85rem" }}>
+              <label htmlFor="basis" style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>
                 Declared Basis:
               </label>
               <select
@@ -621,7 +632,7 @@ export const NutritionDemoForm: React.FC = () => {
                 onChange={(e) =>
                   handleBasisChange(e.target.value as "per_serving" | "per_100g" | "per_100ml")
                 }
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
+                style={{ width: "100%", padding: "0.4rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               >
                 <option value="per_serving">Per Serving</option>
                 <option value="per_100g">Per 100g</option>
@@ -630,14 +641,14 @@ export const NutritionDemoForm: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="foodForm" style={{ display: "block", fontSize: "0.85rem" }}>
+              <label htmlFor="foodForm" style={{ display: "block", fontSize: "0.85rem", marginBottom: "0.25rem" }}>
                 Food Form:
               </label>
               <select
                 id="foodForm"
                 value={foodForm}
                 onChange={(e) => handleFoodFormChange(e.target.value as "solid" | "liquid")}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
+                style={{ width: "100%", padding: "0.4rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
               >
                 <option value="solid">Solid Food</option>
                 <option value="liquid">Liquid / Beverage</option>
@@ -648,158 +659,44 @@ export const NutritionDemoForm: React.FC = () => {
 
         {/* Nutrition Label Values */}
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.25rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.25rem", marginBottom: "0.35rem" }}>
             <label style={{ fontWeight: 600, fontSize: "0.875rem" }}>
               Nutrition Facts (Leave blank if missing from label):
             </label>
             <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-              Entering 0 is treated as zero; blank is treated as missing.
+              0 = zero; blank = missing.
             </span>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "0.5rem" }}>
-            <div>
-              <label htmlFor="energyKcal" style={{ display: "block", fontSize: "0.8rem" }}>Energy (kcal)</label>
-              <input
-                id="energyKcal"
-                type="number"
-                step="any"
-                min="0"
-                value={energyKcal}
-                onChange={(e) => handleFieldChange(setEnergyKcal, e.target.value)}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="proteinG" style={{ display: "block", fontSize: "0.8rem" }}>Protein (g)</label>
-              <input
-                id="proteinG"
-                type="number"
-                step="any"
-                min="0"
-                value={proteinG}
-                onChange={(e) => handleFieldChange(setProteinG, e.target.value)}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="carbohydratesG" style={{ display: "block", fontSize: "0.8rem" }}>Carbs (g)</label>
-              <input
-                id="carbohydratesG"
-                type="number"
-                step="any"
-                min="0"
-                value={carbohydratesG}
-                onChange={(e) => handleFieldChange(setCarbohydratesG, e.target.value)}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="totalSugarG" style={{ display: "block", fontSize: "0.8rem" }}>Total Sugar (g)</label>
-              <input
-                id="totalSugarG"
-                type="number"
-                step="any"
-                min="0"
-                value={totalSugarG}
-                onChange={(e) => handleFieldChange(setTotalSugarG, e.target.value)}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="addedSugarG" style={{ display: "block", fontSize: "0.8rem" }}>Added Sugar (g)</label>
-              <input
-                id="addedSugarG"
-                type="number"
-                step="any"
-                min="0"
-                value={addedSugarG}
-                onChange={(e) => handleFieldChange(setAddedSugarG, e.target.value)}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="dietaryFiberG" style={{ display: "block", fontSize: "0.8rem" }}>Fiber (g)</label>
-              <input
-                id="dietaryFiberG"
-                type="number"
-                step="any"
-                min="0"
-                value={dietaryFiberG}
-                onChange={(e) => handleFieldChange(setDietaryFiberG, e.target.value)}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="totalFatG" style={{ display: "block", fontSize: "0.8rem" }}>Total Fat (g)</label>
-              <input
-                id="totalFatG"
-                type="number"
-                step="any"
-                min="0"
-                value={totalFatG}
-                onChange={(e) => handleFieldChange(setTotalFatG, e.target.value)}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="saturatedFatG" style={{ display: "block", fontSize: "0.8rem" }}>Sat. Fat (g)</label>
-              <input
-                id="saturatedFatG"
-                type="number"
-                step="any"
-                min="0"
-                value={saturatedFatG}
-                onChange={(e) => handleFieldChange(setSaturatedFatG, e.target.value)}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="transFatG" style={{ display: "block", fontSize: "0.8rem" }}>Trans Fat (g)</label>
-              <input
-                id="transFatG"
-                type="number"
-                step="any"
-                min="0"
-                value={transFatG}
-                onChange={(e) => handleFieldChange(setTransFatG, e.target.value)}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="cholesterolMg" style={{ display: "block", fontSize: "0.8rem" }}>Cholesterol (mg)</label>
-              <input
-                id="cholesterolMg"
-                type="number"
-                step="any"
-                min="0"
-                value={cholesterolMg}
-                onChange={(e) => handleFieldChange(setCholesterolMg, e.target.value)}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="sodiumMg" style={{ display: "block", fontSize: "0.8rem" }}>Sodium (mg)</label>
-              <input
-                id="sodiumMg"
-                type="number"
-                step="any"
-                min="0"
-                value={sodiumMg}
-                onChange={(e) => handleFieldChange(setSodiumMg, e.target.value)}
-                style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
-              />
-            </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))", gap: "0.6rem" }}>
+            {[
+              { id: "energyKcal", label: "Energy (kcal)", val: energyKcal, set: setEnergyKcal },
+              { id: "proteinG", label: "Protein (g)", val: proteinG, set: setProteinG },
+              { id: "carbohydratesG", label: "Carbs (g)", val: carbohydratesG, set: setCarbohydratesG },
+              { id: "totalSugarG", label: "Total Sugar (g)", val: totalSugarG, set: setTotalSugarG },
+              { id: "addedSugarG", label: "Added Sugar (g)", val: addedSugarG, set: setAddedSugarG },
+              { id: "dietaryFiberG", label: "Fiber (g)", val: dietaryFiberG, set: setDietaryFiberG },
+              { id: "totalFatG", label: "Total Fat (g)", val: totalFatG, set: setTotalFatG },
+              { id: "saturatedFatG", label: "Sat. Fat (g)", val: saturatedFatG, set: setSaturatedFatG },
+              { id: "transFatG", label: "Trans Fat (g)", val: transFatG, set: setTransFatG },
+              { id: "cholesterolMg", label: "Cholesterol (mg)", val: cholesterolMg, set: setCholesterolMg },
+              { id: "sodiumMg", label: "Sodium (mg)", val: sodiumMg, set: setSodiumMg },
+            ].map(({ id, label, val, set }) => (
+              <div key={id}>
+                <label htmlFor={id} style={{ display: "block", fontSize: "0.8rem", fontWeight: 500, marginBottom: "0.2rem" }}>
+                  {label}
+                </label>
+                <input
+                  id={id}
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={val}
+                  onChange={(e) => handleFieldChange(set, e.target.value)}
+                  style={{ width: "100%", padding: "0.4rem 0.5rem", borderRadius: "4px", border: "1px solid var(--color-border)" }}
+                />
+              </div>
+            ))}
           </div>
         </div>
 
@@ -811,7 +708,7 @@ export const NutritionDemoForm: React.FC = () => {
           <textarea
             id="ingredientsText"
             rows={3}
-            placeholder="Paste the ingredients list from the package, e.g. Wheat Flour, Palm Oil, Sugar, Emulsifier (INS 322(i)), Flavour Enhancer (INS 621)..."
+            placeholder="Paste or review ingredients list from package, e.g. Wheat Flour, Palm Oil, Sugar, Emulsifier (INS 322(i)), Flavour Enhancer (INS 621)..."
             value={ingredientsText}
             onChange={(e) => setIngredientsText(e.target.value)}
             style={{
@@ -825,18 +722,20 @@ export const NutritionDemoForm: React.FC = () => {
           />
         </div>
 
-        {/* Action Button */}
+        {/* Action Button - Thumb Friendly */}
         <div>
           <button
             type="submit"
             className="btn-retry"
             disabled={loading}
             style={{
-              padding: "0.6rem 1.25rem",
+              width: "100%",
+              minHeight: "48px",
+              padding: "0.75rem 1.25rem",
               backgroundColor: "var(--color-primary)",
               color: "#ffffff",
               fontWeight: 600,
-              fontSize: "0.95rem",
+              fontSize: "1rem",
             }}
           >
             {loading ? "Analyzing Deterministically..." : "Analyze Label & Ingredients"}
@@ -854,7 +753,7 @@ export const NutritionDemoForm: React.FC = () => {
             backgroundColor: "var(--color-offline-bg)",
             color: "var(--color-offline-text)",
             borderRadius: "6px",
-            fontSize: "0.9rem",
+            fontSize: "0.875rem",
           }}
         >
           <strong>Input Error:</strong> {generalError}
@@ -865,7 +764,7 @@ export const NutritionDemoForm: React.FC = () => {
       {(nutritionResult || ingredientResult || nutritionError || ingredientError) && (
         <div style={{ marginTop: "1.75rem", display: "grid", gap: "1.25rem" }}>
           {activeProductName && (
-            <h3 style={{ borderBottom: "2px solid var(--color-border)", paddingBottom: "0.5rem" }}>
+            <h3 style={{ borderBottom: "2px solid var(--color-border)", paddingBottom: "0.5rem", fontSize: "1.15rem" }}>
               Analysis Report: {activeProductName}
             </h3>
           )}
@@ -879,6 +778,7 @@ export const NutritionDemoForm: React.FC = () => {
                 backgroundColor: "var(--color-offline-bg)",
                 color: "var(--color-offline-text)",
                 borderRadius: "6px",
+                fontSize: "0.875rem",
               }}
             >
               <strong>Nutrition Analysis Failed:</strong> {nutritionError}
@@ -900,39 +800,41 @@ export const NutritionDemoForm: React.FC = () => {
                 </div>
               )}
 
-              {/* Nutrition Table */}
-              <div style={{ overflowX: "auto", marginBottom: "1rem" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem", textAlign: "left" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "2px solid var(--color-border)" }}>
-                      <th style={{ padding: "0.5rem 0.25rem" }}>Nutrient</th>
-                      <th style={{ padding: "0.5rem 0.25rem" }}>Per Serving ({nutritionResult.serving_size}{nutritionResult.serving_unit})</th>
-                      <th style={{ padding: "0.5rem 0.25rem" }}>Per 100{nutritionResult.food_form === "liquid" ? "ml" : "g"}</th>
-                      <th style={{ padding: "0.5rem 0.25rem" }}>% Daily Value (ICMR-NIN)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {nutritionResult.daily_value_comparisons.map((c) => {
-                      const per100Val = nutritionResult.per_100[c.nutrient_key];
-                      const perServingVal = nutritionResult.per_serving[c.nutrient_key];
+              {/* Mobile-Friendly Stacked Nutrition Cards (Visible on Small Screens) */}
+              <div style={{ display: "grid", gap: "0.5rem", marginBottom: "1rem" }}>
+                <div className="responsive-table-wrapper">
+                  <table style={{ width: "100%", minWidth: "320px", borderCollapse: "collapse", fontSize: "0.85rem", textAlign: "left" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid var(--color-border)", backgroundColor: "#f1f5f9" }}>
+                        <th style={{ padding: "0.6rem 0.5rem" }}>Nutrient</th>
+                        <th style={{ padding: "0.6rem 0.5rem" }}>Per Serving ({nutritionResult.serving_size}{nutritionResult.serving_unit})</th>
+                        <th style={{ padding: "0.6rem 0.5rem" }}>Per 100{nutritionResult.food_form === "liquid" ? "ml" : "g"}</th>
+                        <th style={{ padding: "0.6rem 0.5rem" }}>% Daily Value (ICMR)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {nutritionResult.daily_value_comparisons.map((c) => {
+                        const per100Val = nutritionResult.per_100[c.nutrient_key];
+                        const perServingVal = nutritionResult.per_serving[c.nutrient_key];
 
-                      return (
-                        <tr key={c.nutrient_key} style={{ borderBottom: "1px solid var(--color-border)" }}>
-                          <td style={{ padding: "0.375rem 0.25rem", fontWeight: 500 }}>{c.display_name}</td>
-                          <td style={{ padding: "0.375rem 0.25rem" }}>
-                            {perServingVal !== null && perServingVal !== undefined ? `${perServingVal} ${c.unit}` : <span style={{ color: "#94a3b8" }}>Not provided</span>}
-                          </td>
-                          <td style={{ padding: "0.375rem 0.25rem" }}>
-                            {per100Val !== null && per100Val !== undefined ? `${per100Val} ${c.unit}` : <span style={{ color: "#94a3b8" }}>Not provided</span>}
-                          </td>
-                          <td style={{ padding: "0.375rem 0.25rem" }}>
-                            {c.percentage_of_daily_value !== null ? `${c.percentage_of_daily_value}%` : <span style={{ color: "#94a3b8" }}>—</span>}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                        return (
+                          <tr key={c.nutrient_key} style={{ borderBottom: "1px solid var(--color-border)" }}>
+                            <td style={{ padding: "0.5rem 0.5rem", fontWeight: 500 }}>{c.display_name}</td>
+                            <td style={{ padding: "0.5rem 0.5rem" }}>
+                              {perServingVal !== null && perServingVal !== undefined ? `${perServingVal} ${c.unit}` : <span style={{ color: "#94a3b8" }}>Not provided</span>}
+                            </td>
+                            <td style={{ padding: "0.5rem 0.5rem" }}>
+                              {per100Val !== null && per100Val !== undefined ? `${per100Val} ${c.unit}` : <span style={{ color: "#94a3b8" }}>Not provided</span>}
+                            </td>
+                            <td style={{ padding: "0.5rem 0.5rem" }}>
+                              {c.percentage_of_daily_value !== null ? `${c.percentage_of_daily_value}%` : <span style={{ color: "#94a3b8" }}>—</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {/* Flags & Regulatory Alerts */}
@@ -959,12 +861,12 @@ export const NutritionDemoForm: React.FC = () => {
                           : "#0369a1";
 
                       return (
-                        <li key={flag.id} style={{ marginBottom: "0.5rem" }}>
-                          <span style={{ backgroundColor: badgeColor, color: textColor, padding: "0.15rem 0.4rem", borderRadius: "4px", fontWeight: 600, fontSize: "0.75rem", marginRight: "0.375rem" }}>
+                        <li key={flag.id} style={{ marginBottom: "0.6rem" }}>
+                          <span style={{ backgroundColor: badgeColor, color: textColor, padding: "0.2rem 0.45rem", borderRadius: "4px", fontWeight: 600, fontSize: "0.75rem", marginRight: "0.375rem" }}>
                             {flag.severity.toUpperCase()}
                           </span>
                           <strong>{flag.title}:</strong> {flag.explanation}
-                          <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.15rem" }}>
+                          <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "0.15rem", overflowWrap: "anywhere" }}>
                             Source: {flag.citation}
                           </div>
                         </li>
@@ -1003,7 +905,7 @@ export const NutritionDemoForm: React.FC = () => {
                           {exp.plain_language_summary}
                         </div>
                         {exp.formula && (
-                          <div style={{ marginTop: "0.2rem", fontSize: "0.75rem", color: "#475569", fontFamily: "monospace" }}>
+                          <div style={{ marginTop: "0.2rem", fontSize: "0.75rem", color: "#475569", fontFamily: "monospace", overflowWrap: "anywhere" }}>
                             Formula: {exp.formula}
                           </div>
                         )}
@@ -1024,12 +926,12 @@ export const NutritionDemoForm: React.FC = () => {
               {/* Deterministic Calculation Assumptions & Audit Trail */}
               {nutritionResult.calculation_assumptions && Object.keys(nutritionResult.calculation_assumptions).length > 0 && (
                 <details style={{ marginTop: "1rem", fontSize: "0.75rem", color: "#64748b" }}>
-                  <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+                  <summary style={{ cursor: "pointer", fontWeight: 600, padding: "0.25rem 0" }}>
                     Deterministic Calculation Audit &amp; Mathematical Assumptions
                   </summary>
                   <ul style={{ paddingLeft: "1.25rem", marginTop: "0.35rem", marginBottom: 0 }}>
                     {Object.entries(nutritionResult.calculation_assumptions).map(([key, val]) => (
-                      <li key={key}>
+                      <li key={key} style={{ marginBottom: "0.25rem" }}>
                         <strong>{key.replace(/_/g, " ")}:</strong> {val}
                       </li>
                     ))}
@@ -1048,6 +950,7 @@ export const NutritionDemoForm: React.FC = () => {
                 backgroundColor: "var(--color-offline-bg)",
                 color: "var(--color-offline-text)",
                 borderRadius: "6px",
+                fontSize: "0.875rem",
               }}
             >
               <strong>Ingredient Analysis Failed:</strong> {ingredientError}
@@ -1063,12 +966,48 @@ export const NutritionDemoForm: React.FC = () => {
                 </span>
               </div>
 
-              {/* Matched Additives List */}
+              {/* Category Breakdown Chips (Phase 4A) */}
+              {ingredientResult.category_summary && Object.keys(ingredientResult.category_summary).length > 0 && (
+                <div style={{ marginBottom: "0.75rem", display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+                  {Object.entries(ingredientResult.category_summary).map(([cat, count]) => (
+                    <span key={cat} className="category-pill category-pill-additive">
+                      {cat.replace(/_/g, " ")}: {count}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Ambiguous Functional Classes Warning Box (Phase 4A) */}
+              {ingredientResult.ambiguous_items && ingredientResult.ambiguous_items.length > 0 && (
+                <div
+                  role="alert"
+                  style={{
+                    marginBottom: "1rem",
+                    padding: "0.75rem",
+                    backgroundColor: "#fffbeb",
+                    color: "#92400e",
+                    border: "1px solid #fde68a",
+                    borderRadius: "6px",
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  <strong>⚠️ Ambiguous Declarations (Not Guessed):</strong>
+                  <div style={{ marginTop: "0.25rem" }}>
+                    The following functional terms were declared without an INS or E number qualifier:{" "}
+                    <strong>{ingredientResult.ambiguous_items.join(", ")}</strong>.
+                  </div>
+                  <div style={{ marginTop: "0.25rem", fontSize: "0.775rem", color: "#78350f" }}>
+                    To eliminate false positives, healthyIndia never silently guesses additive identities.
+                  </div>
+                </div>
+              )}
+
+              {/* Matched Additives & Ingredients List */}
               <div style={{ marginBottom: "1rem" }}>
-                <strong style={{ fontSize: "0.9rem" }}>Recognized Food Additives:</strong>
+                <strong style={{ fontSize: "0.9rem" }}>Recognized Ingredients &amp; Additives:</strong>
                 {ingredientResult.matched_items.length === 0 ? (
                   <p style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginTop: "0.25rem" }}>
-                    No additives from the verified reference dataset matched the declaration.
+                    No items from the verified reference dataset matched the declaration.
                   </p>
                 ) : (
                   <div style={{ display: "grid", gap: "0.75rem", marginTop: "0.5rem" }}>
@@ -1083,18 +1022,42 @@ export const NutritionDemoForm: React.FC = () => {
                           fontSize: "0.85rem",
                         }}
                       >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.25rem" }}>
                           <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>
-                            {item.additive.canonical_name} ({item.additive.ins_number || item.additive.e_number})
+                            {item.additive.canonical_name}{" "}
+                            {item.additive.ins_number || item.additive.e_number ? (
+                              <span style={{ color: "#475569" }}>({item.additive.ins_number || item.additive.e_number})</span>
+                            ) : null}
                           </span>
                           <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
                             Matched from: &ldquo;{item.raw_text}&rdquo;
                           </span>
                         </div>
 
-                        <div style={{ marginTop: "0.25rem", color: "var(--color-text-muted)" }}>
-                          <strong>Functional Class:</strong> {item.additive.functional_classes.join(", ")}
+                        {/* Occurrence and Compound Badges */}
+                        <div style={{ marginTop: "0.25rem", display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+                          {item.is_compound && (
+                            <span className="category-pill category-pill-fortification">
+                              Compound Ingredient
+                            </span>
+                          )}
+                          {item.occurrences && item.occurrences > 1 && (
+                            <span className="category-pill category-pill-sweetener">
+                              Declared {item.occurrences}x on label
+                            </span>
+                          )}
+                          {item.additive.entity_type && (
+                            <span className="category-pill category-pill-additive">
+                              {item.additive.entity_type.replace(/_/g, " ")}
+                            </span>
+                          )}
                         </div>
+
+                        {item.additive.functional_classes && item.additive.functional_classes.length > 0 && (
+                          <div style={{ marginTop: "0.25rem", color: "var(--color-text-muted)" }}>
+                            <strong>Functional Class:</strong> {item.additive.functional_classes.join(", ")}
+                          </div>
+                        )}
 
                         {item.additive.chemical_identity && (
                           <div style={{ marginTop: "0.25rem", color: "#64748b", fontSize: "0.8rem" }}>
@@ -1106,9 +1069,11 @@ export const NutritionDemoForm: React.FC = () => {
                           <strong>Regulatory Status:</strong> {item.additive.regulatory_status}
                         </div>
 
-                        <div style={{ marginTop: "0.25rem", color: "#64748b", fontSize: "0.8rem" }}>
-                          <strong>Scope Limitations:</strong> {item.additive.scope_limitations}
-                        </div>
+                        {item.additive.scope_limitations && (
+                          <div style={{ marginTop: "0.25rem", color: "#64748b", fontSize: "0.8rem" }}>
+                            <strong>Scope Limitations:</strong> {item.additive.scope_limitations}
+                          </div>
+                        )}
 
                         {item.additive.acceptable_daily_intake && (
                           <div style={{ marginTop: "0.25rem", fontSize: "0.8rem" }}>
@@ -1147,7 +1112,7 @@ export const NutritionDemoForm: React.FC = () => {
                               {item.additive.everyday_quantity_explanation.plain_language_summary}
                             </div>
                             {item.additive.everyday_quantity_explanation.formula && (
-                              <div style={{ marginTop: "0.15rem", fontSize: "0.725rem", color: "#475569", fontFamily: "monospace" }}>
+                              <div style={{ marginTop: "0.15rem", fontSize: "0.725rem", color: "#475569", fontFamily: "monospace", overflowWrap: "anywhere" }}>
                                 Calculation: {item.additive.everyday_quantity_explanation.formula}
                               </div>
                             )}
@@ -1157,13 +1122,13 @@ export const NutritionDemoForm: React.FC = () => {
                           </div>
                         )}
 
-                        {item.additive.sources.length > 0 && (
-                          <div style={{ marginTop: "0.35rem", fontSize: "0.75rem", color: "#475569" }}>
+                        {item.additive.sources && item.additive.sources.length > 0 && (
+                          <div style={{ marginTop: "0.35rem", fontSize: "0.75rem", color: "#475569", overflowWrap: "anywhere" }}>
                             <strong>Official Citations:</strong>{" "}
                             {item.additive.sources.map((s, idx) => (
                               <span key={s.url + idx}>
                                 {idx > 0 && " | "}
-                                <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-accent)" }}>
+                                <a href={s.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-accent)", overflowWrap: "anywhere" }}>
                                   {s.title}
                                 </a>{" "}
                                 ({s.source_type}, reviewed {s.retrieval_date})
@@ -1180,9 +1145,9 @@ export const NutritionDemoForm: React.FC = () => {
               {/* Unmatched Declared Ingredients */}
               {ingredientResult.unmatched_items.length > 0 && (
                 <div style={{ marginTop: "1rem", padding: "0.75rem", backgroundColor: "#ffffff", borderRadius: "6px", border: "1px solid var(--color-border)" }}>
-                  <strong style={{ fontSize: "0.875rem" }}>Other Declared Ingredients:</strong>
+                  <strong style={{ fontSize: "0.875rem" }}>Other Declared Ingredients (Preserved Unaltered):</strong>
                   <p style={{ fontSize: "0.8rem", color: "var(--color-text-muted)", marginTop: "0.25rem", marginBottom: "0.5rem" }}>
-                    Preserved exactly as declared on the packaging. Unmatched items are not guessed or altered.
+                    Preserved exactly as declared on the packaging. Unmatched items are never guessed or altered.
                   </p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
                     {ingredientResult.unmatched_items.map((token, idx) => (
@@ -1191,9 +1156,10 @@ export const NutritionDemoForm: React.FC = () => {
                         style={{
                           backgroundColor: "#f1f5f9",
                           color: "#334155",
-                          padding: "0.2rem 0.5rem",
+                          padding: "0.25rem 0.55rem",
                           borderRadius: "4px",
                           fontSize: "0.8rem",
+                          overflowWrap: "anywhere",
                         }}
                       >
                         {token}

@@ -9,7 +9,7 @@ export const Header: React.FC = () => {
           <span className="brand-title">healthyIndia</span>
         </div>
         <nav aria-label="Main Navigation">
-          <span className="badge">Phase 1 Foundation</span>
+          <span className="badge">Phase 4 Foundation &amp; Mobile UX</span>
         </nav>
       </div>
     </header>
