@@ -1,5 +1,6 @@
 """
 Pydantic schemas for ingredient analysis requests and responses.
+Phase 4A: Extensible Ingredient Knowledge Base Foundation.
 """
 
 from typing import Any
@@ -35,14 +36,30 @@ class SourceReferenceSchema(BaseModel):
     publication_date: str | None = None
     supported_claims: str | None = None
     section_or_regulation: str | None = None
+    license: str | None = None
+
+
+class EvidenceProvenanceSchema(BaseModel):
+    schema_valid: bool = True
+    source_linked: bool = False
+    source_checked: bool = False
+    scientifically_reviewed: bool = False
+    regulatory_verified: bool = False
+    verification_level: str = "unverified"
+    jurisdiction: str = "India (FSSAI) & Codex Alimentarius"
+    regulatory_act: str | None = None
+    notes: str | None = None
 
 
 class AdditiveEntrySchema(BaseModel):
     id: str
     canonical_name: str
-    ins_number: str | None
-    e_number: str | None
-    functional_classes: list[str]
+    entity_type: str = "food_additive"
+    categories: list[str] = Field(default_factory=list)
+    ins_number: str | None = None
+    e_number: str | None = None
+    cas_number: str | None = None
+    functional_classes: list[str] = Field(default_factory=list)
     jurisdiction: str
     regulatory_status: str
     status_verification: str
@@ -52,7 +69,8 @@ class AdditiveEntrySchema(BaseModel):
     acceptable_daily_intake: str | None = None
     population_sensitivities: str | None = None
     everyday_quantity_explanation: dict[str, Any] | None = None
-    sources: list[SourceReferenceSchema]
+    provenance: EvidenceProvenanceSchema | None = None
+    sources: list[SourceReferenceSchema] = Field(default_factory=list)
 
 
 class MatchedIngredientSchema(BaseModel):
@@ -60,16 +78,21 @@ class MatchedIngredientSchema(BaseModel):
     match_type: MatchType
     confidence: float
     additive: AdditiveEntrySchema
+    occurrences: int = 1
+    raw_mentions: list[str] = Field(default_factory=list)
+    is_compound: bool = False
 
 
 class IngredientAnalysisResponse(BaseModel):
     matched_items: list[MatchedIngredientSchema] = Field(
-        ..., description="List of recognized additives with regulatory provenance."
+        ..., description="List of recognized ingredients and additives with regulatory provenance."
     )
     unmatched_items: list[str] = Field(
-        ..., description="List of declared ingredients not matching reference additives."
+        ..., description="List of declared ingredients not matching reference entries."
     )
     total_tokens_detected: int
     total_matched: int
     total_unmatched: int
     disclaimer: str
+    ambiguous_items: list[str] = Field(default_factory=list)
+    category_summary: dict[str, int] = Field(default_factory=dict)

@@ -1,40 +1,73 @@
 """
-Deterministic ingredient parser and additive matcher.
+Deterministic ingredient parser and extensible knowledge base matcher.
+Phase 4A: Extensible Ingredient Knowledge Base Foundation.
 
 Guiding Principles:
 1. Pure deterministic exact and regex matching.
 2. No generative-AI, heuristic fuzzy guessing, or unverified probabilistic assignment.
-3. Unmatched ingredients are preserved as unknown.
-4. Identification does not imply blanket category permission.
+3. Matching priorities:
+   - Priority 1: Exact canonical name match.
+   - Priority 2: Exact normalized alias match (including Indian language / Hindi aliases).
+   - Priority 3: Verified INS/E identifier match.
+   - Priority 4: Constrained context-aware and compound sub-ingredient matching.
+   - Priority 5: Otherwise, preserve the term as unknown or ambiguous.
+4. Occurrences and original label mentions are preserved without duplicate reference entries.
+5. Identification of an ingredient indicates its detected presence; it does not constitute
+   an evaluation of product safety, nor does the presence of an INS code imply blanket
+   authorization in all food categories under FSSAI regulations.
 """
 
+from __future__ import annotations
+
 import re
+from typing import Final
 
 from app.ingredients.loader import (
-    load_ingredient_reference,
+    IngredientKnowledgeBase,
+    load_knowledge_base,
     normalize_ins_code,
     normalize_lookup_token,
 )
 from app.ingredients.models import (
-    AdditiveEntry,
     IngredientAnalysisResult,
+    IngredientCategory,
     MatchedIngredient,
     MatchType,
 )
 
-DISCLAIMER: str = (
-    "healthyIndia additive matching is deterministic and based on exact verified aliases "
-    "and INS numbers. Identification of an additive does not constitute an evaluation of "
-    "product safety, nor does the presence of an INS code imply authorization in all "
-    "food categories under FSSAI regulations."
+DISCLAIMER: Final[str] = (
+    "healthyIndia ingredient matching is deterministic and based on exact verified aliases, "
+    "INS numbers, and official standards. Identification of an ingredient does not constitute "
+    "an evaluation of product safety, nor does statutory permission in one category imply "
+    "blanket authorization across all food categories under FSSAI regulations."
 )
 
 # Common functional class prefix keywords used in Indian packaging
-FUNCTIONAL_PREFIXES_REGEX = (
+FUNCTIONAL_PREFIXES_REGEX: Final[str] = (
     r"(?:flavour enhancer|flavor enhancer|emulsifier|sweetener|preservative|colour|color|"
     r"raising agent|acidity regulator|stabilizer|antioxidant|thickener|glazing agent|"
-    r"anticaking agent)"
+    r"anticaking agent|firming agent|humectant|flour treatment agent|dough conditioner)"
 )
+
+GENERIC_FUNCTIONAL_CLASSES: Final[set[str]] = {
+    "flavour enhancer",
+    "flavor enhancer",
+    "emulsifier",
+    "sweetener",
+    "preservative",
+    "colour",
+    "color",
+    "raising agent",
+    "acidity regulator",
+    "stabilizer",
+    "antioxidant",
+    "thickener",
+    "glazing agent",
+    "anticaking agent",
+    "firming agent",
+    "humectant",
+    "dough conditioner",
+}
 
 
 def split_ingredients_list(text: str) -> list[str]:
@@ -128,89 +161,239 @@ def extract_ins_pattern(token: str) -> str | None:
 
 def match_single_token(
     raw_token: str,
-    ins_index: dict[str, AdditiveEntry],
-    alias_index: dict[str, AdditiveEntry],
+    kb: IngredientKnowledgeBase,
 ) -> MatchedIngredient | None:
     """
-    Attempts deterministic match:
-    1. INS/E number extraction
-    2. Exact normalized alias matching
-    3. Inner parenthetical content matching (e.g. 'Preservative (Sodium Benzoate)')
+    Attempts deterministic match in strict priority order:
+    1. Exact canonical name match
+    2. Indian language alias match (e.g. Hindi Devanagari)
+    3. Exact normalized alias match
+    4. INS / E number extraction
+    5. Inner parenthetical content matching
     """
-    # 1. Try INS extraction
+    norm_token = normalize_lookup_token(raw_token)
+
+    # Guard: Generic functional class keyword alone must not identify a specific substance
+    if norm_token in GENERIC_FUNCTIONAL_CLASSES:
+        return None
+
+    # Priority 1: Try INS / E number extraction (e.g. 'INS 322(i)', 'E-621', '500(ii)')
     ins_code = extract_ins_pattern(raw_token)
     if ins_code:
         norm_ins = normalize_ins_code(ins_code)
-        if norm_ins in ins_index:
+        if norm_ins in kb.ins_index:
             return MatchedIngredient(
                 raw_text=raw_token,
                 match_type=MatchType.INS_NUMBER,
                 confidence=1.0,
-                additive=ins_index[norm_ins],
+                ingredient=kb.ins_index[norm_ins],
             )
 
-    # 2. Try whole-token exact alias
-    norm_token = normalize_lookup_token(raw_token)
-    if norm_token in alias_index:
+    # Priority 2: Exact canonical name match
+    if norm_token in kb.canonical_index:
+        entry = kb.canonical_index[norm_token]
+        return MatchedIngredient(
+            raw_text=raw_token,
+            match_type=MatchType.EXACT_CANONICAL,
+            confidence=1.0,
+            ingredient=entry,
+        )
+
+    # Priority 3: Indian language alias match (e.g. Hindi Devanagari)
+    if norm_token in kb.indian_alias_index:
+        entry = kb.indian_alias_index[norm_token]
+        return MatchedIngredient(
+            raw_text=raw_token,
+            match_type=MatchType.INDIAN_LANGUAGE_ALIAS,
+            confidence=1.0,
+            ingredient=entry,
+        )
+
+    # Priority 4: Exact normalized alias match
+    if norm_token in kb.alias_index:
+        entry = kb.alias_index[norm_token]
         return MatchedIngredient(
             raw_text=raw_token,
             match_type=MatchType.EXACT_ALIAS,
             confidence=1.0,
-            additive=alias_index[norm_token],
+            ingredient=entry,
         )
 
-    # 3. Check for parenthesized sub-name e.g. 'Acidity Regulator (Citric Acid)'
+    # Priority 5: Check parenthesized sub-content e.g. 'Acidity Regulator (Citric Acid)'
     inner_paren_match = re.search(r"\(([^)]+)\)", raw_token)
     if inner_paren_match:
         inner_content = inner_paren_match.group(1).strip()
         norm_inner = normalize_lookup_token(inner_content)
-        if norm_inner in alias_index:
+
+        if norm_inner in kb.canonical_index:
+            return MatchedIngredient(
+                raw_text=raw_token,
+                match_type=MatchType.EXACT_CANONICAL,
+                confidence=1.0,
+                ingredient=kb.canonical_index[norm_inner],
+            )
+        if norm_inner in kb.indian_alias_index:
+            return MatchedIngredient(
+                raw_text=raw_token,
+                match_type=MatchType.INDIAN_LANGUAGE_ALIAS,
+                confidence=1.0,
+                ingredient=kb.indian_alias_index[norm_inner],
+            )
+        if norm_inner in kb.alias_index:
             return MatchedIngredient(
                 raw_text=raw_token,
                 match_type=MatchType.EXACT_ALIAS,
                 confidence=1.0,
-                additive=alias_index[norm_inner],
+                ingredient=kb.alias_index[norm_inner],
             )
-        # Check if inner content is an INS code directly
+
         norm_inner_ins = normalize_ins_code(inner_content)
-        if norm_inner_ins in ins_index:
+        if norm_inner_ins in kb.ins_index:
             return MatchedIngredient(
                 raw_text=raw_token,
                 match_type=MatchType.INS_NUMBER,
                 confidence=1.0,
-                additive=ins_index[norm_inner_ins],
+                ingredient=kb.ins_index[norm_inner_ins],
             )
 
     return None
 
 
+def parse_compound_token(
+    raw_token: str,
+    kb: IngredientKnowledgeBase,
+) -> tuple[MatchedIngredient | None, list[MatchedIngredient], list[str]]:
+    """
+    Parses a token that may represent a compound ingredient with nested sub-ingredients.
+    Returns:
+    (parent_match, matched_sub_ingredients, unmatched_sub_ingredients)
+    """
+    paren_idx = raw_token.find("(")
+    if paren_idx <= 0 or not raw_token.endswith(")"):
+        return None, [], []
+
+    outer_name = raw_token[:paren_idx].strip()
+    inner_clause = raw_token[paren_idx + 1 : -1].strip()
+
+    parent_match = match_single_token(outer_name, kb)
+    sub_tokens = split_ingredients_list(inner_clause)
+
+    matched_subs: list[MatchedIngredient] = []
+    unmatched_subs: list[str] = []
+
+    for sub in sub_tokens:
+        cleaned_sub = clean_raw_token(sub)
+        if not cleaned_sub:
+            continue
+        sub_m = match_single_token(cleaned_sub, kb)
+        if sub_m:
+            matched_subs.append(sub_m)
+        else:
+            unmatched_subs.append(cleaned_sub)
+
+    return parent_match, matched_subs, unmatched_subs
+
+
 def analyze_ingredients(ingredients_text: str) -> IngredientAnalysisResult:
     """
     Parses an ingredients declaration string deterministically against the
-    curated additive dataset.
+    extensible ingredient knowledge base.
     """
-    ins_index, alias_index = load_ingredient_reference()
+    kb = load_knowledge_base()
 
     raw_tokens = split_ingredients_list(ingredients_text)
-    matched_items: list[MatchedIngredient] = []
+    matched_by_id: dict[str, MatchedIngredient] = {}
     unmatched_items: list[str] = []
-    matched_ids: set[str] = set()
+    ambiguous_items: list[str] = []
 
     for token in raw_tokens:
         cleaned = clean_raw_token(token)
         if not cleaned:
             continue
 
-        match = match_single_token(cleaned, ins_index, alias_index)
+        norm_cleaned = normalize_lookup_token(cleaned)
+        if norm_cleaned in GENERIC_FUNCTIONAL_CLASSES:
+            ambiguous_items.append(cleaned)
+            unmatched_items.append(cleaned)
+            continue
+
+        # Check if token is a compound ingredient with parentheses
+        if "(" in cleaned and cleaned.endswith(")"):
+            parent_m, sub_matches, unmatched_subs = parse_compound_token(cleaned, kb)
+            if parent_m:
+                # Top-level is a recognized compound ingredient
+                cid = parent_m.ingredient.id
+                if cid in matched_by_id:
+                    existing = matched_by_id[cid]
+                    object.__setattr__(existing, "occurrences", existing.occurrences + 1)
+                    existing.raw_mentions.append(cleaned)
+                else:
+                    compound_record = MatchedIngredient(
+                        raw_text=cleaned,
+                        match_type=parent_m.match_type,
+                        confidence=parent_m.confidence,
+                        ingredient=parent_m.ingredient,
+                        occurrences=1,
+                        raw_mentions=[cleaned],
+                        sub_matches=sub_matches,
+                        is_compound=True,
+                    )
+                    matched_by_id[cid] = compound_record
+
+                # Also add recognized sub-matches
+                for sm in sub_matches:
+                    sid = sm.ingredient.id
+                    if sid in matched_by_id:
+                        ex = matched_by_id[sid]
+                        object.__setattr__(ex, "occurrences", ex.occurrences + 1)
+                        ex.raw_mentions.append(sm.raw_text)
+                    else:
+                        matched_by_id[sid] = sm
+
+                for us in unmatched_subs:
+                    if us not in unmatched_items:
+                        unmatched_items.append(us)
+                continue
+            elif sub_matches:
+                # Outer name was not a recognized compound, but sub-ingredients matched!
+                for sm in sub_matches:
+                    sid = sm.ingredient.id
+                    if sid in matched_by_id:
+                        ex = matched_by_id[sid]
+                        object.__setattr__(ex, "occurrences", ex.occurrences + 1)
+                        ex.raw_mentions.append(sm.raw_text)
+                    else:
+                        matched_by_id[sid] = sm
+                for us in unmatched_subs:
+                    if us not in unmatched_items:
+                        unmatched_items.append(us)
+                continue
+
+        # Standard single token match
+        match = match_single_token(cleaned, kb)
         if match:
-            # Prevent duplicate reports of the exact same additive in the same list
-            if match.additive.id not in matched_ids:
-                matched_items.append(match)
-                matched_ids.add(match.additive.id)
+            mid = match.ingredient.id
+            if mid in matched_by_id:
+                existing = matched_by_id[mid]
+                object.__setattr__(existing, "occurrences", existing.occurrences + 1)
+                existing.raw_mentions.append(cleaned)
+            else:
+                matched_by_id[mid] = match
         else:
             unmatched_items.append(cleaned)
 
+    matched_items = list(matched_by_id.values())
     total_tokens = len(matched_items) + len(unmatched_items)
+
+    # Category summary
+    cat_summary: dict[str, int] = {}
+    for m in matched_items:
+        primary_cat = m.ingredient.entity_type.value
+        cat_summary[primary_cat] = cat_summary.get(primary_cat, 0) + 1
+        for c in m.ingredient.categories:
+            c_val = c.value if isinstance(c, IngredientCategory) else str(c)
+            if c_val != primary_cat:
+                cat_summary[c_val] = cat_summary.get(c_val, 0) + 1
 
     return IngredientAnalysisResult(
         matched_items=matched_items,
@@ -219,4 +402,6 @@ def analyze_ingredients(ingredients_text: str) -> IngredientAnalysisResult:
         total_matched=len(matched_items),
         total_unmatched=len(unmatched_items),
         disclaimer=DISCLAIMER,
+        ambiguous_items=ambiguous_items,
+        category_summary=cat_summary,
     )

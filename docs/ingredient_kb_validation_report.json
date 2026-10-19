@@ -1,0 +1,30 @@
+{
+  "dataset_path": "C:\\Users\\SantoshPrajapati-Tec\\.gemini\\antigravity\\scratch\\healthyIndia\\data\\ingredient_reference\\ingredients_v1.json",
+  "version": "2.0.0",
+  "sha256": "d4d95028a5375b9d3d97a47ef200ea508d8cd51d4b8cab59da9be8c9586a3a56",
+  "is_valid": true,
+  "total_records": 16,
+  "duplicate_ids_count": 0,
+  "conflicting_identifiers_count": 0,
+  "alias_collisions_count": 0,
+  "broad_aliases_count": 0,
+  "category_breakdown": {
+    "food_additive": 8,
+    "ordinary_ingredient": 1,
+    "fortification_compound": 2,
+    "allergen": 1,
+    "sweetener": 1,
+    "compound_ingredient": 1,
+    "processing_aid": 1,
+    "nutritional_component": 1
+  },
+  "evidence_tracks": {
+    "schema_valid": 16,
+    "source_linked": 16,
+    "source_checked": 16,
+    "scientifically_reviewed": 16,
+    "regulatory_verified": 16
+  },
+  "errors": [],
+  "warnings": []
+}
