@@ -117,9 +117,13 @@ def extract_ins_pattern(token: str) -> str | None:
     """
     Detects INS or E number references within a token:
     1. Explicit prefix: 'INS 322', 'E-621', 'INS. 500(ii)', 'INS-500ii'
-    2. Functional wrapper with numeric code: 'Emulsifier (322)', 'Preservative (211)'
-    3. Trailing parenthesized code: '(621)', '(500(ii))'
-    4. Standalone code token: '500(ii)', '621'
+    2a. Functional wrapper with parenthesized code: 'Emulsifier (322)', 'Preservative (211)'
+    2b. Functional wrapper with unparenthesized code: 'Flavour enhancer 621', 'Preservative 211'
+    3. Trailing or enclosed parenthesized code: '(621)', '(500(ii))', 'Additive (621)'
+    4. Standalone code token with explicit sub-index: '500(ii)', '322(i)'
+
+    Bare numbers (e.g. '621', '211', '330') out of context without INS/E prefix,
+    parentheses, or functional class are NOT matched to avoid false positives.
     """
     # 1. Explicit INS or E prefix
     explicit_match = re.search(
@@ -130,26 +134,36 @@ def extract_ins_pattern(token: str) -> str | None:
     if explicit_match:
         return explicit_match.group(1)
 
-    # 2. Functional prefix with parenthesized code
-    pattern = (
+    # 2a. Functional prefix with parenthesized code
+    pattern_paren = (
         FUNCTIONAL_PREFIXES_REGEX
         + r"\s*\(\s*(?:ins\s*)?([0-9]{3,4}[a-z0-9]*(?:\([a-z0-9]+\))?)\s*\)"
     )
-    functional_match = re.search(pattern, token, re.IGNORECASE)
+    functional_match = re.search(pattern_paren, token, re.IGNORECASE)
     if functional_match:
         return functional_match.group(1)
 
-    # 3. Trailing parenthesized 3-4 digit code e.g. '(621)'
+    # 2b. Functional prefix with unparenthesized code: 'Flavour Enhancer 621', 'Preservative 211'
+    pattern_unparen = (
+        FUNCTIONAL_PREFIXES_REGEX + r"\s+(?:ins\s*)?([0-9]{3,4}[a-z0-9]*(?:\([a-z0-9]+\))?)(?:\b|$)"
+    )
+    functional_unparen_match = re.search(pattern_unparen, token, re.IGNORECASE)
+    if functional_unparen_match:
+        return functional_unparen_match.group(1)
+
+    # 3. Trailing or enclosed parenthesized 3-4 digit code
+    # e.g. '(621)', '(500(ii))', 'Additive (621)'
     paren_code_match = re.search(
-        r"\(\s*([0-9]{3,4}[a-z0-9]*(?:\([a-z0-9]+\))?)\s*\)",
+        r"\(\s*(?:ins\s*)?([0-9]{3,4}[a-z0-9]*(?:\([a-z0-9]+\))?)\s*\)",
         token,
+        re.IGNORECASE,
     )
     if paren_code_match:
         return paren_code_match.group(1)
 
-    # 4. Standalone code token e.g. '500(ii)', '621'
+    # 4. Standalone code token with explicit sub-index (e.g. '500(ii)', '322(i)')
     standalone_code = re.match(
-        r"^([0-9]{3,4}[a-z0-9]*(?:\([a-z0-9]+\))?)$",
+        r"^([0-9]{3,4}\([a-z0-9]+\))$",
         token.strip(),
         re.IGNORECASE,
     )

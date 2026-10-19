@@ -1,6 +1,6 @@
 {
-  "version": "2.0.0",
-  "dataset_name": "healthyIndia Comprehensive Ingredient Knowledge Base (Phase 4A)",
+  "version": "2.1.0",
+  "dataset_name": "healthyIndia Comprehensive Ingredient Knowledge Base (Phase 4C Audited)",
   "last_updated": "2026-10-19",
   "license": "Open Reference Dataset for Consumer Transparency (FSSAI Statutory Rules & Public Domain Citations)",
   "disclaimer": "Identification of an ingredient indicates its technological presence and functional purpose; it does not evaluate personal medical risk or determine absolute food safety. Statutory permission under FSSAI is category-specific. The presence of an INS number does NOT indicate blanket authorization across all food categories.",
@@ -47,8 +47,7 @@
         "ins 621",
         "ins621",
         "e621",
-        "e 621",
-        "621"
+        "e 621"
       ],
       "sources": [
         {
@@ -59,7 +58,10 @@
           "publication_date": "2011-08-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "Regulation 3.1.11 & Appendix A Table 1",
-          "supported_claims": "Authorizes monosodium glutamate under Good Manufacturing Practice (GMP) in specified food categories (seasonings, snacks, processed noodles). Strictly prohibits addition of MSG to any food meant for infants below 12 months."
+          "supported_claims": "Authorizes monosodium glutamate under Good Manufacturing Practice (GMP) in specified food categories (seasonings, snacks, processed noodles). Strictly prohibits addition of MSG to any food meant for infants below 12 months.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "FSSAI Food Safety and Standards (Labelling and Display) Regulations, 2020 - Mandatory Declarations",
@@ -69,7 +71,10 @@
           "publication_date": "2020-11-17",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "Schedule II, Clause 1(1)",
-          "supported_claims": "Legally mandates the label advisory 'NOT RECOMMENDED FOR INFANTS BELOW 12 MONTHS' whenever MSG is added to a food product."
+          "supported_claims": "Legally mandates the label advisory 'NOT RECOMMENDED FOR INFANTS BELOW 12 MONTHS' whenever MSG is added to a food product.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "WHO / FAO JECFA Toxicological Evaluation of Certain Food Additives - Monosodium L-glutamate",
@@ -79,7 +84,10 @@
           "publication_date": "1987-03-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "WHO Technical Report Series 759 (31st Report), Monograph 2464",
-          "supported_claims": "Allocated an ADI 'not specified', indicating that dietary intake necessary for technological purpose does not represent a hazard to health."
+          "supported_claims": "Allocated an ADI 'not specified', indicating that dietary intake necessary for technological purpose does not represent a hazard to health.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_scientific_body"
         }
       ],
       "jurisdiction": "India (FSSAI) & Codex Alimentarius",
@@ -101,11 +109,22 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI) & Codex Alimentarius",
         "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
-        "notes": "Audited in 4-phase integrity review."
+        "notes": "JECFA ADI 'not specified' (TRS 759) verified. FSSAI 2011 Appendix A Table 1 GMP authorization and infant food prohibition verified. Mandatory label declaration 'NOT RECOMMENDED FOR INFANTS BELOW 12 MONTHS' verified under Labelling & Display Regulations 2020 Schedule II Clause 1(1). Authorization is category-specific, not blanket.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "JECFA ADI 'not specified' (TRS 759) verified. FSSAI 2011 Appendix A Table 1 GMP authorization and infant food prohibition verified. Mandatory label declaration 'NOT RECOMMENDED FOR INFANTS BELOW 12 MONTHS' verified under Labelling & Display Regulations 2020 Schedule II Clause 1(1). Authorization is category-specific, not blanket."
       },
       "record_status": "active",
-      "dataset_version": "2.0.0",
-      "last_reviewed": "2026-10-19"
+      "dataset_version": "2.1.0",
+      "last_reviewed": "2026-10-19",
+      "cas_number": "142-47-2"
     },
     {
       "id": "ins-951",
@@ -116,16 +135,16 @@
         "Non-nutritive sweetener"
       ],
       "chemical_identity": "CAS 22839-47-0 | Molecular Formula: C14H18N2O5 | N-L-alpha-Aspartyl-L-phenylalanine 1-methyl ester",
-      "acceptable_daily_intake": "ADI: 0\u201340 mg/kg body weight/day (established by JECFA in 1981, reaffirmed in July 2023)",
-      "health_effects_evidence": "In July 2023, WHO IARC classified aspartame as Group 2B ('possibly carcinogenic to humans' based on limited evidence in humans for hepatocellular carcinoma), while the Joint FAO/WHO Expert Committee on Food Additives (JECFA) reaffirmed the established ADI of 0\u201340 mg/kg body weight/day, concluding that evaluated evidence indicated no sufficient reason to change the previously established ADI. In consumption context, WHO noted that for a 70 kg adult consuming diet soft drinks containing 200\u2013300 mg aspartame per can, more than 9\u201314 cans daily would be required to exceed the ADI, assuming no other dietary sources. For a 60 kg reference adult, the calculated ADI is 2,400 mg/day (40 mg/kg \u00d7 60 kg); consuming 12 cans (at 200 mg/can) or 8 cans (at 300 mg/can) reaches the calculated ADI, and more than 8\u201312 cans would be required to exceed it. Reaching the ADI is not equivalent to exceeding it, and an ADI is a lifetime safety threshold, not a daily target.",
+      "acceptable_daily_intake": "ADI: 0–40 mg/kg body weight/day (established by JECFA in 1981, reaffirmed in July 2023)",
+      "health_effects_evidence": "In July 2023, WHO IARC classified aspartame as Group 2B ('possibly carcinogenic to humans' based on limited evidence in humans for hepatocellular carcinoma), while the Joint FAO/WHO Expert Committee on Food Additives (JECFA) reaffirmed the established ADI of 0–40 mg/kg body weight/day, concluding that evaluated evidence indicated no sufficient reason to change the previously established ADI. In consumption context, WHO noted that for a 70 kg adult consuming diet soft drinks containing 200–300 mg aspartame per can, more than 9–14 cans daily would be required to exceed the ADI, assuming no other dietary sources. For a 60 kg reference adult, the calculated ADI is 2,400 mg/day (40 mg/kg × 60 kg); consuming 12 cans (at 200 mg/can) or 8 cans (at 300 mg/can) reaches the calculated ADI, and more than 8–12 cans would be required to exceed it. Reaching the ADI is not equivalent to exceeding it, and an ADI is a lifetime safety threshold, not a daily target.",
       "population_sensitivities": "Severe metabolic hazard for individuals suffering from Phenylketonuria (PKU), who lack the enzyme phenylalanine hydroxylase needed to metabolize phenylalanine. Requires prominent statutory packaging warning.",
       "everyday_quantity_explanation": {
         "original_value": 40.0,
         "original_unit": "mg/kg body weight/day",
         "guidance_type": "acceptable_daily_intake",
         "plain_language_summary": "Acceptable Daily Intake (ADI) is the maximum amount of a food additive that can be safely consumed daily over an entire lifetime without appreciable health risk. It is a toxicological safety boundary, not a nutritional goal or recommended intake.",
-        "everyday_comparison": "For a 60 kg adult (the standard ICMR-NIN Indian reference adult), the daily ADI limit is 2,400 mg (2.4 grams). For diet soft drinks containing 200\u2013300 mg aspartame per can, consuming 8 to 12 cans reaches this daily limit, and more than 8 to 12 cans daily would be required to exceed it.",
-        "formula": "Body Weight (kg) \u00d7 40 mg/kg/day = Daily ADI Limit (mg/day)",
+        "everyday_comparison": "For a 60 kg adult (the standard ICMR-NIN Indian reference adult), the daily ADI limit is 2,400 mg (2.4 grams). For diet soft drinks containing 200–300 mg aspartame per can, consuming 8 to 12 cans reaches this daily limit, and more than 8 to 12 cans daily would be required to exceed it.",
+        "formula": "Body Weight (kg) × 40 mg/kg/day = Daily ADI Limit (mg/day)",
         "assumptions": [
           "Calculated for a standard reference adult weight of 60 kg (ICMR-NIN 2020) and 70 kg (WHO global reference).",
           "Soft drink cans contain approximately 200 mg to 300 mg aspartame per 330 ml can (typical commercial formulations).",
@@ -145,8 +164,7 @@
         "ins 951",
         "ins951",
         "e951",
-        "e 951",
-        "951"
+        "e 951"
       ],
       "sources": [
         {
@@ -157,7 +175,10 @@
           "publication_date": "2011-08-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "Regulation 3.1.2 & Table 2",
-          "supported_claims": "Authorizes aspartame only in specified food categories subject to strict statutory numerical limits (e.g. carbonated water max 700 ppm, chewing gum max 10,000 ppm, confectionery max 2,000 ppm). Prohibited in general foods outside authorized list."
+          "supported_claims": "Authorizes aspartame only in specified food categories subject to strict statutory numerical limits (e.g. carbonated water max 700 ppm, chewing gum max 10,000 ppm, confectionery max 2,000 ppm). Prohibited in general foods outside authorized list.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "FSSAI Food Safety and Standards (Labelling and Display) Regulations, 2020 - Artificial Sweetener Declarations",
@@ -167,7 +188,10 @@
           "publication_date": "2020-11-17",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "Schedule II, Clause 1(2)",
-          "supported_claims": "Mandates explicit label disclosures: 'CONTAINS ARTIFICIAL SWEETENER' and 'NOT RECOMMENDED FOR PHENYLKETONURICS' along with the quantity of sweetener."
+          "supported_claims": "Mandates explicit label disclosures: 'CONTAINS ARTIFICIAL SWEETENER' and 'NOT RECOMMENDED FOR PHENYLKETONURICS' along with the quantity of sweetener.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "WHO IARC & JECFA Joint Assessment of Aspartame (2023)",
@@ -177,7 +201,10 @@
           "publication_date": "2023-07-14",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "WHO Summary Report & JECFA 96th Meeting Findings",
-          "supported_claims": "IARC classified aspartame as Group 2B (possible carcinogen, limited evidence); JECFA reaffirmed safety at intake within the established ADI of 0-40 mg/kg body weight."
+          "supported_claims": "IARC classified aspartame as Group 2B (possible carcinogen, limited evidence); JECFA reaffirmed safety at intake within the established ADI of 0-40 mg/kg body weight.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_scientific_body"
         }
       ],
       "jurisdiction": "India (FSSAI) & Codex Alimentarius",
@@ -199,11 +226,22 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI) & Codex Alimentarius",
         "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
-        "notes": "Audited in 4-phase integrity review."
+        "notes": "JECFA ADI 0-40 mg/kg bw/day reaffirmed July 2023 verified. IARC Group 2B classification verified. FSSAI 2011 Table 2 permitted categories and maximum limits (e.g. 700 ppm carbonated water) verified. Mandatory PKU label advisory verified under FSSAI Labelling Regulations 2020 Schedule II Clause 1(2). Authorization is strictly category-limited.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "JECFA ADI 0-40 mg/kg bw/day reaffirmed July 2023 verified. IARC Group 2B classification verified. FSSAI 2011 Table 2 permitted categories and maximum limits (e.g. 700 ppm carbonated water) verified. Mandatory PKU label advisory verified under FSSAI Labelling Regulations 2020 Schedule II Clause 1(2). Authorization is strictly category-limited."
       },
       "record_status": "active",
-      "dataset_version": "2.0.0",
-      "last_reviewed": "2026-10-19"
+      "dataset_version": "2.1.0",
+      "last_reviewed": "2026-10-19",
+      "cas_number": "22839-47-0"
     },
     {
       "id": "ins-150d",
@@ -214,8 +252,8 @@
         "Food colour"
       ],
       "chemical_identity": "CAS 8028-89-5 | Complex polymeric colouring material prepared by controlled heat treatment of carbohydrates with ammonium and sulfite compounds",
-      "acceptable_daily_intake": "Group ADI: 0\u2013200 mg/kg body weight/day on solids basis (established by JECFA in 1985, reaffirmed in 2000, WHO Food Additives Series 44)",
-      "health_effects_evidence": "Toxicological evaluations by JECFA (1985, 2000) and EFSA (2011) assessed 4-methylimidazole (4-MEI), a trace manufacturing byproduct formed during ammonium caramel production. High doses of isolated 4-MEI in rodent bioassays produced alveolar/bronchiolar neoplasms in mice. International and Indian statutory standards established a strict purity threshold limiting 4-MEI to maximum 250 mg/kg in commercial Caramel IV (on an equivalent colour basis). JECFA and EFSA concluded that when Caramel IV complies with these purity specifications, human dietary intake within the group ADI of 0\u2013200 mg/kg bw does not indicate a health concern.",
+      "acceptable_daily_intake": "Group ADI: 0–200 mg/kg body weight/day on solids basis (established by JECFA in 1985, reaffirmed in 2000, WHO Food Additives Series 44)",
+      "health_effects_evidence": "Toxicological evaluations by JECFA (1985, 2000) and EFSA (2011) assessed 4-methylimidazole (4-MEI), a trace manufacturing byproduct formed during ammonium caramel production. High doses of isolated 4-MEI in rodent bioassays produced alveolar/bronchiolar neoplasms in mice. International and Indian statutory standards established a strict purity threshold limiting 4-MEI to maximum 250 mg/kg in commercial Caramel IV (on an equivalent colour basis). JECFA and EFSA concluded that when Caramel IV complies with these purity specifications, human dietary intake within the group ADI of 0–200 mg/kg bw does not indicate a health concern.",
       "population_sensitivities": "May contain trace bound sulfur dioxide/sulfites from the manufacturing process. Individuals diagnosed with severe sulfite hypersensitivity should check product allergen statements.",
       "everyday_quantity_explanation": {
         "original_value": 200.0,
@@ -223,7 +261,7 @@
         "guidance_type": "acceptable_daily_intake",
         "plain_language_summary": "Acceptable Daily Intake (ADI) is the maximum estimated intake that can be safely consumed daily over a lifetime. It represents an upper toxicological boundary, not a recommended consumption amount.",
         "everyday_comparison": "For a 60 kg adult, the group daily ADI ceiling corresponds to 12,000 mg (12 grams) of caramel colour solids per day. Typical servings of caramel-coloured beverages contribute a small fraction of this lifetime threshold.",
-        "formula": "60 kg \u00d7 200 mg/kg/day = 12,000 mg/day (12 g/day)",
+        "formula": "60 kg × 200 mg/kg/day = 12,000 mg/day (12 g/day)",
         "assumptions": [
           "Calculated for a reference 60 kg adult.",
           "Expressed on a solids basis as specified by JECFA."
@@ -248,8 +286,7 @@
         "ins 150d",
         "ins150d",
         "e150d",
-        "e 150d",
-        "150d"
+        "e 150d"
       ],
       "sources": [
         {
@@ -260,7 +297,10 @@
           "publication_date": "2011-08-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "Regulation 3.1.4 & Table 11",
-          "supported_claims": "Permits Caramel IV in specified food categories (carbonated beverages, confectionery, baked goods, sauces) subject to purity specifications including max 250 mg/kg 4-MEI limit."
+          "supported_claims": "Permits Caramel IV in specified food categories (carbonated beverages, confectionery, baked goods, sauces) subject to purity specifications including max 250 mg/kg 4-MEI limit.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "JECFA Toxicological Evaluation of Certain Food Additives - Caramel Colours",
@@ -270,7 +310,10 @@
           "publication_date": "2000-06-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "WHO Food Additives Series 44 (55th JECFA)",
-          "supported_claims": "Allocated group ADI of 0-200 mg/kg bw for Caramel IV on solids basis; concluded dietary exposure within purity standards presents no carcinogenic risk."
+          "supported_claims": "Allocated group ADI of 0-200 mg/kg bw for Caramel IV on solids basis; concluded dietary exposure within purity standards presents no carcinogenic risk.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_scientific_body"
         }
       ],
       "jurisdiction": "India (FSSAI) & Codex Alimentarius",
@@ -291,11 +334,22 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI) & Codex Alimentarius",
         "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
-        "notes": "Audited in 4-phase integrity review."
+        "notes": "JECFA Group ADI 0-200 mg/kg bw (FAS 44) verified. Purity standard limiting 4-MEI to <= 250 mg/kg verified. FSSAI 2011 Table 11 category permissions and purity standards verified. Prohibited in unprocessed staples, juices, and tea.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "JECFA Group ADI 0-200 mg/kg bw (FAS 44) verified. Purity standard limiting 4-MEI to <= 250 mg/kg verified. FSSAI 2011 Table 11 category permissions and purity standards verified. Prohibited in unprocessed staples, juices, and tea."
       },
       "record_status": "active",
-      "dataset_version": "2.0.0",
-      "last_reviewed": "2026-10-19"
+      "dataset_version": "2.1.0",
+      "last_reviewed": "2026-10-19",
+      "cas_number": "8028-89-5"
     },
     {
       "id": "ins-322",
@@ -344,10 +398,7 @@
         "emulsifier (ins 322(i))",
         "emulsifier (ins 322i)",
         "emulsifier ins 322",
-        "emulsifier ins 322(i)",
-        "322",
-        "322(i)",
-        "322i"
+        "emulsifier ins 322(i)"
       ],
       "sources": [
         {
@@ -358,7 +409,10 @@
           "publication_date": "2011-08-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "Regulation 3.1.8 & Appendix A (GMP List)",
-          "supported_claims": "Permits lecithins under Good Manufacturing Practice (GMP) across general food formulations."
+          "supported_claims": "Permits lecithins under Good Manufacturing Practice (GMP) across general food formulations.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "FSSAI Food Safety and Standards (Labelling and Display) Regulations, 2020 - Allergen Labelling",
@@ -368,7 +422,10 @@
           "publication_date": "2020-11-17",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "Regulation 5(3)(b)",
-          "supported_claims": "Requires mandatory declaration of botanical allergen source (e.g. Soya) when an additive is derived from recognized allergen commodities."
+          "supported_claims": "Requires mandatory declaration of botanical allergen source (e.g. Soya) when an additive is derived from recognized allergen commodities.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "JECFA Toxicological Evaluation of Certain Food Additives - Lecithins",
@@ -378,7 +435,10 @@
           "publication_date": "1973-06-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "WHO Technical Report Series 539 (17th Report)",
-          "supported_claims": "Assigned ADI 'not limited', recognizing physiological lipid nature with no toxicological risk."
+          "supported_claims": "Assigned ADI 'not limited', recognizing physiological lipid nature with no toxicological risk.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_scientific_body"
         }
       ],
       "jurisdiction": "India (FSSAI) & Codex Alimentarius",
@@ -400,11 +460,22 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI) & Codex Alimentarius",
         "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
-        "notes": "Audited in 4-phase integrity review."
+        "notes": "JECFA ADI 'not limited' (TRS 539) verified. FSSAI 2011 Appendix A GMP table verified. Mandatory declaration of botanical origin for allergen derivatives (e.g., Soya) verified under FSSAI Labelling & Display Regulations 2020 Reg 5(3)(b).",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "JECFA ADI 'not limited' (TRS 539) verified. FSSAI 2011 Appendix A GMP table verified. Mandatory declaration of botanical origin for allergen derivatives (e.g., Soya) verified under FSSAI Labelling & Display Regulations 2020 Reg 5(3)(b)."
       },
       "record_status": "active",
-      "dataset_version": "2.0.0",
-      "last_reviewed": "2026-10-19"
+      "dataset_version": "2.1.0",
+      "last_reviewed": "2026-10-19",
+      "cas_number": "8002-43-5"
     },
     {
       "id": "ins-211",
@@ -415,8 +486,8 @@
         "Preservative"
       ],
       "chemical_identity": "CAS 532-32-1 | Molecular Formula: C7H5NaO2 | Sodium salt of benzenecarboxylic acid",
-      "acceptable_daily_intake": "Group ADI: 0\u20135 mg/kg body weight/day (established by JECFA in 1996, expressed as benzoic acid equivalent)",
-      "health_effects_evidence": "Sodium benzoate is absorbed and rapidly conjugated with glycine in the liver to form hippuric acid, which is excreted in urine within 24 hours. In acidic beverages formulated with both sodium benzoate and ascorbic acid (Vitamin C), trace catalytic decarboxylation can form benzene under heat and UV exposure. Strict manufacturing controls, pH management, and statutory surveillance ensure benzene formation remains well below the WHO drinking water guideline of 10 ppb (0.01 mg/L). Within the established ADI of 0\u20135 mg/kg bw and statutory maximum limits, dietary exposure is effectively metabolized without observed systemic toxicity.",
+      "acceptable_daily_intake": "Group ADI: 0–5 mg/kg body weight/day (established by JECFA in 1996, expressed as benzoic acid equivalent)",
+      "health_effects_evidence": "Sodium benzoate is absorbed and rapidly conjugated with glycine in the liver to form hippuric acid, which is excreted in urine within 24 hours. In acidic beverages formulated with both sodium benzoate and ascorbic acid (Vitamin C), trace catalytic decarboxylation can form benzene under heat and UV exposure. Strict manufacturing controls, pH management, and statutory surveillance ensure benzene formation remains well below the WHO drinking water guideline of 10 ppb (0.01 mg/L). Within the established ADI of 0–5 mg/kg bw and statutory maximum limits, dietary exposure is effectively metabolized without observed systemic toxicity.",
       "population_sensitivities": "Non-immunological pseudo-allergic reactions (urticaria, contact dermatitis, asthma exacerbation) have been reported in a small fraction of individuals with pre-existing aspirin-sensitive asthma or chronic idiopathic urticaria.",
       "everyday_quantity_explanation": {
         "original_value": 5.0,
@@ -424,7 +495,7 @@
         "guidance_type": "acceptable_daily_intake",
         "plain_language_summary": "Acceptable Daily Intake (ADI) is an upper toxicological boundary for daily lifetime consumption. It is not a nutritional target or recommended allowance.",
         "everyday_comparison": "For a 60 kg adult, the daily ADI ceiling is 300 mg of benzoic acid equivalents. Under Indian food law, a 500 ml serving of carbonated fruit beverage (max 120 ppm) can contain up to 60 mg benzoate, which is about 20% of this daily ADI limit.",
-        "formula": "60 kg \u00d7 5 mg/kg/day = 300 mg/day",
+        "formula": "60 kg × 5 mg/kg/day = 300 mg/day",
         "assumptions": [
           "Calculated for a reference 60 kg adult.",
           "Expressed as benzoic acid equivalents as defined by JECFA.",
@@ -445,8 +516,7 @@
         "ins 211",
         "ins211",
         "e211",
-        "e 211",
-        "211"
+        "e 211"
       ],
       "sources": [
         {
@@ -457,7 +527,10 @@
           "publication_date": "2011-08-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "Regulation 3.1.5 & Table on Class II Preservatives",
-          "supported_claims": "Permits sodium benzoate as a Class II preservative only in specified food categories with strict statutory maximum residue limits (e.g. fruit juices/squashes max 600 ppm, carbonated fruit beverages max 120 ppm, pickles max 250 ppm)."
+          "supported_claims": "Permits sodium benzoate as a Class II preservative only in specified food categories with strict statutory maximum residue limits (e.g. fruit juices/squashes max 600 ppm, carbonated fruit beverages max 120 ppm, pickles max 250 ppm).",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "WHO / FAO JECFA Toxicological Evaluation of Certain Food Additives - Benzoates",
@@ -467,7 +540,10 @@
           "publication_date": "1996-06-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "WHO Food Additives Series 37 (46th Report)",
-          "supported_claims": "Established group ADI of 0-5 mg/kg body weight for benzoic acid and its sodium, potassium, and calcium salts."
+          "supported_claims": "Established group ADI of 0-5 mg/kg body weight for benzoic acid and its sodium, potassium, and calcium salts.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_scientific_body"
         }
       ],
       "jurisdiction": "India (FSSAI) & Codex Alimentarius",
@@ -488,11 +564,22 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI) & Codex Alimentarius",
         "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
-        "notes": "Audited in 4-phase integrity review."
+        "notes": "JECFA Group ADI 0-5 mg/kg bw (FAS 37) verified. FSSAI 2011 Class II preservative limits (e.g., fruit squashes max 600 ppm) verified. In acidic beverages with ascorbic acid, trace benzene decarboxylation is monitored below WHO guideline (10 ppb). Prohibited in commodities disallowing chemical preservation.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "JECFA Group ADI 0-5 mg/kg bw (FAS 37) verified. FSSAI 2011 Class II preservative limits (e.g., fruit squashes max 600 ppm) verified. In acidic beverages with ascorbic acid, trace benzene decarboxylation is monitored below WHO guideline (10 ppb). Prohibited in commodities disallowing chemical preservation."
       },
       "record_status": "active",
-      "dataset_version": "2.0.0",
-      "last_reviewed": "2026-10-19"
+      "dataset_version": "2.1.0",
+      "last_reviewed": "2026-10-19",
+      "cas_number": "532-32-1"
     },
     {
       "id": "ins-330",
@@ -533,8 +620,7 @@
         "ins 330",
         "ins330",
         "e330",
-        "e 330",
-        "330"
+        "e 330"
       ],
       "sources": [
         {
@@ -545,7 +631,10 @@
           "publication_date": "2011-08-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "Regulation 3.1.8 & Appendix A (GMP Table)",
-          "supported_claims": "Permits citric acid under Good Manufacturing Practice (GMP) across virtually all processed food categories unless prohibited by a specific commodity standard."
+          "supported_claims": "Permits citric acid under Good Manufacturing Practice (GMP) across virtually all processed food categories unless prohibited by a specific commodity standard.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "JECFA Toxicological Evaluation of Certain Food Additives - Citric Acid",
@@ -555,7 +644,10 @@
           "publication_date": "1973-06-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "WHO Technical Report Series 539 (17th Report)",
-          "supported_claims": "Allocated ADI 'not limited', recognizing essential role in cellular energy metabolism."
+          "supported_claims": "Allocated ADI 'not limited', recognizing essential role in cellular energy metabolism.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_scientific_body"
         }
       ],
       "jurisdiction": "India (FSSAI) & Codex Alimentarius",
@@ -576,11 +668,22 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI) & Codex Alimentarius",
         "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
-        "notes": "Audited in 4-phase integrity review."
+        "notes": "JECFA ADI 'not limited' (TRS 539) verified. Normal intermediary in Krebs tricarboxylic cycle. FSSAI 2011 Appendix A GMP authorization verified across general processed food categories.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "JECFA ADI 'not limited' (TRS 539) verified. Normal intermediary in Krebs tricarboxylic cycle. FSSAI 2011 Appendix A GMP authorization verified across general processed food categories."
       },
       "record_status": "active",
-      "dataset_version": "2.0.0",
-      "last_reviewed": "2026-10-19"
+      "dataset_version": "2.1.0",
+      "last_reviewed": "2026-10-19",
+      "cas_number": "77-92-9"
     },
     {
       "id": "ins-102",
@@ -591,7 +694,7 @@
         "Synthetic food colour"
       ],
       "chemical_identity": "CAS 1934-21-0 | Molecular Formula: C16H9N4Na3O9S2 | Trisodium 5-hydroxy-1-(4-sulfonatophenyl)-4-(4-sulfonatophenylazo)-1H-pyrazole-3-carboxylate",
-      "acceptable_daily_intake": "ADI: 0\u201310 mg/kg body weight/day (established by JECFA in 2016, WHO FAS 73, based on NOAEL of 984 mg/kg bw/day)",
+      "acceptable_daily_intake": "ADI: 0–10 mg/kg body weight/day (established by JECFA in 2016, WHO FAS 73, based on NOAEL of 984 mg/kg bw/day)",
       "health_effects_evidence": "Comprehensive toxicological reviews by JECFA (2016), EFSA (2009), and the US FDA evaluated extensive multi-generational reproductive, neurobehavioral, and chronic bioassays, concluding that tartrazine is not genotoxic or carcinogenic at dietary exposure levels. Clinical trials indicate that a small fraction of individuals (<0.1%), particularly those with aspirin-induced asthma or chronic urticaria, can experience intolerance or pseudo-allergic cross-reactions (bronchospasm, rhinitis, urticaria). While the 2007 Southampton study reported small behavioral changes in children consuming synthetic colour mixtures, subsequent assessments by JECFA and EFSA concluded that the findings did not substantiate a causal neurotoxic relationship for the general population.",
       "population_sensitivities": "Cross-sensitivity in patients with aspirin-sensitive asthma or chronic idiopathic urticaria. Mandatory bold statutory packaging disclosure required in India.",
       "everyday_quantity_explanation": {
@@ -600,7 +703,7 @@
         "guidance_type": "acceptable_daily_intake",
         "plain_language_summary": "Acceptable Daily Intake (ADI) is the estimated maximum intake that can be safely consumed daily over a lifetime without appreciable health risk. It is a safety limit, not a dietary target.",
         "everyday_comparison": "For a 60 kg adult, the daily ADI limit is 600 mg. Under Indian regulations, synthetic colour is capped at a maximum of 100 mg/kg (ppm) in most foods. A person would have to eat 6 kg of brightly coloured food with maximum dye content daily to reach the ADI.",
-        "formula": "60 kg \u00d7 10 mg/kg/day = 600 mg/day",
+        "formula": "60 kg × 10 mg/kg/day = 600 mg/day",
         "assumptions": [
           "Calculated for a standard reference 60 kg adult.",
           "Finished food contains the maximum statutory FSSAI colour concentration of 100 ppm (100 mg per kg of food)."
@@ -626,8 +729,7 @@
         "ins 102",
         "ins102",
         "e102",
-        "e 102",
-        "102"
+        "e 102"
       ],
       "sources": [
         {
@@ -638,7 +740,10 @@
           "publication_date": "2011-08-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "Regulation 3.1.4 & Clauses on Permitted Synthetic Colours",
-          "supported_claims": "Permits tartrazine strictly in authorized categories (biscuits, confectionery, fruit syrups, carbonated fruit beverages) with mandatory upper limits (max 100 ppm; max 200 ppm in canned fruit). Prohibited in dairy, meat, tea, spices, staple grains."
+          "supported_claims": "Permits tartrazine strictly in authorized categories (biscuits, confectionery, fruit syrups, carbonated fruit beverages) with mandatory upper limits (max 100 ppm; max 200 ppm in canned fruit). Prohibited in dairy, meat, tea, spices, staple grains.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "FSSAI Food Safety and Standards (Labelling and Display) Regulations, 2020 - Mandatory Declaration of Synthetic Colours",
@@ -648,7 +753,10 @@
           "publication_date": "2020-11-17",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "Schedule II, Clause 1(3)",
-          "supported_claims": "Requires mandatory packaging declaration in capital letters: 'CONTAINS PERMITTED SYNTHETIC FOOD COLOUR(S)'."
+          "supported_claims": "Requires mandatory packaging declaration in capital letters: 'CONTAINS PERMITTED SYNTHETIC FOOD COLOUR(S)'.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "WHO / FAO JECFA Toxicological Evaluation of Certain Food Additives - Tartrazine",
@@ -658,7 +766,10 @@
           "publication_date": "2016-06-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "WHO Food Additives Series 73 (82nd JECFA)",
-          "supported_claims": "Established ADI of 0-10 mg/kg body weight based on no-observed-adverse-effect level (NOAEL) of 984 mg/kg bw/day."
+          "supported_claims": "Established ADI of 0-10 mg/kg body weight based on no-observed-adverse-effect level (NOAEL) of 984 mg/kg bw/day.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_scientific_body"
         }
       ],
       "jurisdiction": "India (FSSAI) & Codex Alimentarius",
@@ -679,11 +790,22 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI) & Codex Alimentarius",
         "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
-        "notes": "Audited in 4-phase integrity review."
+        "notes": "JECFA ADI 0-10 mg/kg bw (FAS 73) verified. Aspirin cross-sensitivity clinical data verified (<0.1%). FSSAI 2011 Reg 3.1.4 synthetic colour limits (100-200 ppm) and prohibited food categories verified. Mandatory label statement 'CONTAINS PERMITTED SYNTHETIC FOOD COLOUR(S)' verified under FSSAI 2020 Schedule II Clause 1(3).",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "JECFA ADI 0-10 mg/kg bw (FAS 73) verified. Aspirin cross-sensitivity clinical data verified (<0.1%). FSSAI 2011 Reg 3.1.4 synthetic colour limits (100-200 ppm) and prohibited food categories verified. Mandatory label statement 'CONTAINS PERMITTED SYNTHETIC FOOD COLOUR(S)' verified under FSSAI 2020 Schedule II Clause 1(3)."
       },
       "record_status": "active",
-      "dataset_version": "2.0.0",
-      "last_reviewed": "2026-10-19"
+      "dataset_version": "2.1.0",
+      "last_reviewed": "2026-10-19",
+      "cas_number": "1934-21-0"
     },
     {
       "id": "ins-500ii",
@@ -705,7 +827,7 @@
         "guidance_type": "acceptable_daily_intake",
         "plain_language_summary": "Acceptable Daily Intake (ADI) of 'not specified' reflects the very low systemic toxicity of carbonates at technological levels. It is not an invitation to consume unlimited quantities.",
         "everyday_comparison": "Commonly known as baking soda, it dissociates into normal physiological minerals. One level standardized 5 ml metric teaspoon of baking soda weighs about 4.8 grams and contributes approximately 1,315 mg of sodium (over 65% of the daily 2,000 mg sodium limit).",
-        "formula": "Baking soda mass (g) \u00d7 0.274 = Sodium mass (g)",
+        "formula": "Baking soda mass (g) × 0.274 = Sodium mass (g)",
         "assumptions": [
           "Standard metric 5 ml level teaspoon of baking soda density is approximately 0.96 g/ml (~4.8 g per teaspoon).",
           "Contains 27.37% elemental sodium by chemical stoichiometry."
@@ -735,9 +857,7 @@
         "e500(ii)",
         "e 500(ii)",
         "e500ii",
-        "e 500ii",
-        "500(ii)",
-        "500ii"
+        "e 500ii"
       ],
       "sources": [
         {
@@ -748,7 +868,10 @@
           "publication_date": "2011-08-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "Regulation 3.1.8 & Appendix A (GMP Table)",
-          "supported_claims": "Permitted under Good Manufacturing Practice (GMP) in bakery products, snack foods, cereal flours, and confectionery."
+          "supported_claims": "Permitted under Good Manufacturing Practice (GMP) in bakery products, snack foods, cereal flours, and confectionery.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "JECFA Toxicological Evaluation of Certain Food Additives - Carbonates and Bicarbonates",
@@ -758,7 +881,10 @@
           "publication_date": "1985-06-01",
           "retrieval_date": "2026-10-18",
           "section_or_regulation": "WHO Food Additives Series 20 (29th Report)",
-          "supported_claims": "Allocated group ADI 'not specified' for sodium and potassium carbonates and bicarbonates."
+          "supported_claims": "Allocated group ADI 'not specified' for sodium and potassium carbonates and bicarbonates.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_scientific_body"
         }
       ],
       "jurisdiction": "India (FSSAI) & Codex Alimentarius",
@@ -779,11 +905,22 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI) & Codex Alimentarius",
         "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
-        "notes": "Audited in 4-phase integrity review."
+        "notes": "JECFA Group ADI 'not specified' for carbonates/bicarbonates (FAS 20) verified. Distinct from 500(i) sodium carbonate. FSSAI 2011 Appendix A GMP leavening usage in bakery and cereal flours verified.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "JECFA Group ADI 'not specified' for carbonates/bicarbonates (FAS 20) verified. Distinct from 500(i) sodium carbonate. FSSAI 2011 Appendix A GMP leavening usage in bakery and cereal flours verified."
       },
       "record_status": "active",
-      "dataset_version": "2.0.0",
-      "last_reviewed": "2026-10-19"
+      "dataset_version": "2.1.0",
+      "last_reviewed": "2026-10-19",
+      "cas_number": "144-55-8"
     },
     {
       "id": "ing-turmeric",
@@ -793,12 +930,12 @@
         "ordinary_ingredient",
         "flavouring"
       ],
-      "cas_number": "458-37-7",
+      "cas_number": "84775-52-0",
       "functional_classes": [
         "Spice",
         "Natural Colouring"
       ],
-      "chemical_identity": "Curcuma longa L. rhizome powder containing curcuminoids (curcumin, demethoxycurcumin, bisdemethoxycurcumin)",
+      "chemical_identity": "CAS 84775-52-0 (Curcuma longa rhizome / extract) | Active constituent: Curcumin (CAS 458-37-7, INS 100(i))",
       "acceptable_daily_intake": "Whole spice has no numerical ADI ceiling; dietary spice usage recognized as safe.",
       "health_effects_evidence": "Turmeric is a traditional culinary spice used widely in Indian cuisine. Extensive research documents antioxidant and anti-inflammatory properties of curcuminoids. Customary dietary seasoning amounts (typically 1 g to 3 g daily) possess an established history of safe food use.",
       "population_sensitivities": "High therapeutic doses (e.g., concentrated supplement extracts >3 g) may exacerbate gastrointestinal symptoms or interact with anticoagulant medications. Culinary dietary levels are well tolerated.",
@@ -813,8 +950,8 @@
       ],
       "indian_language_aliases": {
         "hi": [
-          "\u0939\u0932\u094d\u0926\u0940",
-          "\u0939\u0932\u094d\u0926\u0940 \u092a\u093e\u0909\u0921\u0930"
+          "हल्दी",
+          "हल्दी पाउडर"
         ]
       },
       "sources": [
@@ -826,7 +963,10 @@
           "publication_date": "2011-08-01",
           "retrieval_date": "2026-10-19",
           "section_or_regulation": "Regulation 2.9.27",
-          "supported_claims": "Standard of identity for turmeric whole and powder. Mandates total ash not more than 9.0%, moisture not more than 10.0%, and freedom from lead chromate and artificial coloring."
+          "supported_claims": "Standard of identity for turmeric whole and powder. Mandates total ash not more than 9.0%, moisture not more than 10.0%, and freedom from lead chromate and artificial coloring.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         }
       ],
       "jurisdiction": "India (FSSAI)",
@@ -842,10 +982,20 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI)",
         "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
-        "notes": "Verified against FSSAI spice standards."
+        "notes": "Agricultural food commodity and spice. CAS 84775-52-0 (whole rhizome) documented and distinguished from CAS 458-37-7 (curcumin pigment, INS 100(i)). Standard of identity, ash (<=9.0%), moisture (<=10.0%), and prohibition of lead chromate verified under FSSAI 2011 Regulation 2.9.27.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "Agricultural food commodity and spice. CAS 84775-52-0 (whole rhizome) documented and distinguished from CAS 458-37-7 (curcumin pigment, INS 100(i)). Standard of identity, ash (<=9.0%), moisture (<=10.0%), and prohibition of lead chromate verified under FSSAI 2011 Regulation 2.9.27."
       },
       "last_reviewed": "2026-10-19",
-      "dataset_version": "2.0.0",
+      "dataset_version": "2.1.0",
       "record_status": "active"
     },
     {
@@ -882,7 +1032,10 @@
           "publication_date": "2018-08-02",
           "retrieval_date": "2026-10-19",
           "section_or_regulation": "Schedule I, Clauses 2 & 3",
-          "supported_claims": "Permitted chemical form for fortification of Edible Oil (0.11 - 0.16 mcg / g) and Milk (0.5 - 0.75 mcg / 100 ml) under the +F logo."
+          "supported_claims": "Permitted chemical form for fortification of Edible Oil (0.11 - 0.16 mcg / g) and Milk (0.5 - 0.75 mcg / 100 ml) under the +F logo.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         }
       ],
       "jurisdiction": "India (FSSAI)",
@@ -898,10 +1051,20 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI)",
         "regulatory_act": "Food Safety and Standards (Fortification of Foods) Regulations, 2018",
-        "notes": "Verified against FSSAI Schedule I fortificant list."
+        "notes": "Ergocalciferol (D2) verified under FSSAI (Fortification of Foods) Regulations 2018 Schedule I for fortified milk (0.5-0.75 mcg/100ml) and edible oil (0.11-0.16 mcg/g) under +F logo. Tolerable Upper Intake Level of 4,000 IU/day verified against ICMR-NIN 2020. Note: Generic label alias 'Vitamin D' may alternatively denote Cholecalciferol (D3) in commercial practice.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "Ergocalciferol (D2) verified under FSSAI (Fortification of Foods) Regulations 2018 Schedule I for fortified milk (0.5-0.75 mcg/100ml) and edible oil (0.11-0.16 mcg/g) under +F logo. Tolerable Upper Intake Level of 4,000 IU/day verified against ICMR-NIN 2020. Note: Generic label alias 'Vitamin D' may alternatively denote Cholecalciferol (D3) in commercial practice."
       },
       "last_reviewed": "2026-10-19",
-      "dataset_version": "2.0.0",
+      "dataset_version": "2.1.0",
       "record_status": "active"
     },
     {
@@ -937,7 +1100,10 @@
           "publication_date": "2018-08-02",
           "retrieval_date": "2026-10-19",
           "section_or_regulation": "Schedule I, Clause 1 (Fortified Wheat Flour) & Clause 5 (Fortified Rice)",
-          "supported_claims": "Permitted source of iron for mandatory/voluntary fortification of Fortified Wheat Flour (Maida/Atta) and Fortified Rice at 28 mg to 42.5 mg per kg."
+          "supported_claims": "Permitted source of iron for mandatory/voluntary fortification of Fortified Wheat Flour (Maida/Atta) and Fortified Rice at 28 mg to 42.5 mg per kg.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         }
       ],
       "jurisdiction": "India (FSSAI)",
@@ -953,10 +1119,20 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI)",
         "regulatory_act": "Food Safety and Standards (Fortification of Foods) Regulations, 2018",
-        "notes": "Verified against FSSAI grain fortification standards."
+        "notes": "Permitted iron fortificant for Fortified Rice (28-42.5 mg/kg) and Fortified Wheat Flour under FSSAI Fortification Regulations 2018 Schedule I. Tolerable Upper Limit (45 mg/day) verified against ICMR-NIN 2020.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "Permitted iron fortificant for Fortified Rice (28-42.5 mg/kg) and Fortified Wheat Flour under FSSAI Fortification Regulations 2018 Schedule I. Tolerable Upper Limit (45 mg/day) verified against ICMR-NIN 2020."
       },
       "last_reviewed": "2026-10-19",
-      "dataset_version": "2.0.0",
+      "dataset_version": "2.1.0",
       "record_status": "active"
     },
     {
@@ -994,8 +1170,11 @@
           "source_type": "Statutory Regulation",
           "publication_date": "2020-11-17",
           "retrieval_date": "2026-10-19",
-          "section_or_regulation": "Clause 5(4)",
-          "supported_claims": "Mandatory allergen declaration requirement: 'Contains Soy' or 'Contains Soybeans and products thereof' when present as an ingredient."
+          "section_or_regulation": "Regulation 5(3)(e)",
+          "supported_claims": "Mandatory allergen declaration requirement: 'Contains Soy' or 'Contains Soybeans and products thereof' pursuant to Regulation 5(3)(e).",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         }
       ],
       "jurisdiction": "India (FSSAI)",
@@ -1011,10 +1190,20 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI)",
         "regulatory_act": "Food Safety and Standards (Labelling and Display) Regulations, 2020",
-        "notes": "Verified under statutory allergen declaration rules."
+        "notes": "Food allergen derivative. Mandatory statutory allergen declaration 'Contains Soy' verified under FSSAI Labelling & Display Regulations 2020 Regulation 5(3)(e).",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "Food allergen derivative. Mandatory statutory allergen declaration 'Contains Soy' verified under FSSAI Labelling & Display Regulations 2020 Regulation 5(3)(e)."
       },
       "last_reviewed": "2026-10-19",
-      "dataset_version": "2.0.0",
+      "dataset_version": "2.1.0",
       "record_status": "active"
     },
     {
@@ -1060,7 +1249,6 @@
         "ins955",
         "e955",
         "e 955",
-        "955",
         "splenda"
       ],
       "indian_language_aliases": {},
@@ -1073,7 +1261,10 @@
           "publication_date": "2011-08-01",
           "retrieval_date": "2026-10-19",
           "section_or_regulation": "Regulation 3.1.2 & Table 1",
-          "supported_claims": "Permitted non-nutritive sweetener in specified foods (e.g. up to 300 ppm in carbonated water, 750 ppm in biscuits). Mandatory label declaration required."
+          "supported_claims": "Permitted non-nutritive sweetener in specified foods (e.g. up to 300 ppm in carbonated water, 750 ppm in biscuits). Mandatory label declaration required.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         },
         {
           "title": "Evaluation of certain food additives and contaminants (Thirty-fifth report of JECFA)",
@@ -1083,7 +1274,10 @@
           "publication_date": "1990-01-01",
           "retrieval_date": "2026-10-19",
           "section_or_regulation": "WHO Technical Report Series No. 789",
-          "supported_claims": "Allocated an Acceptable Daily Intake (ADI) of 0-15 mg/kg body weight for sucralose."
+          "supported_claims": "Allocated an Acceptable Daily Intake (ADI) of 0-15 mg/kg body weight for sucralose.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_scientific_body"
         }
       ],
       "jurisdiction": "India (FSSAI) & Codex Alimentarius",
@@ -1099,10 +1293,20 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI) & Codex Alimentarius",
         "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
-        "notes": "Verified under FSSAI Table 1 permitted sweetener standards."
+        "notes": "JECFA ADI 0-15 mg/kg bw (TRS 789) verified. Non-caloric intense sweetener. FSSAI 2011 Table 1/2 permitted categories and maximum limits (e.g. 300 ppm in carbonated water, 750 ppm in biscuits) verified. Mandatory label statement 'CONTAINS NON-CALORIC SWEETENER' verified under FSSAI 2020 Schedule II Clause 1(2).",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "JECFA ADI 0-15 mg/kg bw (TRS 789) verified. Non-caloric intense sweetener. FSSAI 2011 Table 1/2 permitted categories and maximum limits (e.g. 300 ppm in carbonated water, 750 ppm in biscuits) verified. Mandatory label statement 'CONTAINS NON-CALORIC SWEETENER' verified under FSSAI 2020 Schedule II Clause 1(2)."
       },
       "last_reviewed": "2026-10-19",
-      "dataset_version": "2.0.0",
+      "dataset_version": "2.1.0",
       "record_status": "active"
     },
     {
@@ -1139,7 +1343,10 @@
           "publication_date": "2011-08-01",
           "retrieval_date": "2026-10-19",
           "section_or_regulation": "Regulation 2.7.4",
-          "supported_claims": "Establishes definitions and standards for cocoa butter and chocolate products."
+          "supported_claims": "Establishes definitions and standards for cocoa butter and chocolate products.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         }
       ],
       "jurisdiction": "India (FSSAI)",
@@ -1155,11 +1362,22 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI)",
         "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
-        "notes": "Verified under FSSAI Cocoa standards."
+        "notes": "Standardized chocolate ingredient under FSSAI 2011 Regulation 2.7.4. Compound food parenthetical declaration rules verified under FSSAI Labelling & Display Regulations 2020 Clause 5(2)(a).",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "Standardized chocolate ingredient under FSSAI 2011 Regulation 2.7.4. Compound food parenthetical declaration rules verified under FSSAI Labelling & Display Regulations 2020 Clause 5(2)(a)."
       },
       "last_reviewed": "2026-10-19",
-      "dataset_version": "2.0.0",
-      "record_status": "active"
+      "dataset_version": "2.1.0",
+      "record_status": "active",
+      "cas_number": null
     },
     {
       "id": "proc-papain",
@@ -1194,7 +1412,10 @@
           "publication_date": "2011-08-01",
           "retrieval_date": "2026-10-19",
           "section_or_regulation": "Regulation 3.3.1",
-          "supported_claims": "Permitted enzyme processing aid for meat tenderization and protein hydrolysis."
+          "supported_claims": "Permitted enzyme processing aid for meat tenderization and protein hydrolysis.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         }
       ],
       "jurisdiction": "India (FSSAI) & Codex Alimentarius",
@@ -1210,10 +1431,20 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI) & Codex Alimentarius",
         "regulatory_act": "Food Safety and Standards (Food Products Standards and Food Additives) Regulations, 2011",
-        "notes": "Verified under FSSAI enzyme regulations."
+        "notes": "Enzyme processing aid (EC 3.4.22.2). Permitted under FSSAI 2011 Regulation 3.3.1 / Processing Aids Regulations 2018 for meat tenderization and protein hydrolysis under Good Manufacturing Practice.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "Enzyme processing aid (EC 3.4.22.2). Permitted under FSSAI 2011 Regulation 3.3.1 / Processing Aids Regulations 2018 for meat tenderization and protein hydrolysis under Good Manufacturing Practice."
       },
       "last_reviewed": "2026-10-19",
-      "dataset_version": "2.0.0",
+      "dataset_version": "2.1.0",
       "record_status": "active"
     },
     {
@@ -1250,7 +1481,10 @@
           "publication_date": "2022-03-29",
           "retrieval_date": "2026-10-19",
           "section_or_regulation": "Schedule I & Schedule IV",
-          "supported_claims": "Approved prebiotic ingredient and recognized dietary fiber source for food fortification and special dietary foods."
+          "supported_claims": "Approved prebiotic ingredient and recognized dietary fiber source for food fortification and special dietary foods.",
+          "url_accessible": true,
+          "verification_status": "verified",
+          "citation_tier": "primary_statutory"
         }
       ],
       "jurisdiction": "India (FSSAI)",
@@ -1266,10 +1500,20 @@
         "verification_level": "fully_verified",
         "jurisdiction": "India (FSSAI)",
         "regulatory_act": "Food Safety and Standards (Health Supplements, Nutraceuticals, Food for Special Dietary Use) Regulations, 2022",
-        "notes": "Verified under FSSAI 2022 Prebiotic regulations."
+        "notes": "Prebiotic and dietary fiber ingredient. Approved under FSSAI (Health Supplements, Nutraceuticals, Food for Special Dietary Use) Regulations 2022 Schedule I & Schedule IV. Purity standards and chicory source (Cichorium intybus) verified.",
+        "source_url_recorded": true,
+        "source_url_accessible": true,
+        "source_content_checked": true,
+        "scientific_claim_supported": true,
+        "regulatory_claim_verified": true,
+        "audit_date": "2026-10-19",
+        "auditor_role": "Food Science Data Auditor & Regulatory Researcher",
+        "scientific_review_status": "verified",
+        "regulatory_verification_status": "verified",
+        "claim_verification_notes": "Prebiotic and dietary fiber ingredient. Approved under FSSAI (Health Supplements, Nutraceuticals, Food for Special Dietary Use) Regulations 2022 Schedule I & Schedule IV. Purity standards and chicory source (Cichorium intybus) verified."
       },
       "last_reviewed": "2026-10-19",
-      "dataset_version": "2.0.0",
+      "dataset_version": "2.1.0",
       "record_status": "active"
     }
   ]

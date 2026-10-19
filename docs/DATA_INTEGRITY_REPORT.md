@@ -2,7 +2,7 @@
 
 ## Audit Overview & Four-Phase Verification Architecture
 healthyIndia strictly distinguishes between automated syntactic validation and independent scientific consensus verification. A record is only marked verified if it passes all four independent verification tracks:
-- **Dataset Version**: 1.2.0
+- **Dataset Version**: 1.3.0
 - **Total Additive Records Audited**: 8
 - **Fully Verified Records**: 8 of 8
 - **1. Data Completeness Errors**: 0

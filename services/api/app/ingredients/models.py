@@ -62,7 +62,7 @@ class EvidenceProvenance:
     """
     Multi-track verification provenance.
     Syntactic validity is strictly distinguished from scientific consensus
-    and statutory regulatory authorization.
+    and statutory regulatory authorization across 5 independent tracks.
     """
 
     schema_valid: bool = True
@@ -70,10 +70,23 @@ class EvidenceProvenance:
     source_checked: bool = False
     scientifically_reviewed: bool = False
     regulatory_verified: bool = False
-    verification_level: str = "unverified"  # "schema_only" | "source_linked" | "fully_verified"
+    # "schema_only" | "source_linked" | "partially_verified" | "fully_verified"
+    verification_level: str = "unverified"
     jurisdiction: str = "India (FSSAI) & Codex Alimentarius"
     regulatory_act: str = ""
     notes: str = ""
+
+    # Phase 4C: 5 Independent Verification Tracks & Audit Metadata
+    source_url_recorded: bool = False
+    source_url_accessible: bool = False
+    source_content_checked: bool = False
+    scientific_claim_supported: bool = False
+    regulatory_claim_verified: bool = False
+    audit_date: str = ""
+    auditor_role: str = ""
+    scientific_review_status: str = "unverified"  # "verified" | "partially_verified"
+    regulatory_verification_status: str = "unverified"  # "verified" | "partially_verified"
+    claim_verification_notes: str = ""
 
 
 @dataclass(frozen=True)
@@ -89,6 +102,9 @@ class SourceReference:
     supported_claims: str = ""
     section_or_regulation: str = ""
     license: str = ""
+    url_accessible: bool = True
+    verification_status: str = "verified"  # "verified" | "partially_verified" | "unverified"
+    citation_tier: str = "primary_statutory"  # primary_statutory | primary_scientific_body
 
 
 @dataclass(frozen=True)

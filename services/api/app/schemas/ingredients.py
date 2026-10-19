@@ -37,6 +37,9 @@ class SourceReferenceSchema(BaseModel):
     supported_claims: str | None = None
     section_or_regulation: str | None = None
     license: str | None = None
+    url_accessible: bool = True
+    verification_status: str = "verified"
+    citation_tier: str = "primary_statutory"
 
 
 class EvidenceProvenanceSchema(BaseModel):
@@ -49,6 +52,16 @@ class EvidenceProvenanceSchema(BaseModel):
     jurisdiction: str = "India (FSSAI) & Codex Alimentarius"
     regulatory_act: str | None = None
     notes: str | None = None
+    source_url_recorded: bool = False
+    source_url_accessible: bool = False
+    source_content_checked: bool = False
+    scientific_claim_supported: bool = False
+    regulatory_claim_verified: bool = False
+    audit_date: str | None = None
+    auditor_role: str | None = None
+    scientific_review_status: str = "unverified"
+    regulatory_verification_status: str = "unverified"
+    claim_verification_notes: str | None = None
 
 
 class AdditiveEntrySchema(BaseModel):

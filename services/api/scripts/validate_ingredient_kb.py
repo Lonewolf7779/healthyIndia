@@ -64,6 +64,21 @@ SUSPICIOUS_GENERIC_ALIASES: set[str] = {
     "seed",
 }
 
+AUTHORITATIVE_DOMAINS: set[str] = {
+    "fssai.gov.in",
+    "who.int",
+    "apps.who.int",
+    "fao.org",
+    "efsa.europa.eu",
+    "nih.gov",
+    "ncbi.nlm.nih.gov",
+    "codexalimentarius.org",
+    "ec.europa.eu",
+    "fda.gov",
+    "icmr.nic.in",
+    "nin.res.in",
+}
+
 VALID_CATEGORIES: set[str] = {
     "ordinary_ingredient",
     "food_additive",
@@ -158,9 +173,10 @@ def validate_ingredient_dataset(dataset_path: Path) -> dict:
                 )
             cas_map[cas_clean] = iid
 
-    # 3. Alias collision check & Broad alias detection
+    # 3. Alias collision check, Broad alias detection & Bare number check
     alias_map: dict[str, str] = {}
     broad_aliases_found: list[dict[str, str]] = []
+    bare_numbers_found: list[dict[str, str]] = []
 
     for item in ingredients:
         iid = item.get("id", "UNKNOWN")
@@ -180,6 +196,14 @@ def validate_ingredient_dataset(dataset_path: Path) -> dict:
             if not norm:
                 continue
 
+            # Bare numerical alias (out-of-context hazard)
+            if re.match(r"^\d{3,4}$", norm):
+                errors.append(
+                    f"[{iid}] Unsafe bare numerical alias detected: '{norm}'. "
+                    f"Bare numbers without INS prefix or functional class are prone to false positives."
+                )
+                bare_numbers_found.append({"record_id": iid, "alias": norm})
+
             # Suspiciously broad alias
             if norm in SUSPICIOUS_GENERIC_ALIASES:
                 warnings.append(f"[{iid}] Suspiciously broad/generic alias detected: '{norm}'.")
@@ -192,14 +216,22 @@ def validate_ingredient_dataset(dataset_path: Path) -> dict:
                 )
             alias_map[norm] = iid
 
-    # 4. Provenance & Citations
-    schema_valid_count = 0
-    source_linked_count = 0
-    source_checked_count = 0
-    scientifically_reviewed_count = 0
-    regulatory_verified_count = 0
+    # 4. Provenance & Citations: 5 Independent Tracks
+    track1_url_recorded_count = 0
+    track2_url_accessible_count = 0
+    track3_content_checked_count = 0
+    track4_scientific_supported_count = 0
+    track5_regulatory_verified_count = 0
+    fully_verified_count = 0
 
     category_counts: dict[str, int] = {}
+
+    disallowed_absolutes = [
+        "non-toxic at all",
+        "completely harmless",
+        "zero risk under any condition",
+        "universally safe for everyone",
+    ]
 
     for item in ingredients:
         iid = item.get("id", "UNKNOWN")
@@ -215,31 +247,96 @@ def validate_ingredient_dataset(dataset_path: Path) -> dict:
             if cat not in VALID_CATEGORIES:
                 warnings.append(f"[{iid}] Unrecognized category tag: '{cat}'.")
 
-        # Provenance tracks
         prov = item.get("provenance", {})
-        if prov.get("schema_valid", True):
-            schema_valid_count += 1
-        if prov.get("source_linked", False):
-            source_linked_count += 1
-        if prov.get("source_checked", False):
-            source_checked_count += 1
-        if prov.get("scientifically_reviewed", False):
-            scientifically_reviewed_count += 1
-        if prov.get("regulatory_verified", False):
-            regulatory_verified_count += 1
-
-        # Sources
         sources = item.get("sources", [])
-        if not sources:
-            warnings.append(f"[{iid}] Record has 0 citations in 'sources'.")
+
+        # Track 1: Source URL recorded
+        has_sources = len(sources) > 0
+        all_sources_have_url = has_sources and all(s.get("url") for s in sources)
+        if prov.get("source_url_recorded", False) or all_sources_have_url:
+            track1_url_recorded_count += 1
+        else:
+            errors.append(f"[{iid}] Track 1 failed: No recorded citation URL found.")
+
+        # Track 2: Source URL accessible & Authoritative
+        authoritative_urls = 0
         for sidx, s in enumerate(sources):
             s_url = s.get("url", "")
             if not s_url or not validate_url(s_url):
                 errors.append(f"[{iid}] Citation #{sidx} has invalid or missing URL: '{s_url}'.")
+            else:
+                domain = urlparse(s_url).netloc.lower()
+                if any(auth in domain for auth in AUTHORITATIVE_DOMAINS):
+                    authoritative_urls += 1
+                else:
+                    warnings.append(
+                        f"[{iid}] Citation #{sidx} URL domain '{domain}' is not in authoritative whitelist."
+                    )
             if not s.get("title"):
                 errors.append(f"[{iid}] Citation #{sidx} missing 'title'.")
             if not s.get("retrieval_date"):
                 warnings.append(f"[{iid}] Citation #{sidx} missing 'retrieval_date'.")
+
+        if authoritative_urls > 0 and (
+            prov.get("source_url_accessible", False) or all_sources_have_url
+        ):
+            track2_url_accessible_count += 1
+        else:
+            errors.append(f"[{iid}] Track 2 failed: Missing accessible authoritative citation URL.")
+
+        # Track 3: Source content checked
+        if prov.get("source_content_checked", False) and prov.get("audit_date"):
+            track3_content_checked_count += 1
+        else:
+            errors.append(f"[{iid}] Track 3 failed: Record lacks documented audit verification.")
+
+        # Track 4: Scientific claim independently supported
+        sci_text = (
+            item.get("health_effects_evidence", "") + " " + item.get("acceptable_daily_intake", "")
+        ).lower()
+        contains_forbidden_absolute = any(phrase in sci_text for phrase in disallowed_absolutes)
+        if contains_forbidden_absolute:
+            errors.append(
+                f"[{iid}] Track 4 failed: Record contains disallowed absolute safety claim."
+            )
+        elif (
+            prov.get("scientific_claim_supported", False)
+            and prov.get("scientific_review_status") == "verified"
+        ):
+            track4_scientific_supported_count += 1
+        else:
+            errors.append(f"[{iid}] Track 4 failed: Scientific claim not marked verified.")
+
+        # Track 5: Regulatory claim independently verified for relevant context
+        has_scope_limits = bool(item.get("scope_limitations"))
+        if not has_scope_limits and item.get("entity_type") in ("food_additive", "sweetener"):
+            errors.append(
+                f"[{iid}] Track 5 failed: Food additive/sweetener lacks documented scope limitations."
+            )
+        elif (
+            prov.get("regulatory_claim_verified", False)
+            and prov.get("regulatory_verification_status") == "verified"
+            and prov.get("regulatory_act")
+        ):
+            track5_regulatory_verified_count += 1
+        else:
+            errors.append(
+                f"[{iid}] Track 5 failed: Regulatory claim not fully verified with statutory act."
+            )
+
+        # Overall verification integrity check
+        if prov.get("verification_level") == "fully_verified":
+            if not (
+                all_sources_have_url
+                and prov.get("source_content_checked")
+                and prov.get("scientific_claim_supported")
+                and prov.get("regulatory_claim_verified")
+            ):
+                errors.append(
+                    f"[{iid}] Invalid claim: Record claims 'fully_verified' but failed one or more verification tracks."
+                )
+            else:
+                fully_verified_count += 1
 
     is_valid = len(errors) == 0
 
@@ -253,13 +350,15 @@ def validate_ingredient_dataset(dataset_path: Path) -> dict:
         "conflicting_identifiers_count": len([e for e in errors if "Conflicting" in e]),
         "alias_collisions_count": len([e for e in errors if "Alias collision" in e]),
         "broad_aliases_count": len(broad_aliases_found),
+        "bare_numerical_aliases_count": len(bare_numbers_found),
         "category_breakdown": category_counts,
         "evidence_tracks": {
-            "schema_valid": schema_valid_count,
-            "source_linked": source_linked_count,
-            "source_checked": source_checked_count,
-            "scientifically_reviewed": scientifically_reviewed_count,
-            "regulatory_verified": regulatory_verified_count,
+            "track1_source_url_recorded": track1_url_recorded_count,
+            "track2_source_url_accessible": track2_url_accessible_count,
+            "track3_source_content_checked": track3_content_checked_count,
+            "track4_scientific_claim_supported": track4_scientific_supported_count,
+            "track5_regulatory_claim_verified": track5_regulatory_verified_count,
+            "fully_verified_records": fully_verified_count,
         },
         "errors": errors,
         "warnings": warnings,
@@ -277,6 +376,7 @@ def print_report(report: dict) -> None:
     print(f"Duplicate Canonical IDs:        {report['duplicate_ids_count']}")
     print(f"Conflicting Identifiers:        {report['conflicting_identifiers_count']}")
     print(f"Alias Collisions:               {report['alias_collisions_count']}")
+    print(f"Bare Numeric Aliases Flagged:   {report['bare_numerical_aliases_count']}")
     print(f"Broad/Generic Aliases Flagged:  {report['broad_aliases_count']}")
 
     print("\n" + "-" * 80)
@@ -286,15 +386,24 @@ def print_report(report: dict) -> None:
         print(f"  {cat:<30}: {count}")
 
     print("\n" + "-" * 80)
-    print("EVIDENCE TRACK PROVENANCE AUDIT")
+    print("5-TRACK INDEPENDENT EVIDENCE PROVENANCE AUDIT")
     print("-" * 80)
     ev = report["evidence_tracks"]
     total = report["total_records"]
-    print(f"  Schema-Valid Records:         {ev['schema_valid']} of {total}")
-    print(f"  Source-Linked Records:        {ev['source_linked']} of {total}")
-    print(f"  Source-Checked Records:       {ev['source_checked']} of {total}")
-    print(f"  Scientifically Reviewed:      {ev['scientifically_reviewed']} of {total}")
-    print(f"  Regulatory Verified (FSSAI):  {ev['regulatory_verified']} of {total}")
+    print(f"  Track 1 - Source URL Recorded:        {ev['track1_source_url_recorded']} of {total}")
+    print(
+        f"  Track 2 - Source URL Accessible:      {ev['track2_source_url_accessible']} of {total}"
+    )
+    print(
+        f"  Track 3 - Source Content Checked:     {ev['track3_source_content_checked']} of {total}"
+    )
+    print(
+        f"  Track 4 - Scientific Claim Supported: {ev['track4_scientific_claim_supported']} of {total}"
+    )
+    print(
+        f"  Track 5 - Regulatory Claim Verified:  {ev['track5_regulatory_claim_verified']} of {total}"
+    )
+    print(f"  Overall Fully Verified Records:       {ev['fully_verified_records']} of {total}")
 
     if report["warnings"]:
         print("\n" + "-" * 80)

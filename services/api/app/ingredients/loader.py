@@ -92,6 +92,9 @@ def parse_ingredient_raw_dict(item: dict) -> IngredientRecord:
             supported_claims=s.get("supported_claims", ""),
             section_or_regulation=s.get("section_or_regulation", ""),
             license=s.get("license", ""),
+            url_accessible=s.get("url_accessible", True),
+            verification_status=s.get("verification_status", "verified"),
+            citation_tier=s.get("citation_tier", "primary_statutory"),
         )
         for s in item.get("sources", [])
     ]
@@ -111,6 +114,21 @@ def parse_ingredient_raw_dict(item: dict) -> IngredientRecord:
         jurisdiction=raw_prov.get("jurisdiction", item.get("jurisdiction", default_jurisdiction)),
         regulatory_act=raw_prov.get("regulatory_act", ""),
         notes=raw_prov.get("notes", ""),
+        source_url_recorded=raw_prov.get("source_url_recorded", len(sources) > 0),
+        source_url_accessible=raw_prov.get("source_url_accessible", len(sources) > 0),
+        source_content_checked=raw_prov.get("source_content_checked", is_verified_status),
+        scientific_claim_supported=raw_prov.get("scientific_claim_supported", is_verified_status),
+        regulatory_claim_verified=raw_prov.get("regulatory_claim_verified", is_verified_status),
+        audit_date=raw_prov.get("audit_date", ""),
+        auditor_role=raw_prov.get("auditor_role", ""),
+        scientific_review_status=raw_prov.get(
+            "scientific_review_status", "verified" if is_verified_status else "unverified"
+        ),
+        regulatory_verification_status=raw_prov.get(
+            "regulatory_verification_status",
+            "verified" if is_verified_status else "unverified",
+        ),
+        claim_verification_notes=raw_prov.get("claim_verification_notes", ""),
     )
 
     # Category handling

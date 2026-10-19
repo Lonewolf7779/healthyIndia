@@ -34,6 +34,9 @@ class IngredientService:
                     supported_claims=s.supported_claims,
                     section_or_regulation=s.section_or_regulation,
                     license=s.license,
+                    url_accessible=s.url_accessible,
+                    verification_status=s.verification_status,
+                    citation_tier=s.citation_tier,
                 )
                 for s in ing.sources
             ]
@@ -48,6 +51,16 @@ class IngredientService:
                 jurisdiction=ing.provenance.jurisdiction,
                 regulatory_act=ing.provenance.regulatory_act,
                 notes=ing.provenance.notes,
+                source_url_recorded=ing.provenance.source_url_recorded,
+                source_url_accessible=ing.provenance.source_url_accessible,
+                source_content_checked=ing.provenance.source_content_checked,
+                scientific_claim_supported=ing.provenance.scientific_claim_supported,
+                regulatory_claim_verified=ing.provenance.regulatory_claim_verified,
+                audit_date=ing.provenance.audit_date,
+                auditor_role=ing.provenance.auditor_role,
+                scientific_review_status=ing.provenance.scientific_review_status,
+                regulatory_verification_status=ing.provenance.regulatory_verification_status,
+                claim_verification_notes=ing.provenance.claim_verification_notes,
             )
 
             additive_schema = AdditiveEntrySchema(

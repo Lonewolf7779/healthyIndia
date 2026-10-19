@@ -22,6 +22,7 @@ from fastapi.testclient import TestClient
 
 from app.ingredients.loader import (
     load_ingredient_reference,
+    load_knowledge_base,
 )
 from app.ingredients.matcher import analyze_ingredients
 from app.ingredients.models import IngredientCategory, MatchType
@@ -332,3 +333,70 @@ def test_api_ingredient_analysis_rich_response(client: TestClient) -> None:
     assert "ordinary_ingredient" in data["category_summary"]
     assert "food_additive" in data["category_summary"]
     assert "sweetener" in data["category_summary"]
+
+
+# ==============================================================================
+# 10. PHASE 4C: EVIDENCE AUDIT & PROVENANCE REGRESSION TESTS
+# ==============================================================================
+def test_bare_numbers_out_of_context_not_matched() -> None:
+    """
+    Bare numbers without INS prefix, parentheses, or functional class must NOT
+    match food additives out of context (e.g. '621', '211', '330').
+    """
+    out_of_context_inputs = [
+        "621",
+        "211",
+        "330",
+        "102",
+        "951",
+        "Wheat Flour, 621, Salt",
+        "Refined Oil, Net Wt 330g, Water",
+        "Batch 102, Energy 621 kJ",
+    ]
+    for text in out_of_context_inputs:
+        res = analyze_ingredients(text)
+        # Additives like ins-621, ins-211, ins-330, ins-102 must NOT match bare numbers
+        matched_additive_ids = [m.ingredient.id for m in res.matched_items]
+        assert "ins-621" not in matched_additive_ids, f"Bare number matched MSG in: {text}"
+        assert "ins-211" not in matched_additive_ids, f"Bare number matched Benzoate in: {text}"
+        assert "ins-330" not in matched_additive_ids, f"Bare number matched Citric Acid in: {text}"
+        assert "ins-102" not in matched_additive_ids, f"Bare number matched Tartrazine in: {text}"
+
+
+def test_five_track_provenance_audit() -> None:
+    """Verifies that all 16 reference records satisfy the 5 independent verification tracks."""
+    kb = load_knowledge_base()
+    assert len(kb.records_by_id) == 16
+
+    for iid, record in kb.records_by_id.items():
+        prov = record.provenance
+        assert prov.schema_valid is True, f"{iid} schema_valid must be True"
+        assert prov.source_url_recorded is True, f"{iid} source_url_recorded must be True"
+        assert prov.source_url_accessible is True, f"{iid} source_url_accessible must be True"
+        assert prov.source_content_checked is True, f"{iid} source_content_checked must be True"
+        assert prov.scientific_claim_supported is True, (
+            f"{iid} scientific_claim_supported must be True"
+        )
+        assert prov.regulatory_claim_verified is True, (
+            f"{iid} regulatory_claim_verified must be True"
+        )
+        assert prov.audit_date == "2026-10-19", f"{iid} missing audit_date"
+        assert prov.auditor_role != "", f"{iid} missing auditor_role"
+        assert prov.claim_verification_notes != "", f"{iid} missing verification notes"
+
+
+def test_turmeric_curcumin_cas_distinction() -> None:
+    """Verifies that turmeric distinguishes whole agricultural spice CAS from curcumin CAS."""
+    kb = load_knowledge_base()
+    turmeric = kb.records_by_id["ing-turmeric"]
+    assert turmeric.cas_number == "84775-52-0"
+    assert "458-37-7" in turmeric.chemical_identity
+    assert "curcumin" in turmeric.chemical_identity.lower()
+
+
+def test_soy_allergen_statutory_citation() -> None:
+    """Verifies that soy protein isolate cites FSSAI Regulation 5(3)(e)."""
+    kb = load_knowledge_base()
+    soy = kb.records_by_id["ing-soy-protein-isolate"]
+    assert soy.cas_number == "9010-10-0"
+    assert any("5(3)" in s.section_or_regulation for s in soy.sources)
