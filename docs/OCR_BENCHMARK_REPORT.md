@@ -1,6 +1,6 @@
 # Food Label OCR & Deterministic Parsing Benchmark Report
 
-Generated: 2026-10-19 07:23:52Z
+Generated: 2026-10-19 07:37:21Z
 Environment: Local deterministic test framework with OpenCV & Tesseract (Tesseract runtime present: True)
 Overall Suite Status: **PASS**
 

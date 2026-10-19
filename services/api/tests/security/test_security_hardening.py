@@ -651,8 +651,11 @@ def test_hsts_header_environment_differentiation() -> None:
         assert "includeSubDomains" in res.headers["Strict-Transport-Security"]
 
 
-def test_confirmation_token_additional_edge_cases() -> None:
-    """Tests future timestamps, secret key mismatches, and malformed token formats."""
+def test_extraction_token_additional_edge_cases() -> None:
+    """
+    Tests future timestamps, secret key mismatches, and malformed token formats
+    for extraction tokens.
+    """
     from app.core.security import (
         generate_extraction_token,
         verify_extraction_token,
@@ -681,3 +684,97 @@ def test_confirmation_token_additional_edge_cases() -> None:
     assert (
         verify_extraction_token(f"v1.{valid_id}.abc.sig", valid_id, secret_key=secret)[0] is False
     )
+
+
+def test_confirmation_token_security_edge_cases() -> None:
+    """
+    Tests confirmation token cryptographic digest binding, future timestamps,
+    signature tampering, and value modification rejection.
+    """
+    from app.core.security import (
+        generate_confirmation_token,
+        verify_confirmation_token,
+    )
+
+    valid_id = "550e8400-e29b-41d4-a716-446655440000"
+    valid_digest = "f" * 64
+    secret = "k" * 32
+    now = int(time.time())
+
+    # 1. Valid confirmation token succeeds
+    valid_token = generate_confirmation_token(
+        valid_id, values_digest=valid_digest, secret_key=secret, timestamp=now
+    )
+    ok, err = verify_confirmation_token(
+        valid_token, extraction_id=valid_id, expected_digest=valid_digest, secret_key=secret
+    )
+    assert ok is True
+    assert err == ""
+
+    # 2. Nutrition-value modification (digest mismatch) MUST fail
+    altered_digest = "0" * 64
+    ok, err = verify_confirmation_token(
+        valid_token, extraction_id=valid_id, expected_digest=altered_digest, secret_key=secret
+    )
+    assert ok is False
+    assert "digest does not match submitted values" in err
+
+    # 3. Signature tampering MUST fail
+    parts = valid_token.split(".")
+    tampered_sig = parts[4][:-4] + "dead"
+    tampered_token = f"{parts[0]}.{parts[1]}.{parts[2]}.{parts[3]}.{tampered_sig}"
+    ok, err = verify_confirmation_token(
+        tampered_token, extraction_id=valid_id, expected_digest=valid_digest, secret_key=secret
+    )
+    assert ok is False
+    assert "HMAC verification failed" in err
+
+    # 4. Extraction ID tampering MUST fail
+    different_id = "660e8400-e29b-41d4-a716-446655440000"
+    ok, err = verify_confirmation_token(
+        valid_token, extraction_id=different_id, expected_digest=valid_digest, secret_key=secret
+    )
+    assert ok is False
+    assert "does not match provided" in err
+
+    # 5. Future timestamp (> 60s in future) MUST fail
+    future_time = now + 120
+    future_conf = generate_confirmation_token(
+        valid_id, values_digest=valid_digest, secret_key=secret, timestamp=future_time
+    )
+    ok, err = verify_confirmation_token(
+        future_conf, extraction_id=valid_id, expected_digest=valid_digest, secret_key=secret
+    )
+    assert ok is False
+    assert "in the future" in err.lower()
+
+    # 6. Expired token (> 3600s) MUST fail
+    expired_conf = generate_confirmation_token(
+        valid_id, values_digest=valid_digest, secret_key=secret, timestamp=now - 4000
+    )
+    ok, err = verify_confirmation_token(
+        expired_conf,
+        extraction_id=valid_id,
+        expected_digest=valid_digest,
+        secret_key=secret,
+        max_age_seconds=3600,
+    )
+    assert ok is False
+    assert "expired" in err.lower()
+
+    # 7. Secret key mismatch MUST fail
+    ok, err = verify_confirmation_token(
+        valid_token,
+        extraction_id=valid_id,
+        expected_digest=valid_digest,
+        secret_key="z" * 32,
+    )
+    assert ok is False
+    assert "HMAC verification failed" in err
+
+    # 8. Unkeyed raw SHA-256 hash or malformed token string MUST fail
+    ok, err = verify_confirmation_token(
+        valid_digest, extraction_id=valid_id, expected_digest=valid_digest, secret_key=secret
+    )
+    assert ok is False
+    assert "Unkeyed SHA-256 hash or malformed token detected" in err

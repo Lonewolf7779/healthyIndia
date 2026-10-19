@@ -192,16 +192,26 @@ flowchart LR
 
 ## 4. Knowledge Base Evidence Validator Scope & Boundaries
 
-The automated knowledge base validator (`validate_ingredient_kb.py`) performs deterministic **structural, schema, and lexical verification**:
-- **What the automated validator proves**:
-  1. Record completeness: all mandatory fields, categories, and identifiers (INS, CAS) are structurally valid and collision-free.
-  2. Domain allowlisting: citation URLs belong to recognized public health and regulatory domains (`fssai.gov.in`, `who.int`, `efsa.europa.eu`, `nih.gov`, `codexalimentarius.org`).
-  3. Anti-hyperbole rules: prohibits absolute safety assertions ("100% safe", "completely harmless").
-  4. Statutory reference completeness: food additives declare mandatory scope limitations and specific statutory acts.
-- **What the automated validator does NOT prove**:
-  1. It does not perform live network fetching during CI to verify HTTP server response status codes.
-  2. It does not replace human domain expertise in evaluating biochemical toxicological reality or legal interpretations of FSSAI schedules.
-  3. Provenance flags (`source_content_checked`, `scientific_review_status`, `regulatory_verification_status`) record the completion of manual verification by food-science auditors; they are validated for schema integrity, not computationally generated.
+healthyIndia enforces an explicit separation between automated tooling and human expert review across three distinct verification tiers:
+
+### Tier A: Automated Schema & Consistency Validation
+Automated CI checks (`validate_ingredient_kb.py`) deterministically verify structural and lexical invariants:
+- **Record completeness**: All required fields, functional classes, and identifiers (canonical ID, INS number, CAS number) conform to schemas.
+- **Collision avoidance**: Cryptographic SHA-256 dataset checksum, zero duplicate canonical IDs, zero alias collisions across records, and zero bare numeric aliases (which cause false positives).
+- **Anti-hyperbole lexical enforcement**: Prohibits absolute safety claims (e.g., "completely harmless", "zero risk", "100% safe") in text fields.
+- **Additive scope completeness**: Food additives declare explicit technological categories and scope limitations.
+
+### Tier B: Source Metadata & URL Domain Checks
+Automated checks ensure that references originate from authoritative, transparent sources:
+- **Domain allowlisting**: Citation URLs belong strictly to recognized public health and statutory authorities (`fssai.gov.in`, `who.int`, `efsa.europa.eu`, `nih.gov`, `codexalimentarius.org`, `icmr.nic.in`, `nin.res.in`).
+- **Citation metadata**: Every citation record contains title, organization, URL, source type, and retrieval date.
+- **Offline verification**: CI does not perform live network HTTP calls (which could fail due to network volatility); URL syntax and allowlists are evaluated deterministically offline.
+
+### Tier C: Human Review of Primary Sources
+Independent scientific or statutory authority is **never** computationally claimed merely because CI passes:
+- **Primary source inspection**: Specific statutory acts (e.g., FSSAI Food Products Standards and Food Additives Regulations, 2011; Labelling and Display Regulations, 2020) and scientific monographs (JECFA WHO Technical Report Series, EFSA opinions) must be audited by qualified food-science auditors.
+- **Provenance records**: Provenance flags (`source_content_checked`, `scientific_review_status`, `regulatory_verification_status`) record the completion of manual verification by human reviewers; automated CI asserts only that this audit metadata is present, schema-compliant, and accompanied by specific statutory clauses and audit dates.
+- **Boundary of claims**: healthyIndia does not claim independent clinical discovery or universal regulatory clearance; it provides structured transparency into published statutory schedules and international toxicological consensus.
 
 ---
 
